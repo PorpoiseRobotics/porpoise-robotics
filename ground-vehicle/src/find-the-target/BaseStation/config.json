@@ -1,0 +1,10 @@
+{
+  "camera_url": "http://10.10.20.191:81/stream",
+  "field_origin_lat": 33.024476,
+  "field_origin_lon": -117.076943,
+  "field_bearing_deg": 130,
+  "field_length_m": 105,
+  "field_width_m": 68,
+  "dest_x_ft": 200,
+  "dest_y_ft": 100
+}

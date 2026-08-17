@@ -60,13 +60,30 @@
 // ======================================================================
 struct WifiCred { const char *ssid; const char *password; };
 
-// THIS REPOSITORY IS PUBLIC. Fill these in on your own computer, flash the
-// board, then put the placeholders back before you `git add` this file.
+// !!! THIS MIGHT BE DANGEROUS !!!
+// These are REAL Wi-Fi network names and passwords, and THIS REPOSITORY IS
+// PUBLIC — anyone on the internet can read the lines below right now.
+// They are kept here on purpose so the team can flash a board without
+// hunting for them, but that is a trade: convenience now, exposure forever.
+//
+// What this means in practice:
+//   - Treat every password below as ALREADY COMPROMISED. Anyone who has read
+//     this file can join these networks.
+//   - These should be changed, and once they are, do not paste the new ones
+//     here. Deleting a password later does NOT remove it from git history.
+//   - Before adding a NEW network to this list, ask whether you would be
+//     comfortable posting that password publicly, because that is what
+//     committing it does.
+//
+// The safe pattern, for when the team is ready: keep real values in a file
+// that .gitignore blocks, and commit only an example file with blank values.
 // See CONTRIBUTING.md, "Rule 4: never commit secrets".
 const WifiCred NETWORKS[] = {
-  { "YOUR_WIFI_NAME", "YOUR_WIFI_PASSWORD" },
-  // { "AnotherNetwork", "anotherpassword" },
-  // { "PhoneHotspot",   "hotspotpass"     },
+  { "Kiln Guest",     "kilnguests"     },   // exposed publicly 2026-08-17
+  { "SpectrumSetup-D8",     "violetocean004"     },   // exposed publicly 2026-08-17 — looks like a home network
+  { "Porpoise",     "*9293kpb"     },   // exposed publicly 2026-08-17 — the org's own network
+  // { "YourHomeWiFi",   "yourpassword"   },
+  // { "PhoneHotspot",   "hotspotpass"    },
 };
 const int NUM_NETWORKS = sizeof(NETWORKS) / sizeof(NETWORKS[0]);
 

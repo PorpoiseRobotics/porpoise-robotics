@@ -67,6 +67,15 @@ Each folder ending in a sketch name is an **Arduino sketch folder**: the folder 
 `.ino` file inside it must stay identical, or the Arduino IDE will not open it. If you rename
 one, rename both.
 
+Two leftovers from the original upload were kept rather than deleted, so that nothing that was
+uploaded has gone missing:
+
+- `src/unorganized` — an empty file, 0 bytes, created on GitHub before the upload.
+- `src/find-the-target/BaseStation/~$waypoints_example_xy.xlsx` — a lock file Excel creates
+  while a spreadsheet is open. It is not part of the program.
+
+Both are safe to delete whenever the team wants; they just are not mine to throw away.
+
 **TBD:** nobody has yet written down how `pathfinder/` and `find-the-target/` relate — whether
 Find the Target runs on the Pathfinder vehicle or on a different chassis. Record the answer here.
 
@@ -109,17 +118,38 @@ that header into a proper getting-started section here.
 
 Before flashing anything with WiFi, read the secrets rule below.
 
-## A note on WiFi credentials
+## ⚠️ This might be dangerous — real credentials are in these files
 
-`src/pathfinder/CameraWebServerKiln/CameraWebServerKiln.ino` and
-`src/find-the-target/CameraWebServer_v3/CameraWebServer_v3.ino` both need a real WiFi name and
-password typed into the file before you flash the board. **This repository is public.** Type
-them in on your own computer, flash, then put the placeholders back before you commit. See
-[CONTRIBUTING.md](../CONTRIBUTING.md#rule-4-never-commit-secrets).
+**This repository is public.** Anyone on the internet can read every file in it, including its
+full history. Some files here contain real, working values that were committed before anyone
+checked. They have been left in place deliberately — hiding them would not un-publish them, and
+would only make the risk harder to see — but each one is now marked with a warning comment
+explaining what it is.
 
-The base station's `BaseStation/config.json` holds the camera's IP address and the field's real
-GPS coordinates. It is created automatically when you run `base_station.py` and is listed in
-`.gitignore`, so it will not be committed. Leave it that way.
+| File | What is exposed |
+|---|---|
+| `src/find-the-target/CameraWebServer_v3/CameraWebServer_v3.ino` | Three real Wi-Fi networks and passwords: `Kiln Guest`, `SpectrumSetup-D8`, `Porpoise` |
+| `src/pathfinder/CameraWebServerKiln/CameraWebServerKiln.ino` | The `Kiln Guest` network and password |
+| `src/find-the-target/BaseStation/config.json` | The camera's IP address on the local network, and the field's real GPS coordinates |
+
+**What to do about it:**
+
+1. **Change those three Wi-Fi passwords.** Treat them as known to strangers, because they are.
+   This is the only fix that actually works.
+2. **Deleting them from these files later will not help.** Anything ever committed stays in the
+   repository's history forever. That is why the fix is at the router, not in the code.
+3. **Before committing a new password, ask whether you would post it publicly** — because that
+   is exactly what committing it to this repository does.
+
+When the team is ready for the safer pattern: real values live in a file that `.gitignore`
+blocks from being committed, and only an example file with blank values gets committed. That is
+described in [CONTRIBUTING.md](../CONTRIBUTING.md#rule-4-never-commit-secrets) and is worth
+adopting before the school camera project starts, where this matters far more than it does here.
+
+`config.json` is also worth understanding: `base_station.py` writes it automatically every time
+you run it, so it is not really source code — it is saved settings. It is committed here so
+nothing from the original upload is missing, but it will change on its own as you use the
+dashboard.
 
 ## Safety
 

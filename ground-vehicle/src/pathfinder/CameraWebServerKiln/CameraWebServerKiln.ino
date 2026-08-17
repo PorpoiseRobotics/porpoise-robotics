@@ -33,13 +33,24 @@
 #include "camera_pins.h"
 
 // ===========================
-// Enter your WiFi credentials here BEFORE flashing — and do not commit them.
-// This repository is public. Fill these in on your own computer, flash the
-// board, and put the placeholders back before you `git add` this file.
+// Enter your WiFi credentials
+// (The original line here ended with a stray OneDrive path from the author's
+//  computer: c:\Users\kbowe\OneDrive\TwoWayCom2_Veh — harmless, kept for
+//  provenance so nobody wonders what was deleted.)
+//
+// !!! THIS MIGHT BE DANGEROUS !!!
+// The ssid/password below are REAL and THIS REPOSITORY IS PUBLIC — anyone on
+// the internet can read them right now. Treat this network password as
+// ALREADY COMPROMISED; it should be changed.
+//
+// Deleting a password from this file later does NOT remove it from git
+// history, so the only real fix is changing the password on the router.
+// Before you commit a NEW password here, ask whether you would post it
+// publicly — because that is exactly what committing it does.
 // See CONTRIBUTING.md, "Rule 4: never commit secrets".
 // ===========================
-const char* ssid = "YOUR_WIFI_NAME";
-const char* password = "YOUR_WIFI_PASSWORD";
+const char* ssid = "Kiln Guest";        // exposed publicly 2026-08-17
+const char* password = "kilnguests";    // exposed publicly 2026-08-17
 
 void startCameraServer();
 void setupLedFlash(int pin);
