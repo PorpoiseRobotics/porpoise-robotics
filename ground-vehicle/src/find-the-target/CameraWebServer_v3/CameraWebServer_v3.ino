@@ -60,12 +60,13 @@
 // ======================================================================
 struct WifiCred { const char *ssid; const char *password; };
 
+// THIS REPOSITORY IS PUBLIC. Fill these in on your own computer, flash the
+// board, then put the placeholders back before you `git add` this file.
+// See CONTRIBUTING.md, "Rule 4: never commit secrets".
 const WifiCred NETWORKS[] = {
-  { "Kiln Guest",     "kilnguests"     },
-  { "SpectrumSetup-D8",     "violetocean004"     },
-  { "Porpoise",     "*9293kpb"     },
-  // { "YourHomeWiFi",   "yourpassword"   },
-  // { "PhoneHotspot",   "hotspotpass"    },
+  { "YOUR_WIFI_NAME", "YOUR_WIFI_PASSWORD" },
+  // { "AnotherNetwork", "anotherpassword" },
+  // { "PhoneHotspot",   "hotspotpass"     },
 };
 const int NUM_NETWORKS = sizeof(NETWORKS) / sizeof(NETWORKS[0]);
 

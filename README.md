@@ -42,7 +42,9 @@ system on a campus, this project has stricter rules about what may be written do
 its README before contributing.
 
 ### [`ground-vehicle/`](ground-vehicle/README.md)
-A ground-based unmanned vehicle platform — a rover that drives on land.
+A ground-based unmanned vehicle platform — a rover that drives on land. **This is the only
+project with code in it so far:** the Pathfinder vehicle firmware and the "Find the Target"
+telemetry mission.
 
 ### [`submersible-vehicle/`](submersible-vehicle/README.md)
 An underwater vehicle platform. Porpoise Robotics publicly lists two ROV platforms, Explorer ROV
@@ -59,9 +61,13 @@ project-name/
 └── hardware/      wiring notes, bill of materials, mechanical files
 ```
 
-**Those folders are empty right now.** That is expected — the code has not been written yet.
-Each one contains a file called `.gitkeep`, which exists purely so that git will keep the empty
-folder. [Here is why that is necessary.](docs/05-gitkeep-and-empty-folders.md)
+**Most of those folders are still empty.** That is expected — the code has not been written yet.
+Each empty one contains a file called `.gitkeep`, which exists purely so that git will keep the
+empty folder. [Here is why that is necessary.](docs/05-gitkeep-and-empty-folders.md) Delete a
+`.gitkeep` once its folder has real files in it.
+
+The exception is `ground-vehicle/`, which now has working code in `src/` and reference documents
+in `docs/`. See [its README](ground-vehicle/README.md) for what is in there.
 
 ---
 
@@ -79,8 +85,9 @@ Details and the safe way to handle configuration are in
 
 ## Status
 
-This repository is a fresh scaffold. It contains structure and documentation only — no source
-code has been written yet. Sections marked **TBD** are waiting on the team to fill in.
+Early. `ground-vehicle/` holds the team's existing ESP32 and Python code, moved in from a
+OneDrive export. The other two projects are still structure and documentation only. Sections
+marked **TBD** are waiting on the team to fill in.
 
 ## License
 

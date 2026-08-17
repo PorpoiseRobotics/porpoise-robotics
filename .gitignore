@@ -25,6 +25,9 @@ secrets.json
 secrets.yaml
 secrets.yml
 config.local.*
+# base_station.py writes this at runtime and it ends up holding the camera's
+# IP address and the field's real GPS coordinates. Never commit it.
+ground-vehicle/src/find-the-target/BaseStation/config.json
 *_secret*
 *_secrets*
 *.credentials
@@ -196,6 +199,8 @@ footage/
 Icon
 Thumbs.db
 Thumbs.db:encryptable
+# Word/Excel/PowerPoint lock files, left behind when a document is open
+~$*
 ehthumbs.db
 ehthumbs_vista.db
 Desktop.ini

@@ -33,10 +33,13 @@
 #include "camera_pins.h"
 
 // ===========================
-// Enter your WiFi credentialsc:\Users\kbowe\OneDrive\TwoWayCom2_Veh
+// Enter your WiFi credentials here BEFORE flashing — and do not commit them.
+// This repository is public. Fill these in on your own computer, flash the
+// board, and put the placeholders back before you `git add` this file.
+// See CONTRIBUTING.md, "Rule 4: never commit secrets".
 // ===========================
-const char* ssid = "Kiln Guest";
-const char* password = "kilnguests";
+const char* ssid = "YOUR_WIFI_NAME";
+const char* password = "YOUR_WIFI_PASSWORD";
 
 void startCameraServer();
 void setupLedFlash(int pin);
