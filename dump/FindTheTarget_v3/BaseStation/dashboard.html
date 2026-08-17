@@ -1,0 +1,620 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Find the Target — Ground Station</title>
+<!--
+  dashboard.html - served by base_station.py
+  ==============================================================
+  Left panel : live MJPEG stream from CameraWebServer_v3
+  Right panel: soccer-field map with waypoints + live vehicle
+  Bottom     : telemetry readouts from ESPNow_Sender_v3
+  Setup bar  : camera URL, field calibration, waypoint upload
+
+  HOW GPS BECOMES A DOT ON THE FIELD
+    The map is a traditional graph: the origin (0,0) is the
+    BOTTOM-LEFT corner of the pitch, x runs right along the field
+    length, y runs up across the width.
+    1. Stand at the corner you want as (0,0), record its lat/lon
+       (use the vehicle parked there, or your phone).
+    2. Face down the LONG side toward the far goal line with the
+       field on your LEFT; the compass direction you are facing
+       is "bearing".
+    3. Enter those plus the field length/width in Field setup.
+    The page converts each GPS fix to meters east/north of the
+    origin, rotates by the bearing, and plots it.
+
+  DESTINATION (Setup -> Destination card)
+    Enter an x/y point in feet from the origin corner (same graph
+    coordinates as x/y waypoints). A gold crosshair marks it on the
+    map, and the Dest dX/dY telemetry cards count down the feet
+    remaining along each axis as the vehicle drives toward it.
+
+  WAYPOINT FILE (Excel .xlsx or .csv)
+    First sheet, first row = headers. Two layouts are accepted:
+      name | x_ft | y_ft   feet from the origin corner (x along
+                           the length, y up across the width -
+                           like plotting points on a graph)
+      name | lat  | lon    GPS degrees
+    One waypoint per row. See waypoints_example.xlsx.
+    Optional extra sheet named "field" with two columns key|value
+    (origin_lat, origin_lon, bearing_deg, length_m, width_m)
+    auto-fills the calibration.
+-->
+<script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Archivo:wght@400;600;800&family=IBM+Plex+Mono:wght@400;600&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --paper:#eef1ec;        /* cool vellum background */
+    --panel:#ffffff;
+    --ink:#1d2b26;          /* deep pine ink */
+    --ink-soft:#5b6b64;
+    --line:#cbd4cc;
+    --pitch:#2e7d4f;        /* the field itself */
+    --pitch-dark:#256842;
+    --chalk:#f3f6f1;        /* field line paint */
+    --vehicle:#ff5c1f;      /* safety orange - vehicle + alerts only */
+    --ok:#2e7d4f;
+    --warn:#c9a020;
+    --bad:#c23c1e;
+    --mono:"IBM Plex Mono","Cascadia Mono",Consolas,monospace;
+    --sans:"Archivo","Segoe UI",system-ui,sans-serif;
+  }
+  *{box-sizing:border-box}
+  body{
+    margin:0;background:var(--paper);color:var(--ink);
+    font-family:var(--sans);font-size:14px;
+    background-image:linear-gradient(var(--line) 1px,transparent 1px),
+                     linear-gradient(90deg,var(--line) 1px,transparent 1px);
+    background-size:28px 28px;background-position:-1px -1px;
+  }
+  header{
+    display:flex;align-items:center;gap:16px;flex-wrap:wrap;
+    padding:12px 20px;background:var(--ink);color:var(--chalk);
+  }
+  header h1{font-size:16px;font-weight:800;letter-spacing:.14em;
+    text-transform:uppercase;margin:0}
+  header h1 span{color:var(--vehicle)}
+  .pills{display:flex;gap:8px;margin-left:auto;flex-wrap:wrap}
+  .pill{
+    font-family:var(--mono);font-size:11px;letter-spacing:.08em;
+    padding:4px 10px;border-radius:999px;border:1px solid #ffffff33;
+    display:flex;align-items:center;gap:6px;
+  }
+  .dot{width:8px;height:8px;border-radius:50%;background:var(--bad)}
+  .pill.ok .dot{background:#5fd08a}
+  .pill.warn .dot{background:#e8c14a}
+
+  main{display:grid;grid-template-columns:1fr 1fr;gap:16px;
+       padding:16px 20px 0;max-width:1500px;margin:0 auto}
+  @media(max-width:980px){main{grid-template-columns:1fr}}
+
+  .panel{background:var(--panel);border:1px solid var(--line);
+    border-radius:8px;overflow:hidden;display:flex;flex-direction:column}
+  .panel-head{
+    display:flex;align-items:center;gap:10px;padding:8px 14px;
+    border-bottom:1px solid var(--line);
+    font-family:var(--mono);font-size:11px;letter-spacing:.12em;
+    text-transform:uppercase;color:var(--ink-soft)}
+  .panel-head .right{margin-left:auto;display:flex;gap:8px;align-items:center}
+
+  /* Camera */
+  .cam-wrap{position:relative;background:#101613;min-height:280px;
+    display:flex;align-items:center;justify-content:center;flex:1}
+  #camImg{width:100%;height:auto;display:block;max-height:560px;object-fit:contain}
+  #camMsg{position:absolute;color:#9db3a8;font-family:var(--mono);
+    font-size:12px;text-align:center;padding:0 20px;line-height:1.7}
+
+  /* Field */
+  #fieldBox{padding:14px;flex:1;display:flex}
+  #fieldSvg{width:100%;height:auto;flex:1}
+
+  /* Telemetry strip */
+  .telem{display:grid;gap:12px;padding:16px 20px;max-width:1500px;margin:0 auto;
+    grid-template-columns:repeat(auto-fit,minmax(120px,1fr))}
+  .metric{background:var(--panel);border:1px solid var(--line);border-radius:8px;
+    padding:10px 12px}
+  .metric .label{font-family:var(--mono);font-size:10px;letter-spacing:.12em;
+    text-transform:uppercase;color:var(--ink-soft)}
+  .metric .value{font-family:var(--mono);font-size:22px;font-weight:600;
+    margin-top:2px}
+  .metric .unit{font-size:12px;color:var(--ink-soft);margin-left:2px}
+  .metric.alert .value{color:var(--vehicle)}
+  .metric.good .value{color:var(--ok)}
+
+  /* Setup */
+  details.setup{max-width:1500px;margin:0 auto 24px;padding:0 20px}
+  details.setup>summary{
+    cursor:pointer;font-family:var(--mono);font-size:11px;
+    letter-spacing:.12em;text-transform:uppercase;color:var(--ink-soft);
+    padding:8px 0;user-select:none}
+  .setup-grid{display:grid;gap:16px;grid-template-columns:repeat(auto-fit,minmax(280px,1fr))}
+  .card{background:var(--panel);border:1px solid var(--line);border-radius:8px;padding:14px}
+  .card h3{margin:0 0 10px;font-size:13px;font-weight:600}
+  .card label{display:block;font-family:var(--mono);font-size:10px;
+    letter-spacing:.1em;text-transform:uppercase;color:var(--ink-soft);margin:8px 0 3px}
+  .card input[type=text],.card input[type=number]{
+    width:100%;padding:7px 9px;border:1px solid var(--line);border-radius:5px;
+    font-family:var(--mono);font-size:13px;background:var(--paper)}
+  .card input:focus{outline:2px solid var(--pitch);outline-offset:1px}
+  button{
+    margin-top:12px;padding:8px 16px;border:none;border-radius:5px;
+    background:var(--pitch);color:var(--chalk);font-family:var(--mono);
+    font-size:12px;letter-spacing:.08em;cursor:pointer}
+  button:hover{background:var(--pitch-dark)}
+  button:focus-visible{outline:2px solid var(--ink);outline-offset:2px}
+  button.ghost{background:transparent;color:var(--ink);border:1px solid var(--line)}
+  .hint{font-size:12px;color:var(--ink-soft);line-height:1.55;margin-top:8px}
+
+  /* Event log */
+  #log{font-family:var(--mono);font-size:11px;color:var(--ink-soft);
+    line-height:1.7;max-height:120px;overflow-y:auto;white-space:pre-wrap}
+
+  @media (prefers-reduced-motion:no-preference){
+    #vehicle{transition:transform .8s linear}
+  }
+</style>
+</head>
+<body>
+
+<header>
+  <h1>Find the Target <span>//</span> Ground Station</h1>
+  <div class="pills">
+    <div class="pill" id="pillLink"><span class="dot"></span>LINK <span id="pktAge">--</span></div>
+    <div class="pill" id="pillGps"><span class="dot"></span>GPS</div>
+    <div class="pill" id="pillCam"><span class="dot"></span>CAMERA</div>
+  </div>
+</header>
+
+<main>
+  <!-- ============ CAMERA ============ -->
+  <section class="panel">
+    <div class="panel-head">Live camera
+      <div class="right"><button class="ghost" style="margin:0" onclick="reloadCam()">Reconnect</button></div>
+    </div>
+    <div class="cam-wrap">
+      <img id="camImg" alt="Camera stream" style="display:none">
+      <div id="camMsg">No camera URL set.<br>Open Setup below and paste the stream URL
+        printed on the camera's serial monitor,<br>e.g. http://192.168.1.42:81/stream</div>
+    </div>
+  </section>
+
+  <!-- ============ FIELD MAP ============ -->
+  <section class="panel">
+    <div class="panel-head">Field map
+      <div class="right" id="wpCount">0 waypoints</div>
+    </div>
+    <div id="fieldBox"><svg id="fieldSvg" role="img" aria-label="Soccer field map"></svg></div>
+  </section>
+</main>
+
+<!-- ============ TELEMETRY ============ -->
+<div class="telem">
+  <div class="metric" id="mDist"><div class="label">Range</div><div class="value">--<span class="unit">in</span></div></div>
+  <div class="metric"><div class="label">Temp</div><div class="value" id="vTemp">--<span class="unit">°F</span></div></div>
+  <div class="metric"><div class="label">Pressure</div><div class="value" id="vPress">--<span class="unit">atm</span></div></div>
+  <div class="metric"><div class="label">Speed</div><div class="value" id="vSpeed">--<span class="unit">mph</span></div></div>
+  <div class="metric"><div class="label">Heading</div><div class="value" id="vCourse">--<span class="unit">°</span></div></div>
+  <div class="metric"><div class="label">Satellites</div><div class="value" id="vSats">--</div></div>
+  <div class="metric"><div class="label">Radio</div><div class="value" id="vRssi">--<span class="unit">dBm</span></div></div>
+  <div class="metric"><div class="label">Position</div><div class="value" id="vPos" style="font-size:13px;line-height:1.5">--</div></div>
+  <div class="metric"><div class="label">Dest ΔX</div><div class="value" id="vDx">--<span class="unit">ft</span></div></div>
+  <div class="metric"><div class="label">Dest ΔY</div><div class="value" id="vDy">--<span class="unit">ft</span></div></div>
+</div>
+
+<!-- ============ SETUP ============ -->
+<details class="setup" open>
+  <summary>Setup — camera, field calibration, waypoints</summary>
+  <div class="setup-grid">
+
+    <div class="card">
+      <h3>Camera</h3>
+      <label for="cfgCam">Stream URL (from camera serial monitor)</label>
+      <input type="text" id="cfgCam" placeholder="http://192.168.1.42:81/stream">
+      <button onclick="saveConfig()">Save & connect</button>
+      <p class="hint">This computer must be on the same WiFi network as the camera.</p>
+    </div>
+
+    <div class="card">
+      <h3>Field calibration</h3>
+      <label for="cfgLat">Origin corner latitude</label>
+      <input type="number" id="cfgLat" step="0.000001">
+      <label for="cfgLon">Origin corner longitude</label>
+      <input type="number" id="cfgLon" step="0.000001">
+      <label for="cfgBrg">Bearing along field length (° compass)</label>
+      <input type="number" id="cfgBrg" step="0.1">
+      <label for="cfgLen">Field length (m)</label>
+      <input type="number" id="cfgLen" step="0.5">
+      <label for="cfgWid">Field width (m)</label>
+      <input type="number" id="cfgWid" step="0.5">
+      <button onclick="saveConfig()">Save calibration</button>
+      <p class="hint">The origin is the <b>bottom-left</b> corner of the map.
+        Stand on that corner facing down the long side with the field on your
+        <b>left</b>; that compass heading is the bearing.</p>
+    </div>
+
+    <div class="card">
+      <h3>Destination</h3>
+      <label for="cfgDestX">X from origin (ft)</label>
+      <input type="number" id="cfgDestX" step="1">
+      <label for="cfgDestY">Y from origin (ft)</label>
+      <input type="number" id="cfgDestY" step="1">
+      <button onclick="saveConfig()">Set destination</button>
+      <button class="ghost" onclick="clearDestination()">Clear</button>
+      <p class="hint">Marks a gold crosshair on the map. The <b>Dest ΔX / ΔY</b>
+        readouts show the feet left to travel along each axis
+        (+ means further right / up); they turn green within 10 ft.</p>
+    </div>
+
+    <div class="card">
+      <h3>Waypoints</h3>
+      <label for="wpFile">Load from Excel (.xlsx) or .csv</label>
+      <input type="file" id="wpFile" accept=".xlsx,.xls,.csv">
+      <button class="ghost" onclick="clearWaypoints()">Clear waypoints</button>
+      <p class="hint">Columns (first sheet): <b>name, x_ft, y_ft</b> — feet from
+        the origin corner, like graph points — or <b>name, lat, lon</b> in GPS
+        degrees. An optional sheet named <b>field</b> with key/value rows
+        auto-fills the calibration.</p>
+      <h3 style="margin-top:14px">Event log</h3>
+      <div id="log" aria-live="polite"></div>
+    </div>
+
+  </div>
+</details>
+
+<script>
+"use strict";
+/* ==================== state ==================== */
+let config = {camera_url:"", field_origin_lat:0, field_origin_lon:0,
+              field_bearing_deg:0, field_length_m:100, field_width_m:64,
+              dest_x_ft:null, dest_y_ft:null};
+const FT = 0.3048;       // meters per foot
+let waypoints = [];      // {name, lat, lon} or {name, x, y} (field meters)
+let trail = [];          // recent vehicle positions in field meters
+const TRAIL_MAX = 150;
+let lastPacket = null, lastPacketAt = 0;
+
+const $ = id => document.getElementById(id);
+function log(msg){
+  const el = $("log");
+  el.textContent = `${new Date().toLocaleTimeString()}  ${msg}\n` + el.textContent;
+  el.textContent = el.textContent.split("\n").slice(0, 40).join("\n");
+}
+
+/* ==================== config <-> server ==================== */
+async function loadConfig(){
+  try{
+    config = await (await fetch("/config")).json();
+    $("cfgCam").value = config.camera_url || "";
+    $("cfgLat").value = config.field_origin_lat;
+    $("cfgLon").value = config.field_origin_lon;
+    $("cfgBrg").value = config.field_bearing_deg;
+    $("cfgLen").value = config.field_length_m;
+    $("cfgWid").value = config.field_width_m;
+    $("cfgDestX").value = config.dest_x_ft ?? "";
+    $("cfgDestY").value = config.dest_y_ft ?? "";
+    if (config.camera_url) startCam(config.camera_url);
+    drawField();
+  }catch(e){ log("Could not load config from server"); }
+}
+async function saveConfig(){
+  config.camera_url       = $("cfgCam").value.trim();
+  config.field_origin_lat = parseFloat($("cfgLat").value) || 0;
+  config.field_origin_lon = parseFloat($("cfgLon").value) || 0;
+  config.field_bearing_deg= parseFloat($("cfgBrg").value) || 0;
+  config.field_length_m   = parseFloat($("cfgLen").value) || 100;
+  config.field_width_m    = parseFloat($("cfgWid").value) || 64;
+  // Destination is optional: blank inputs mean "not set" (null).
+  const dx = parseFloat($("cfgDestX").value), dy = parseFloat($("cfgDestY").value);
+  config.dest_x_ft = Number.isFinite(dx) ? dx : null;
+  config.dest_y_ft = Number.isFinite(dy) ? dy : null;
+  try{
+    await fetch("/config",{method:"POST",headers:{"Content-Type":"application/json"},
+                           body:JSON.stringify(config)});
+    log("Settings saved");
+  }catch(e){ log("Save failed - is base_station.py running?"); }
+  trail = [];
+  if (config.camera_url) startCam(config.camera_url);
+  drawField();
+}
+function hasDest(){
+  return Number.isFinite(config.dest_x_ft) && Number.isFinite(config.dest_y_ft);
+}
+function clearDestination(){
+  $("cfgDestX").value = ""; $("cfgDestY").value = "";
+  saveConfig();
+  log("Destination cleared");
+}
+
+/* ==================== camera ==================== */
+function startCam(url){
+  const img = $("camImg");
+  $("camMsg").textContent = "Connecting to camera...";
+  img.style.display = "none";
+  // cache-buster forces a fresh MJPEG connection on reconnect
+  img.src = url + (url.includes("?") ? "&" : "?") + "t=" + Date.now();
+  img.onload  = () => { img.style.display="block"; $("camMsg").style.display="none";
+                        setPill("pillCam","ok"); log("Camera stream connected"); };
+  img.onerror = () => { img.style.display="none"; $("camMsg").style.display="block";
+                        $("camMsg").innerHTML = "Camera unreachable at<br>"+url+
+                          "<br>Check the URL, WiFi network, and that the camera is powered.";
+                        setPill("pillCam","bad"); };
+}
+function reloadCam(){ if (config.camera_url) startCam(config.camera_url); }
+
+/* ==================== telemetry feed ==================== */
+function setPill(id, state){
+  const p = $(id);
+  p.classList.remove("ok","warn");
+  if (state==="ok") p.classList.add("ok");
+  if (state==="warn") p.classList.add("warn");
+}
+function connectEvents(){
+  const es = new EventSource("/events");
+  es.onmessage = ev => handlePacket(JSON.parse(ev.data));
+  es.onerror   = () => { setPill("pillLink","bad");
+    log("Lost connection to base_station.py - retrying");
+    es.close(); setTimeout(connectEvents, 3000); };
+}
+function handlePacket(p){
+  lastPacket = p; lastPacketAt = Date.now();
+
+  const set = (id,val)=>{ const el=$(id);
+    el.firstChild ? el.firstChild.nodeValue = val : el.textContent = val; };
+  // Range card turns orange when the vehicle is close to an obstacle
+  $("mDist").classList.toggle("alert", p.sonar_ok && p.distance_in < 20);
+  $("mDist").querySelector(".value").firstChild.nodeValue =
+      p.sonar_ok ? p.distance_in.toFixed(1) : "--";
+  set("vTemp",   p.bmp_ok ? p.temp_f.toFixed(1) : "--");
+  set("vPress",  p.bmp_ok ? p.pressure_atm.toFixed(3) : "--");
+  set("vSpeed",  p.gps_fix ? p.speed_mph.toFixed(1) : "--");
+  set("vCourse", p.gps_fix ? p.course_deg.toFixed(0) : "--");
+  set("vSats",   String(p.sats));
+  set("vRssi",   String(p.rssi));
+  $("vPos").textContent = p.gps_fix ? p.lat.toFixed(6)+"\n"+p.lon.toFixed(6) : "no fix";
+
+  setPill("pillGps", p.gps_fix ? "ok" : "warn");
+
+  if (p.gps_fix && config.field_origin_lat !== 0){
+    const xy = gpsToField(p.lat, p.lon);
+    trail.push(xy);
+    if (trail.length > TRAIL_MAX) trail.shift();
+    updateVehicle(xy, p.course_deg);
+    updateDestReadout(xy);
+  } else updateDestReadout(null);
+}
+// Feet the vehicle still has to travel along each axis to reach the
+// destination. Signed: + means the destination is further right (x)
+// or up (y) on the map; both readouts turn green within 10 ft.
+function updateDestReadout(xy){
+  const cards = [$("vDx"), $("vDy")];
+  if (!xy || !hasDest()){
+    cards.forEach(c=>{ c.firstChild.nodeValue = "--";
+                       c.parentElement.classList.remove("good"); });
+    return;
+  }
+  const dx = config.dest_x_ft - xy.x/FT;
+  const dy = config.dest_y_ft - xy.y/FT;
+  const rx = Math.round(dx) || 0, ry = Math.round(dy) || 0;   // || 0 kills "-0"
+  $("vDx").firstChild.nodeValue = (rx>0?"+":"") + rx;
+  $("vDy").firstChild.nodeValue = (ry>0?"+":"") + ry;
+  const near = Math.abs(dx) < 10 && Math.abs(dy) < 10;
+  cards.forEach(c=>c.parentElement.classList.toggle("good", near));
+}
+// LINK pill: green if a packet arrived in the last 3 s
+setInterval(()=>{
+  const age = lastPacketAt ? (Date.now()-lastPacketAt)/1000 : null;
+  $("pktAge").textContent = age===null ? "--" : age.toFixed(0)+"s";
+  setPill("pillLink", age!==null && age<3 ? "ok" : (age!==null && age<10 ? "warn":"bad"));
+}, 1000);
+
+/* ==================== GPS -> field meters ==================== */
+// Equirectangular approximation is plenty accurate over a soccer field.
+// Field coordinates are a traditional graph anchored at the origin
+// corner (bottom-left of the map): x = meters along the field LENGTH
+// (the bearing direction), y = meters across the WIDTH to the LEFT of
+// the bearing, so y increases "up" the map.
+function gpsToField(lat, lon){
+  const R = 111320;                                   // meters per degree
+  const lat0 = config.field_origin_lat, lon0 = config.field_origin_lon;
+  const dN = (lat - lat0) * R;
+  const dE = (lon - lon0) * R * Math.cos(lat0 * Math.PI/180);
+  const b  = config.field_bearing_deg * Math.PI/180;
+  return { x: dE*Math.sin(b) + dN*Math.cos(b),
+           y: dN*Math.sin(b) - dE*Math.cos(b) };
+}
+// SVG's y-axis points down the screen; flip so field y points up and
+// the origin lands at the bottom-left of the drawn pitch.
+function toSvg(p){ return { x: p.x, y: config.field_width_m - p.y }; }
+// Waypoints are stored as GPS ({lat,lon}) or field meters ({x,y}).
+function wpField(wp){ return "lat" in wp ? gpsToField(wp.lat, wp.lon)
+                                         : { x: wp.x, y: wp.y }; }
+
+/* ==================== field drawing (SVG) ==================== */
+const NS = "http://www.w3.org/2000/svg";
+const PAD = 6;                       // meters of margin drawn around the pitch
+function el(name, attrs){ const e=document.createElementNS(NS,name);
+  for (const k in attrs) e.setAttribute(k, attrs[k]); return e; }
+
+function drawField(){
+  const L = config.field_length_m, W = config.field_width_m;
+  const svg = $("fieldSvg");
+  svg.innerHTML = "";
+  svg.setAttribute("viewBox", `${-PAD} ${-PAD} ${L+2*PAD} ${W+2*PAD}`);
+
+  // Grass + chalk markings (dimensions scale with the field size)
+  svg.appendChild(el("rect",{x:-PAD,y:-PAD,width:L+2*PAD,height:W+2*PAD,fill:"#2e7d4f",rx:1.5}));
+  // mowing stripes
+  for (let i=0;i<10;i++)
+    svg.appendChild(el("rect",{x:i*L/10,y:0,width:L/10,height:W,
+      fill:i%2? "#2a7449":"#2e7d4f"}));
+  const chalk = {fill:"none",stroke:"#f3f6f1","stroke-width":0.35};
+  svg.appendChild(el("rect",{...chalk,x:0,y:0,width:L,height:W}));            // touchlines
+  svg.appendChild(el("line",{...chalk,x1:L/2,y1:0,x2:L/2,y2:W}));             // halfway
+  svg.appendChild(el("circle",{...chalk,cx:L/2,cy:W/2,r:9.15*Math.min(1,L/105)})); // center circle
+  const paW=16.5, paH=40.3, gaW=5.5, gaH=18.3;                                // FIFA boxes
+  for (const side of [0,1]){
+    const x0 = side? L : 0, s = side? -1 : 1;
+    svg.appendChild(el("rect",{...chalk,x:side? L-paW: 0,y:(W-paH)/2,width:paW,height:paH}));
+    svg.appendChild(el("rect",{...chalk,x:side? L-gaW: 0,y:(W-gaH)/2,width:gaW,height:gaH}));
+    svg.appendChild(el("circle",{cx:x0+s*11,cy:W/2,r:0.5,fill:"#f3f6f1"}));   // penalty spot
+  }
+
+  // Origin axes: the map is a graph — (0,0) at the bottom-left corner,
+  // x to the right, y up. Drawn in the padding just outside the pitch.
+  const axis = {stroke:"#f3f6f1","stroke-width":0.3,opacity:0.9};
+  svg.appendChild(el("line",{...axis,x1:0,y1:W+2.5,x2:8,y2:W+2.5}));
+  svg.appendChild(el("path",{d:`M8.9,${W+2.5} L7.6,${W+1.9} L7.6,${W+3.1} Z`,fill:"#f3f6f1"}));
+  svg.appendChild(el("line",{...axis,x1:-2.5,y1:W,x2:-2.5,y2:W-8}));
+  svg.appendChild(el("path",{d:`M-2.5,${W-8.9} L-3.1,${W-7.6} L-1.9,${W-7.6} Z`,fill:"#f3f6f1"}));
+  const axText=(x,y,s)=>{const t=el("text",{x,y,"font-size":1.8,fill:"#f3f6f1",
+    "font-family":"IBM Plex Mono, monospace","text-anchor":"middle"});t.textContent=s;
+    svg.appendChild(t);};
+  axText(10.5, W+3.1, "x");
+  axText(-2.5, W-9.6, "y");
+  axText(-2.8, W+3.1, "0,0");
+
+  // Waypoints
+  waypoints.forEach((wp,i)=>{
+    const p = toSvg(wpField(wp));
+    const g = el("g",{});
+    g.appendChild(el("circle",{cx:p.x,cy:p.y,r:1.6,fill:"#1d2b26",stroke:"#f3f6f1","stroke-width":0.35}));
+    const t = el("text",{x:p.x,y:p.y+0.45,"text-anchor":"middle",
+      "font-size":1.5,fill:"#f3f6f1","font-family":"IBM Plex Mono, monospace"});
+    t.textContent = String(i+1);
+    g.appendChild(t);
+    const lbl = el("text",{x:p.x,y:p.y-2.4,"text-anchor":"middle",
+      "font-size":1.6,fill:"#f3f6f1","font-family":"IBM Plex Mono, monospace"});
+    lbl.textContent = wp.name;
+    g.appendChild(lbl);
+    svg.appendChild(g);
+  });
+  // dotted route through the waypoints, in order
+  if (waypoints.length > 1){
+    const pts = waypoints.map(w=>{const p=toSvg(wpField(w));return `${p.x},${p.y}`;}).join(" ");
+    svg.insertBefore(el("polyline",{points:pts,fill:"none",stroke:"#f3f6f1",
+      "stroke-width":0.25,"stroke-dasharray":"1 1",opacity:0.8}),
+      svg.querySelector("g"));
+  }
+
+  // Destination target: gold crosshair, set in the Destination card
+  if (hasDest()){
+    const s = toSvg({x: config.dest_x_ft*FT, y: config.dest_y_ft*FT});
+    const gold = "#ffd23f";
+    const d = el("g",{id:"dest"});
+    d.appendChild(el("circle",{cx:s.x,cy:s.y,r:2.4,fill:"none",stroke:gold,"stroke-width":0.45}));
+    d.appendChild(el("circle",{cx:s.x,cy:s.y,r:0.55,fill:gold}));
+    for (const [x1,y1,x2,y2] of [[s.x-3.4,s.y,s.x-1.6,s.y],[s.x+1.6,s.y,s.x+3.4,s.y],
+                                 [s.x,s.y-3.4,s.x,s.y-1.6],[s.x,s.y+1.6,s.x,s.y+3.4]])
+      d.appendChild(el("line",{x1,y1,x2,y2,stroke:gold,"stroke-width":0.45}));
+    const t = el("text",{x:s.x,y:s.y-4.2,"text-anchor":"middle","font-size":1.8,
+      fill:gold,"font-family":"IBM Plex Mono, monospace","font-weight":"600"});
+    t.textContent = "DEST";
+    d.appendChild(t);
+    svg.appendChild(d);
+  }
+
+  // Trail + vehicle (created last so they draw on top)
+  svg.appendChild(el("polyline",{id:"trail",fill:"none",stroke:"#ff5c1f",
+    "stroke-width":0.4,opacity:0.55,"stroke-linejoin":"round"}));
+  const v = el("g",{id:"vehicle",visibility:"hidden"});
+  v.appendChild(el("circle",{r:1.4,fill:"#ff5c1f",stroke:"#fff","stroke-width":0.3}));
+  v.appendChild(el("path",{d:"M0,-2.6 L1.1,-0.6 L-1.1,-0.6 Z",fill:"#ff5c1f"})); // heading arrow
+  svg.appendChild(v);
+  $("wpCount").textContent = waypoints.length + " waypoint" + (waypoints.length===1?"":"s");
+  updateVehicle(null,0);
+}
+function updateVehicle(xy, courseDeg){
+  const v = $("vehicle"), tr = $("trail");
+  if (!v) return;
+  if (trail.length)
+    tr.setAttribute("points", trail.map(p=>{const s=toSvg(p);return `${s.x},${s.y}`;}).join(" "));
+  const pos = xy || trail[trail.length-1];
+  if (!pos){ v.setAttribute("visibility","hidden"); return; }
+  // Heading arrow: GPS course is compass-based; the map's x-axis points
+  // along the field bearing. The arrow is drawn pointing "up", and
+  // course == bearing must point along +x (right), i.e. +90 degrees.
+  // (Screen-y down + field-y left cancel, so no extra flip is needed.)
+  const rot = (courseDeg||0) - config.field_bearing_deg + 90;
+  const s = toSvg(pos);
+  v.setAttribute("visibility","visible");
+  v.setAttribute("transform",`translate(${s.x},${s.y}) rotate(${rot})`);
+}
+
+/* ==================== waypoint files ==================== */
+$("wpFile").addEventListener("change", async ev=>{
+  const file = ev.target.files[0];
+  if (!file) return;
+  try{
+    if (file.name.toLowerCase().endsWith(".csv")){
+      parseWaypointRows(csvToRows(await file.text()));
+    } else if (typeof XLSX !== "undefined"){
+      const wb = XLSX.read(await file.arrayBuffer());
+      // optional "field" sheet: key/value calibration
+      const fieldSheet = wb.SheetNames.find(n=>n.toLowerCase()==="field");
+      if (fieldSheet){
+        const kv = XLSX.utils.sheet_to_json(wb.Sheets[fieldSheet],{header:1});
+        applyFieldSheet(kv);
+      }
+      const first = wb.SheetNames.find(n=>n.toLowerCase()!=="field") || wb.SheetNames[0];
+      parseWaypointRows(XLSX.utils.sheet_to_json(wb.Sheets[first],{header:1}));
+    } else {
+      log("Excel reader failed to load (offline?). Save the sheet as .csv and retry.");
+      return;
+    }
+  }catch(e){ log("Could not read file: "+e.message); }
+  ev.target.value = "";
+});
+function csvToRows(text){
+  return text.trim().split(/\r?\n/).map(line=>line.split(",").map(c=>c.trim()));
+}
+function parseWaypointRows(rows){
+  if (!rows.length){ log("File is empty"); return; }
+  const head = rows[0].map(h=>String(h||"").toLowerCase().trim());
+  const iName = head.findIndex(h=>h.startsWith("name"));
+  const iLat  = head.findIndex(h=>h==="lat"||h.startsWith("latitude"));
+  const iLon  = head.findIndex(h=>h==="lon"||h==="lng"||h.startsWith("longitude"));
+  // x/y columns: "x", "x_ft", "x ft", "x (ft)" ... measured in FEET
+  const iX    = head.findIndex(h=>h==="x"||/^x[\s_(]/.test(h));
+  const iY    = head.findIndex(h=>h==="y"||/^y[\s_(]/.test(h));
+  const name = (r,k)=> iName>=0 && r[iName] ? String(r[iName]) : "WP"+(k+1);
+  if (iLat>=0 && iLon>=0){
+    waypoints = rows.slice(1)
+      .map((r,k)=>({ name: name(r,k),
+                     lat: parseFloat(r[iLat]), lon: parseFloat(r[iLon]) }))
+      .filter(w=>Number.isFinite(w.lat) && Number.isFinite(w.lon));
+    log("Loaded "+waypoints.length+" GPS waypoints");
+  } else if (iX>=0 && iY>=0){
+    waypoints = rows.slice(1)
+      .map((r,k)=>({ name: name(r,k),
+                     x: parseFloat(r[iX])*FT, y: parseFloat(r[iY])*FT }))
+      .filter(w=>Number.isFinite(w.x) && Number.isFinite(w.y));
+    log("Loaded "+waypoints.length+" x/y waypoints (feet from origin)");
+  } else {
+    log("Row 1 needs headers: name,x_ft,y_ft (feet) or name,lat,lon");
+    return;
+  }
+  drawField();
+}
+function applyFieldSheet(kv){
+  const map = {origin_lat:"cfgLat", origin_lon:"cfgLon", bearing_deg:"cfgBrg",
+               length_m:"cfgLen", width_m:"cfgWid"};
+  let found = 0;
+  for (const row of kv){
+    const key = String(row[0]||"").toLowerCase().trim();
+    if (map[key] && row[1]!==undefined){ $(map[key]).value = row[1]; found++; }
+  }
+  if (found){ log("Field calibration loaded from 'field' sheet"); saveConfig(); }
+}
+function clearWaypoints(){ waypoints=[]; drawField(); log("Waypoints cleared"); }
+
+/* ==================== boot ==================== */
+loadConfig();
+drawField();
+connectEvents();
+log("Dashboard started");
+</script>
+</body>
+</html>
