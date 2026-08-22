@@ -1,62 +1,35 @@
 /*
-  pathfinder_nintendoswitch.ino
-  Porpoise Robotics - Pathfinder vehicle, beginner program (Nintendo Switch controller)
+  pathfinder_ps3.ino
+  Porpoise Robotics - Pathfinder vehicle, beginner program (PS3 controller)
 
   WHAT THIS PROGRAM DOES
   ----------------------
-  The same as pathfinder_ps3.ino, but for a wireless Nintendo Switch style
-  controller: drives the Pathfinder, aims two servos with the right thumbstick,
-  and runs the 32 LEDs as headlights, tail lights, turn signals, and a "KITT"
-  scanner (like Knight Rider, or a Cylon in Battlestar Galactica).
+  Drives the Pathfinder with a PS3 controller, aims two servos with the right
+  thumbstick, and runs the 32 LEDs as headlights, tail lights, turn signals,
+  and a "KITT" scanner (like Knight Rider, or a Cylon in Battlestar Galactica).
 
   BEFORE YOU CAN COMPILE THIS
   ---------------------------
-  1. Board package: "esp32_bluepad32" by Ricardo Quesada, version 4.1.0.
-       File > Preferences > "Additional boards manager URLs", add this line:
-         https://raw.githubusercontent.com/ricardoquesada/esp32-arduino-lib-builder/master/bluepad32_files/package_esp32_bluepad32_index.json
-       Then Tools > Board > Boards Manager, search "bluepad32", and install it.
-       Finally pick Tools > Board > esp32_bluepad32 > "ESP32 Dev Module".
+  1. Board package: "esp32" by Espressif Systems, VERSION 3.0.7
+       Tools > Board > Boards Manager, search "esp32", choose version 3.0.7.
+       Then pick Tools > Board > ESP32 Arduino > "ESP32 Dev Module".
+  2. Libraries (Tools > Manage Libraries):
+       - "PS3 Controller Host" by Jeffrey van Pernis   (gives us Ps3Controller.h)
+       - "Adafruit NeoPixel" by Adafruit               (gives us Adafruit_NeoPixel.h)
 
-       WATCH OUT: you now have TWO "ESP32 Dev Module" entries in the board list,
-       one under "esp32" and one under "esp32_bluepad32". This program only
-       compiles under the esp32_bluepad32 one. pathfinder_ps3.ino only compiles
-       under the other one. If you get a pile of errors, check this first.
-
-  2. Library (Tools > Manage Libraries):
-       - "Adafruit NeoPixel" by Adafruit
-       The Bluepad32 library itself arrives with the board package, so there is
-       nothing else to install.
-
-  LOCKING ONE CONTROLLER TO THIS VEHICLE
-  --------------------------------------
-  In a classroom there are many vehicles and many controllers switched on at
-  once, so each vehicle has to ignore every controller except its own. The PS3
-  program does this by pairing the controller to one Bluetooth address. Here we
-  do the mirror image: the VEHICLE is told the address of the one controller it
-  is allowed to talk to, and Bluepad32 refuses every other controller before the
-  connection is even accepted.
-
-  You need to fill in MY_CONTROLLER below before this program will drive
-  anything. To find out your controller's address, open the sketch called
-  pathfinder_find_controller, upload it, and follow the instructions at the top
-  of that file. It prints a line that looks like this:
-
-      const uint8_t MY_CONTROLLER[6] = { 0x98, 0xB6, 0xE9, 0x11, 0x22, 0x33 };
-
-  Paste that line over the MY_CONTROLLER line below and upload. From then on
-  this vehicle only ever answers to that one controller. Write the address on a
-  sticker on both the vehicle and the controller so the pair stays together.
-
-  (If you forget this step the vehicle blinks RED and refuses to connect to
-  anything, and it tells you so on the Serial Monitor.)
+  PAIRING THE CONTROLLER
+  ----------------------
+  A PS3 controller only talks to the one Bluetooth address it was paired with.
+  Use SixaxisPairTool on a PC to write the address below into the controller.
+  Any address works, as long as the controller and this program use the SAME one.
 
   CONTROLS
   --------
     Left stick        Drive. Up = forward, down = reverse, left/right = turn.
     Right stick X     Servo 1 (pin 25)
     Right stick Y     Servo 2 (pin 26)
-    TOP face button   KITT scanner on / off   (marked X on most Switch pads)
-    LEFT face button  All lights on / off     (marked Y on most Switch pads)
+    TRIANGLE          KITT scanner on / off
+    SQUARE            All lights on / off
     D-pad UP          Headlights bright
     D-pad DOWN        Headlights dim
 
@@ -78,17 +51,15 @@
   Porpoise Robotics
 */
 
-#include <Bluepad32.h>
-#include <uni.h>                // Lets us use the Bluetooth "allowlist"
+#include <Ps3Controller.h>
 #include <Adafruit_NeoPixel.h>
 
 // ===================================================================
 // SETTINGS - change these numbers to change how the vehicle behaves
 // ===================================================================
 
-// --- The one controller this vehicle will talk to --------------------
-// Run pathfinder_find_controller to get this line. See the notes at the top.
-const uint8_t MY_CONTROLLER[6] = { 0x00, 0x00, 0x00, 0x00, 0x00, 0x00 };
+// --- Bluetooth address this program answers to -----------------------
+const char *PS3_MAC_ADDRESS = "02:02:03:04:05:25";
 
 // --- LED strip -------------------------------------------------------
 const int LED_PIN        = 5;    // Data wire for the LED strip
@@ -108,22 +79,11 @@ Adafruit_NeoPixel strip(LED_COUNT, LED_PIN, NEO_GRB + NEO_KHZ800);
 // Each motor is wired to TWO pins on its DRV8871 driver board.
 // Put power on pin A and the motor spins one way, put it on pin B and it
 // spins the other way. If one motor runs backwards on your vehicle, swap
-// that motor's two PIN numbers here (leave the channel numbers alone).
-//
-// PWM CHANNELS: this board package is built on an older ESP32 core than
-// pathfinder_ps3.ino uses, and it does not let us talk to a pin directly.
-// Instead the ESP32 has 16 numbered PWM "channels". We set a channel up, plug
-// it into a pin, and from then on we write speeds to the CHANNEL number.
-// Every channel number has to be different. Channels 0-7 are used by the eight
-// motor pins here, and 8-9 by the servos further down.
-const int FRONT_LEFT_PIN_A  = 12, FRONT_LEFT_CH_A  = 0;
-const int FRONT_LEFT_PIN_B  = 13, FRONT_LEFT_CH_B  = 1;
-const int REAR_LEFT_PIN_A   = 18, REAR_LEFT_CH_A   = 2;
-const int REAR_LEFT_PIN_B   = 19, REAR_LEFT_CH_B   = 3;
-const int FRONT_RIGHT_PIN_A = 22, FRONT_RIGHT_CH_A = 4;
-const int FRONT_RIGHT_PIN_B = 23, FRONT_RIGHT_CH_B = 5;
-const int REAR_RIGHT_PIN_A  = 16, REAR_RIGHT_CH_A  = 6;
-const int REAR_RIGHT_PIN_B  = 17, REAR_RIGHT_CH_B  = 7;
+// that motor's two pin numbers here.
+const int FRONT_LEFT_A  = 12, FRONT_LEFT_B  = 13;
+const int REAR_LEFT_A   = 18, REAR_LEFT_B   = 19;
+const int FRONT_RIGHT_A = 22, FRONT_RIGHT_B = 23;
+const int REAR_RIGHT_A  = 16, REAR_RIGHT_B  = 17;
 
 const int MOTOR_PWM_FREQ = 20000;  // 20 kHz is above human hearing, so no motor whine
 const int MOTOR_PWM_BITS = 8;      // 8 bits of resolution means speed values 0..255
@@ -133,8 +93,8 @@ const int MOTOR_MIN      = 60;     // Slowest speed that can still turn a wheel
 // --- Servos ----------------------------------------------------------
 // A hobby servo wants one pulse every 20 ms. The LENGTH of that pulse sets
 // the angle: 1000 us = 0 degrees, 1500 us = 90 degrees, 2000 us = 180 degrees.
-const int SERVO1_PIN     = 25, SERVO1_CH = 8;
-const int SERVO2_PIN     = 26, SERVO2_CH = 9;
+const int SERVO1_PIN     = 25;
+const int SERVO2_PIN     = 26;
 const int SERVO_PWM_FREQ = 50;     // 50 pulses per second is one every 20 ms
 const int SERVO_PWM_BITS = 16;     // Plenty of resolution, so the angle is smooth
 const int SERVO_MIN_US   = 1000;
@@ -142,11 +102,10 @@ const int SERVO_MID_US   = 1500;
 const int SERVO_MAX_US   = 2000;
 
 // --- Thumbsticks -----------------------------------------------------
-// Bluepad32 reports every stick axis as -512 to +511, whatever brand of
-// controller you plug in. Pushing UP gives a NEGATIVE number, which is why
-// "forward" flips the sign further down in loop().
-const int STICK_MAX      = 511;
-const int STICK_DEADZONE = 60;   // Ignore small values so a worn stick cannot creep
+// A PS3 stick reports -128 to +127 on each axis. Pushing UP gives a NEGATIVE
+// number, which is why "forward" flips the sign further down in loop().
+const int STICK_MAX      = 127;
+const int STICK_DEADZONE = 20;   // Ignore small values so a worn stick cannot creep
 
 // --- KITT scanner ----------------------------------------------------
 const int SCANNER_STEP_MS = 40;  // Time between moves. Smaller number = faster scanner.
@@ -162,88 +121,19 @@ const int SCANNER_BLUE    = 0;
 // Which lighting picture we show while driving.
 enum LightPattern { LIGHTS_STOPPED, LIGHTS_FORWARD, LIGHTS_REVERSE, LIGHTS_LEFT, LIGHTS_RIGHT };
 
-bool         lightsOn       = true;             // Left face button toggles this
+bool         lightsOn       = true;             // SQUARE toggles this
 int          headlightLevel = 80;               // D-pad up/down changes this
 LightPattern lightPattern   = LIGHTS_STOPPED;
 bool         lightsChanged  = true;             // true means the strip needs redrawing
 
-bool scannerOn       = false;   // Top face button toggles this
+bool scannerOn       = false;   // TRIANGLE toggles this
 int  scannerPosition = 0;       // Which front LED the bright dot is sitting on
 int  scannerStep     = 1;       // +1 while moving right, -1 while moving left
 unsigned long scannerLastMove = 0;
 
-// The controller we are driving with. nullptr means "nothing connected".
-ControllerPtr myController = nullptr;
-
-bool addressIsSet = false;      // false while MY_CONTROLLER is still all zeros
-bool wasConnected = false;      // Used to notice the moment a controller connects
-
-bool scannerButtonWasDown = false;   // Used to notice the moment a button is pressed
-bool lightsButtonWasDown  = false;
-
-// ===================================================================
-// BLUETOOTH
-// ===================================================================
-
-/*
-  Prints a Bluetooth address the usual way, as six numbers separated by colons.
-*/
-void printControllerAddress(const uint8_t *address) {
-  for (int i = 0; i < 6; i++) {
-    Serial.printf("%02X", address[i]);
-    if (i < 5) Serial.print(":");
-  }
-  Serial.println();
-}
-
-/*
-  Is this the controller we are allowed to drive with? It is only our controller
-  if all six numbers of its address match MY_CONTROLLER exactly.
-*/
-bool isMyController(const uint8_t *address) {
-  for (int i = 0; i < 6; i++) {
-    if (address[i] != MY_CONTROLLER[i]) {
-      return false;
-    }
-  }
-  return true;
-}
-
-/*
-  Bluepad32 calls this by itself whenever a controller connects. We never call
-  it ourselves - it is a "callback", a function we hand over for someone else
-  to call at the right moment.
-*/
-void onConnectedController(ControllerPtr controller) {
-  ControllerProperties properties = controller->getProperties();
-
-  // One vehicle, one controller. Turn away anything extra.
-  if (myController != nullptr) {
-    Serial.println("Another controller tried to connect. Refused.");
-    controller->disconnect();
-    return;
-  }
-
-  if (!isMyController(properties.btaddr)) {
-    Serial.println("A controller that does not belong to this vehicle was refused.");
-    controller->disconnect();
-    return;
-  }
-
-  myController = controller;
-  Serial.print("Controller connected: ");
-  Serial.println(controller->getModelName());
-}
-
-/*
-  Bluepad32 calls this by itself whenever the controller disconnects.
-*/
-void onDisconnectedController(ControllerPtr controller) {
-  if (myController == controller) {
-    myController = nullptr;
-    Serial.println("Controller disconnected.");
-  }
-}
+bool wasConnected    = false;   // Used to notice the moment a controller connects
+bool triangleWasDown = false;   // Used to notice the moment a button is pressed
+bool squareWasDown   = false;
 
 // ===================================================================
 // SMALL HELPER FUNCTIONS
@@ -292,25 +182,17 @@ int stickToServoMicroseconds(int stickValue) {
 // ===================================================================
 
 /*
-  Gets one PWM channel ready and connects it to one pin.
-*/
-void attachMotorPwm(int pin, int channel) {
-  ledcSetup(channel, MOTOR_PWM_FREQ, MOTOR_PWM_BITS);
-  ledcAttachPin(pin, channel);
-}
-
-/*
   Drives one motor. Speed runs from -255 (full reverse) to +255 (full forward).
-  Zero puts both channels low, which lets the motor coast to a stop.
+  Zero puts both pins low, which lets the motor coast to a stop.
 */
-void setMotor(int channelA, int channelB, int speed) {
+void setMotor(int pinA, int pinB, int speed) {
   speed = constrain(speed, -MOTOR_MAX, MOTOR_MAX);
   if (speed >= 0) {
-    ledcWrite(channelA, speed);
-    ledcWrite(channelB, 0);
+    ledcWrite(pinA, speed);
+    ledcWrite(pinB, 0);
   } else {
-    ledcWrite(channelA, 0);
-    ledcWrite(channelB, -speed);   // -speed turns the negative number positive
+    ledcWrite(pinA, 0);
+    ledcWrite(pinB, -speed);   // -speed turns the negative number positive
   }
 }
 
@@ -320,10 +202,10 @@ void setMotor(int channelA, int channelB, int speed) {
   straight line, opposite speeds spin the vehicle on the spot.
 */
 void drive(int leftSpeed, int rightSpeed) {
-  setMotor(FRONT_LEFT_CH_A,  FRONT_LEFT_CH_B,  leftSpeed);
-  setMotor(REAR_LEFT_CH_A,   REAR_LEFT_CH_B,   leftSpeed);
-  setMotor(FRONT_RIGHT_CH_A, FRONT_RIGHT_CH_B, rightSpeed);
-  setMotor(REAR_RIGHT_CH_A,  REAR_RIGHT_CH_B,  rightSpeed);
+  setMotor(FRONT_LEFT_A,  FRONT_LEFT_B,  leftSpeed);
+  setMotor(REAR_LEFT_A,   REAR_LEFT_B,   leftSpeed);
+  setMotor(FRONT_RIGHT_A, FRONT_RIGHT_B, rightSpeed);
+  setMotor(REAR_RIGHT_A,  REAR_RIGHT_B,  rightSpeed);
 }
 
 // ===================================================================
@@ -338,10 +220,10 @@ void drive(int leftSpeed, int rightSpeed) {
         counts = microseconds * 65536 / 20000
   We use "long" for the maths because 1500 * 65536 is far too big to fit in an int.
 */
-void writeServo(int channel, int microseconds) {
+void writeServo(int pin, int microseconds) {
   microseconds = constrain(microseconds, SERVO_MIN_US, SERVO_MAX_US);
   long duty = (long)microseconds * 65536L / 20000L;
-  ledcWrite(channel, duty);
+  ledcWrite(pin, duty);
 }
 
 // ===================================================================
@@ -391,8 +273,7 @@ void showDrivingLights() {
 }
 
 /*
-  Blinks slowly while we wait for our controller to connect: GREEN normally, or
-  RED if nobody has filled in MY_CONTROLLER yet.
+  Slow green blink while we wait for a controller to connect.
 
   Notice there is no delay() in here. We check the clock instead, so the rest of
   the program keeps running. millis() counts the milliseconds since the ESP32
@@ -406,11 +287,7 @@ void showWaitingLights() {
     lastBlink = millis();
     blinkOn = !blinkOn;
 
-    uint32_t colour = strip.Color(0, 0, 0);
-    if (blinkOn) {
-      colour = addressIsSet ? strip.Color(0, 60, 0) : strip.Color(80, 0, 0);
-    }
-    strip.fill(colour);
+    strip.fill(blinkOn ? strip.Color(0, 60, 0) : strip.Color(0, 0, 0));
     strip.show();
   }
 }
@@ -477,23 +354,23 @@ void setup() {
   strip.show();
 
   // --- Motors ---
-  attachMotorPwm(FRONT_LEFT_PIN_A,  FRONT_LEFT_CH_A);
-  attachMotorPwm(FRONT_LEFT_PIN_B,  FRONT_LEFT_CH_B);
-  attachMotorPwm(REAR_LEFT_PIN_A,   REAR_LEFT_CH_A);
-  attachMotorPwm(REAR_LEFT_PIN_B,   REAR_LEFT_CH_B);
-  attachMotorPwm(FRONT_RIGHT_PIN_A, FRONT_RIGHT_CH_A);
-  attachMotorPwm(FRONT_RIGHT_PIN_B, FRONT_RIGHT_CH_B);
-  attachMotorPwm(REAR_RIGHT_PIN_A,  REAR_RIGHT_CH_A);
-  attachMotorPwm(REAR_RIGHT_PIN_B,  REAR_RIGHT_CH_B);
+  // ledcAttach() sets up hardware PWM on a pin: (pin, frequency, resolution).
+  // After that we can call ledcWrite(pin, 0..255) to set the speed.
+  ledcAttach(FRONT_LEFT_A,  MOTOR_PWM_FREQ, MOTOR_PWM_BITS);
+  ledcAttach(FRONT_LEFT_B,  MOTOR_PWM_FREQ, MOTOR_PWM_BITS);
+  ledcAttach(REAR_LEFT_A,   MOTOR_PWM_FREQ, MOTOR_PWM_BITS);
+  ledcAttach(REAR_LEFT_B,   MOTOR_PWM_FREQ, MOTOR_PWM_BITS);
+  ledcAttach(FRONT_RIGHT_A, MOTOR_PWM_FREQ, MOTOR_PWM_BITS);
+  ledcAttach(FRONT_RIGHT_B, MOTOR_PWM_FREQ, MOTOR_PWM_BITS);
+  ledcAttach(REAR_RIGHT_A,  MOTOR_PWM_FREQ, MOTOR_PWM_BITS);
+  ledcAttach(REAR_RIGHT_B,  MOTOR_PWM_FREQ, MOTOR_PWM_BITS);
   drive(0, 0);   // Make sure nothing is moving
 
   // --- Servos ---
-  ledcSetup(SERVO1_CH, SERVO_PWM_FREQ, SERVO_PWM_BITS);
-  ledcAttachPin(SERVO1_PIN, SERVO1_CH);
-  ledcSetup(SERVO2_CH, SERVO_PWM_FREQ, SERVO_PWM_BITS);
-  ledcAttachPin(SERVO2_PIN, SERVO2_CH);
-  writeServo(SERVO1_CH, SERVO_MID_US);
-  writeServo(SERVO2_CH, SERVO_MID_US);
+  ledcAttach(SERVO1_PIN, SERVO_PWM_FREQ, SERVO_PWM_BITS);
+  ledcAttach(SERVO2_PIN, SERVO_PWM_FREQ, SERVO_PWM_BITS);
+  writeServo(SERVO1_PIN, SERVO_MID_US);
+  writeServo(SERVO2_PIN, SERVO_MID_US);
 
   // --- Startup light show ---
   // One scanner sweep, so you can see that every LED is working.
@@ -510,42 +387,8 @@ void setup() {
   strip.show();
 
   // --- Bluetooth ---
-  // Has somebody filled in MY_CONTROLLER yet? All zeros means "no".
-  addressIsSet = false;
-  for (int i = 0; i < 6; i++) {
-    if (MY_CONTROLLER[i] != 0x00) {
-      addressIsSet = true;
-    }
-  }
-
-  if (!addressIsSet) {
-    Serial.println();
-    Serial.println("MY_CONTROLLER has not been filled in, so this vehicle does");
-    Serial.println("not know which controller belongs to it and will not drive.");
-    Serial.println("Upload pathfinder_find_controller, follow the instructions,");
-    Serial.println("then paste the address it prints into the top of this program.");
-    return;   // Nothing else to set up. The LEDs will blink red.
-  }
-
-  BP32.setup(&onConnectedController, &onDisconnectedController);
-  BP32.enableVirtualDevice(false);   // We only want gamepads, not virtual mice
-
-  // The "allowlist" is Bluepad32's guest list. If an address is on the list it
-  // may connect, and if it is not, the connection is turned away before it is
-  // ever accepted. We clear the list and rebuild it every time the vehicle
-  // starts, so this sketch is always the single source of truth about who is
-  // allowed to drive.
-  bd_addr_t allowed;
-  memcpy(allowed, MY_CONTROLLER, 6);
-  uni_bt_allowlist_remove_all();
-  uni_bt_allowlist_add_addr(allowed);
-  uni_bt_allowlist_set_enabled(true);
-  BP32.enableNewBluetoothConnections(true);
-
-  Serial.println();
-  Serial.println("This vehicle is locked to one controller:");
-  printControllerAddress(MY_CONTROLLER);
-  Serial.println("Pathfinder ready. Waiting for the controller...");
+  Ps3.begin(PS3_MAC_ADDRESS);
+  Serial.println("Pathfinder ready. Waiting for the PS3 controller...");
 }
 
 // ===================================================================
@@ -553,21 +396,11 @@ void setup() {
 // ===================================================================
 
 void loop() {
-  // Nobody told this vehicle which controller is its own, so there is nothing
-  // safe to do. Blink red and wait for somebody to fix the program.
-  if (!addressIsSet) {
-    showWaitingLights();
-    return;
-  }
-
-  // Ask Bluepad32 for fresh controller data. This is also where Bluepad32 calls
-  // onConnectedController() and onDisconnectedController() for us.
-  BP32.update();
 
   // ---- No controller? Stop everything and wait. ----
-  if (myController == nullptr || !myController->isConnected()) {
+  if (!Ps3.isConnected()) {
     if (wasConnected) {
-      Serial.println("Motors stopped.");
+      Serial.println("Controller disconnected. Motors stopped.");
       wasConnected = false;
     }
     drive(0, 0);           // Safety first: never drive without a controller
@@ -578,47 +411,36 @@ void loop() {
   // ---- A controller has just connected ----
   if (!wasConnected) {
     wasConnected = true;
-    lightsChanged = true;              // Make sure the driving lights get drawn
-    myController->setPlayerLEDs(0x01); // Light up player LED 1 on the controller
+    lightsChanged = true;  // Make sure the driving lights get drawn
+    Ps3.setPlayer(1);      // Light up player LED 1 on the controller
+    Serial.println("Controller connected.");
   }
 
   // ---- Read the buttons ----
-  // Bluepad32 names the four face buttons by POSITION, not by the letter
-  // printed on them:  a() = bottom, b() = right, x() = left, y() = top.
-  // Most Switch style pads print  bottom = B, right = A, left = Y, top = X.
-  // So y() below is the button marked X on the controller, which sits in the
-  // same place as TRIANGLE does on the PS3 pad.
-  // Third-party pads do not always agree about this. If a button does not do
-  // what you expect, pathfinder_find_controller prints the code of every button
-  // you press, so you can find the right one.
-  bool scannerButton = myController->y();   // Top face button
-  bool lightsButton  = myController->x();   // Left face button
-
-  if (justPressed(scannerButton, scannerButtonWasDown)) {
+  if (justPressed(Ps3.data.button.triangle, triangleWasDown)) {
     scannerOn = !scannerOn;
     lightsChanged = true;                     // Redraw normal lights when it goes off
     Serial.println(scannerOn ? "Scanner ON" : "Scanner OFF");
   }
 
-  if (justPressed(lightsButton, lightsButtonWasDown)) {
+  if (justPressed(Ps3.data.button.square, squareWasDown)) {
     lightsOn = !lightsOn;
     lightsChanged = true;
     Serial.println(lightsOn ? "Lights ON" : "Lights OFF");
   }
 
-  uint8_t dpad = myController->dpad();
-  if ((dpad & DPAD_UP) && headlightLevel != 255) {
+  if (Ps3.data.button.up && headlightLevel != 255) {
     headlightLevel = 255;
     lightsChanged = true;
   }
-  if ((dpad & DPAD_DOWN) && headlightLevel != 80) {
+  if (Ps3.data.button.down && headlightLevel != 80) {
     headlightLevel = 80;
     lightsChanged = true;
   }
 
   // ---- Read the left stick and drive ----
-  int leftStickX = myController->axisX();
-  int leftStickY = myController->axisY();
+  int leftStickX = Ps3.data.analog.stick.lx;
+  int leftStickY = Ps3.data.analog.stick.ly;
 
   // The stick gives a negative number when pushed up, so flip the sign to get a
   // "forward" number that is positive when we want to go forward.
@@ -643,10 +465,10 @@ void loop() {
   }
 
   // ---- Read the right stick and aim the servos ----
-  int rightStickX = myController->axisRX();
-  int rightStickY = myController->axisRY();
-  writeServo(SERVO1_CH, stickToServoMicroseconds(rightStickX));
-  writeServo(SERVO2_CH, stickToServoMicroseconds(rightStickY));
+  int rightStickX = Ps3.data.analog.stick.rx;
+  int rightStickY = Ps3.data.analog.stick.ry;
+  writeServo(SERVO1_PIN, stickToServoMicroseconds(rightStickX));
+  writeServo(SERVO2_PIN, stickToServoMicroseconds(rightStickY));
 
   // ---- Update the LEDs ----
   // The scanner takes over the whole strip while it is running. When it is off
