@@ -36,20 +36,19 @@
   is allowed to talk to, and Bluepad32 refuses every other controller before the
   connection is even accepted.
 
-  Step 1 - find out your controller's address (do this once):
-      Leave MY_CONTROLLER below as all zeros and upload. The vehicle starts in
-      PAIRING MODE and its LEDs blink BLUE. Put your controller into pairing
-      mode (hold its small round SYNC button until its lights run back and
-      forth) and wait. When it connects, open Tools > Serial Monitor at 115200
-      baud and you will see a line like this:
+  You need to fill in MY_CONTROLLER below before this program will drive
+  anything. To find out your controller's address, open the sketch called
+  pathfinder_find_controller, upload it, and follow the instructions at the top
+  of that file. It prints a line that looks like this:
 
-          const uint8_t MY_CONTROLLER[6] = { 0x98, 0xB6, 0xE9, 0x11, 0x22, 0x33 };
+      const uint8_t MY_CONTROLLER[6] = { 0x98, 0xB6, 0xE9, 0x11, 0x22, 0x33 };
 
-  Step 2 - lock the vehicle to that controller:
-      Copy that whole line over the MY_CONTROLLER line below and upload again.
-      The LEDs now blink GREEN while waiting, and this vehicle will only ever
-      accept that one controller. Write the address on a sticker on both the
-      vehicle and the controller so the pair stays together.
+  Paste that line over the MY_CONTROLLER line below and upload. From then on
+  this vehicle only ever answers to that one controller. Write the address on a
+  sticker on both the vehicle and the controller so the pair stays together.
+
+  (If you forget this step the vehicle blinks RED and refuses to connect to
+  anything, and it tells you so on the Serial Monitor.)
 
   CONTROLS
   --------
@@ -88,7 +87,7 @@
 // ===================================================================
 
 // --- The one controller this vehicle will talk to --------------------
-// All zeros means "pairing mode": see the instructions at the top of the file.
+// Run pathfinder_find_controller to get this line. See the notes at the top.
 const uint8_t MY_CONTROLLER[6] = { 0x00, 0x00, 0x00, 0x00, 0x00, 0x00 };
 
 // --- LED strip -------------------------------------------------------
@@ -156,12 +155,6 @@ const int SCANNER_RED     = 255; // Scanner colour. Try 0, 0, 255 for Cylon blue
 const int SCANNER_GREEN   = 0;
 const int SCANNER_BLUE    = 0;
 
-// --- Serial Monitor help ---------------------------------------------
-// Third-party controllers do not always send the button codes you expect.
-// While this is true, every button press prints its code, so you can find out
-// which code your own controller sends. Set it to false for quieter output.
-const bool SHOW_BUTTON_CODES = true;
-
 // ===================================================================
 // STATE - variables that remember what the vehicle is doing right now
 // ===================================================================
@@ -182,38 +175,32 @@ unsigned long scannerLastMove = 0;
 // The controller we are driving with. nullptr means "nothing connected".
 ControllerPtr myController = nullptr;
 
-bool pairingMode  = false;      // true when MY_CONTROLLER is still all zeros
+bool addressIsSet = false;      // false while MY_CONTROLLER is still all zeros
 bool wasConnected = false;      // Used to notice the moment a controller connects
 
 bool scannerButtonWasDown = false;   // Used to notice the moment a button is pressed
 bool lightsButtonWasDown  = false;
-uint16_t lastButtonCodes  = 0;
 
 // ===================================================================
 // BLUETOOTH
 // ===================================================================
 
 /*
-  Prints a Bluetooth address as the line of code you would paste into the
-  MY_CONTROLLER setting at the top of this file.
+  Prints a Bluetooth address the usual way, as six numbers separated by colons.
 */
 void printControllerAddress(const uint8_t *address) {
-  Serial.print("    const uint8_t MY_CONTROLLER[6] = { ");
   for (int i = 0; i < 6; i++) {
-    Serial.printf("0x%02X", address[i]);
-    if (i < 5) Serial.print(", ");
+    Serial.printf("%02X", address[i]);
+    if (i < 5) Serial.print(":");
   }
-  Serial.println(" };");
+  Serial.println();
 }
 
 /*
-  Is this the controller we are allowed to drive with?
-  In pairing mode we have not chosen one yet, so the first to arrive wins.
+  Is this the controller we are allowed to drive with? It is only our controller
+  if all six numbers of its address match MY_CONTROLLER exactly.
 */
 bool isMyController(const uint8_t *address) {
-  if (pairingMode) {
-    return true;
-  }
   for (int i = 0; i < 6; i++) {
     if (address[i] != MY_CONTROLLER[i]) {
       return false;
@@ -246,12 +233,6 @@ void onConnectedController(ControllerPtr controller) {
   myController = controller;
   Serial.print("Controller connected: ");
   Serial.println(controller->getModelName());
-  printControllerAddress(properties.btaddr);
-
-  if (pairingMode) {
-    Serial.println("PAIRING MODE: copy the line above into MY_CONTROLLER at the");
-    Serial.println("top of this program, then upload again to lock this vehicle.");
-  }
 }
 
 /*
@@ -410,8 +391,8 @@ void showDrivingLights() {
 }
 
 /*
-  Blinks slowly while we wait for a controller: BLUE in pairing mode, GREEN once
-  the vehicle has been locked to its own controller.
+  Blinks slowly while we wait for our controller to connect: GREEN normally, or
+  RED if nobody has filled in MY_CONTROLLER yet.
 
   Notice there is no delay() in here. We check the clock instead, so the rest of
   the program keeps running. millis() counts the milliseconds since the ESP32
@@ -427,7 +408,7 @@ void showWaitingLights() {
 
     uint32_t colour = strip.Color(0, 0, 0);
     if (blinkOn) {
-      colour = pairingMode ? strip.Color(0, 0, 80) : strip.Color(0, 60, 0);
+      colour = addressIsSet ? strip.Color(0, 60, 0) : strip.Color(80, 0, 0);
     }
     strip.fill(colour);
     strip.show();
@@ -530,11 +511,20 @@ void setup() {
 
   // --- Bluetooth ---
   // Has somebody filled in MY_CONTROLLER yet? All zeros means "no".
-  pairingMode = true;
+  addressIsSet = false;
   for (int i = 0; i < 6; i++) {
     if (MY_CONTROLLER[i] != 0x00) {
-      pairingMode = false;
+      addressIsSet = true;
     }
+  }
+
+  if (!addressIsSet) {
+    Serial.println();
+    Serial.println("MY_CONTROLLER has not been filled in, so this vehicle does");
+    Serial.println("not know which controller belongs to it and will not drive.");
+    Serial.println("Upload pathfinder_find_controller, follow the instructions,");
+    Serial.println("then paste the address it prints into the top of this program.");
+    return;   // Nothing else to set up. The LEDs will blink red.
   }
 
   BP32.setup(&onConnectedController, &onDisconnectedController);
@@ -542,28 +532,19 @@ void setup() {
 
   // The "allowlist" is Bluepad32's guest list. If an address is on the list it
   // may connect, and if it is not, the connection is turned away before it is
-  // ever accepted. We clear the list and rebuild it on every start up, so the
-  // sketch is always the single source of truth about who may drive.
+  // ever accepted. We clear the list and rebuild it every time the vehicle
+  // starts, so this sketch is always the single source of truth about who is
+  // allowed to drive.
+  bd_addr_t allowed;
+  memcpy(allowed, MY_CONTROLLER, 6);
   uni_bt_allowlist_remove_all();
-
-  if (pairingMode) {
-    uni_bt_allowlist_set_enabled(false);   // No guest list yet: anyone may knock
-    BP32.forgetBluetoothKeys();            // Start pairing from a clean slate
-    Serial.println();
-    Serial.println("PAIRING MODE (the LEDs are blinking blue)");
-    Serial.println("Hold the SYNC button on your controller until its lights run");
-    Serial.println("back and forth, then wait for it to connect.");
-  } else {
-    bd_addr_t allowed;
-    memcpy(allowed, MY_CONTROLLER, 6);
-    uni_bt_allowlist_add_addr(allowed);
-    uni_bt_allowlist_set_enabled(true);    // Now only that one controller gets in
-    Serial.println();
-    Serial.println("This vehicle is locked to one controller:");
-    printControllerAddress(MY_CONTROLLER);
-  }
-
+  uni_bt_allowlist_add_addr(allowed);
+  uni_bt_allowlist_set_enabled(true);
   BP32.enableNewBluetoothConnections(true);
+
+  Serial.println();
+  Serial.println("This vehicle is locked to one controller:");
+  printControllerAddress(MY_CONTROLLER);
   Serial.println("Pathfinder ready. Waiting for the controller...");
 }
 
@@ -572,6 +553,13 @@ void setup() {
 // ===================================================================
 
 void loop() {
+  // Nobody told this vehicle which controller is its own, so there is nothing
+  // safe to do. Blink red and wait for somebody to fix the program.
+  if (!addressIsSet) {
+    showWaitingLights();
+    return;
+  }
+
   // Ask Bluepad32 for fresh controller data. This is also where Bluepad32 calls
   // onConnectedController() and onDisconnectedController() for us.
   BP32.update();
@@ -600,13 +588,11 @@ void loop() {
   // Most Switch style pads print  bottom = B, right = A, left = Y, top = X.
   // So y() below is the button marked X on the controller, which sits in the
   // same place as TRIANGLE does on the PS3 pad.
+  // Third-party pads do not always agree about this. If a button does not do
+  // what you expect, pathfinder_find_controller prints the code of every button
+  // you press, so you can find the right one.
   bool scannerButton = myController->y();   // Top face button
   bool lightsButton  = myController->x();   // Left face button
-
-  if (SHOW_BUTTON_CODES && myController->buttons() != lastButtonCodes) {
-    lastButtonCodes = myController->buttons();
-    Serial.printf("Button code: 0x%04X\n", lastButtonCodes);
-  }
 
   if (justPressed(scannerButton, scannerButtonWasDown)) {
     scannerOn = !scannerOn;
