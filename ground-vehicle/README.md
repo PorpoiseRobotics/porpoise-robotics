@@ -57,11 +57,19 @@ src/
 │   └── CameraWebServerKiln/              ESP32 camera web server for the vehicle
 └── find-the-target/    the "Find the Target" telemetry mission
     ├── README.md                 start here — wiring, bring-up order, calibration
-    ├── ESPNow_Sender_v3/         vehicle ESP32: sensors, GPS, NeoPixels
-    ├── ESPNow_Receiver_v3/       ESP32 on the base-station computer's USB port
+    ├── PorpoiseNet_Vehicle/      rover: announces a find to the whole fleet
+    ├── PorpoiseNet_Base/         base station: prints everything, sends commands
+    ├── ESPNow_Sender_v3/         v3 vehicle ESP32: sensors, GPS, NeoPixels
+    ├── ESPNow_Receiver_v3/       v3 ESP32 on the base-station computer's USB port
     ├── CameraWebServer_v3/       Freenove ESP32-WROVER camera
     └── BaseStation/              Python server + browser dashboard
 ```
+
+The two `PorpoiseNet_*` folders are the **two-way** version of the mission: rovers talk to each
+other, not only to the base, and the base can talk back. They run on
+[`shared/PorpoiseNet/`](../shared/PorpoiseNet/), the same networking layer the security camera
+project uses. The `*_v3` sketches are the earlier one-way telemetry link and still work; see
+[`src/find-the-target/README.md`](src/find-the-target/README.md) for which to use when.
 
 Each folder ending in a sketch name is an **Arduino sketch folder**: the folder name and the
 `.ino` file inside it must stay identical, or the Arduino IDE will not open it. If you rename
@@ -167,4 +175,6 @@ cables, and hurt someone if it is heavy or fast enough. At minimum, decide and d
 - Indoor or outdoor — determines the whole hardware direction
 - ROS2 or a simpler custom stack
 - Level of autonomy for the first version
-- Whether this shares code with the submersible platform, and where that shared code lives
+- Whether this shares code with the submersible platform. **Where shared code lives is now
+  answered:** [`shared/`](../shared/), which already holds the ESP-NOW layer used by both this
+  project and the security camera.

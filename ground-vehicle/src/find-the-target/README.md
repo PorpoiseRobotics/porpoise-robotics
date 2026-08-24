@@ -1,9 +1,32 @@
-# Find the Target — Vehicle Telemetry System (v3)
+# Find the Target — Vehicle Telemetry System
 
 *A Porpoise Robotics STEM project.*
 
-Three ESP32 programs plus a base-station dashboard that shows the live
-camera feed and the vehicle's position on a soccer-field map, side by side.
+There are **two versions of this mission in this folder**, and they solve
+different problems.
+
+| | **v3** (`ESPNow_Sender_v3` + `ESPNow_Receiver_v3`) | **PorpoiseNet** (`PorpoiseNet_Vehicle` + `PorpoiseNet_Base`) |
+|---|---|---|
+| Direction | one-way: vehicle → base | **two-way: everyone ↔ everyone** |
+| Vehicles | one | as many as you like |
+| Rover-to-rover | no | **yes — a find is announced to the whole fleet** |
+| Base can send commands | no | **yes — start, stop, recall, ping, identify** |
+| Setup per board | paste the receiver's MAC into the sender | change one number |
+| Confirmed delivery | no | **yes — a find is resent until the base confirms** |
+| Range beyond one hop | no | **yes — rovers relay for each other** |
+| Camera | separate WiFi stream | also a node; can photograph a find |
+| Dashboard | works | works — the JSON output is unchanged |
+
+**Use v3** if you have one vehicle and want the existing dashboard, unchanged.
+**Use PorpoiseNet** for the actual game, where several vehicles hunt at once and
+finding the target has to tell everybody. It runs on
+[`shared/PorpoiseNet/`](../../../shared/PorpoiseNet/) — read that README first;
+it explains how the boards find each other and the three settings that must
+match.
+
+The rest of this document describes the **v3** system: three ESP32 programs plus
+a base-station dashboard that shows the live camera feed and the vehicle's
+position on a soccer-field map, side by side.
 
 ## How the pieces connect
 
@@ -30,6 +53,8 @@ camera feed and the vehicle's position on a soccer-field map, side by side.
 | `ESPNow_Receiver_v3/` | ESP32 on the computer's USB | ESP32 Dev Module |
 | `CameraWebServer_v3/` | Freenove ESP32-WROVER camera | ESP32 Wrover Module, Partition Scheme: **Huge APP (3MB)** |
 | `BaseStation/` | The computer (Python 3 + browser) | — |
+| `PorpoiseNet_Vehicle/` | *(two-way version)* each rover | ESP32 Dev Module |
+| `PorpoiseNet_Base/` | *(two-way version)* ESP32 on the computer's USB | ESP32 Dev Module |
 
 All serial monitors run at **115200 baud** (up from 9600 in v2).
 Arduino libraries needed (sender only): Adafruit BMP280, Adafruit
@@ -117,3 +142,92 @@ has no `field` sheet, so loading it never overwrites your calibration.
   tab.
 - **Vehicle dot missing** — needs a GPS fix (GPS pill green) *and* a
   non-zero origin latitude in Field setup.
+
+
+---
+
+# The two-way version — running the game
+
+This section covers `PorpoiseNet_Vehicle/` and `PorpoiseNet_Base/`. For how the
+network itself works, read
+[`shared/PorpoiseNet/README.md`](../../../shared/PorpoiseNet/README.md) first.
+
+## What happens when a rover finds the target
+
+1. A student presses the FIND button on rover 11 (or its sonar sees something
+   closer than 8 inches).
+2. Rover 11 broadcasts a target report. **Every rover in range hears it at the
+   same instant** — it is not sent to the base for the base to pass on.
+3. Rovers 12 and 13 print who found it, where, and how sure they were, and
+   flash purple so their drivers see it without looking at a screen.
+4. The base station prints the find and sends an acknowledgement back.
+5. Rover 11 keeps resending until that acknowledgement arrives, then prints
+   `ACK ... confirmed received`. A find that nobody heard is the same as no
+   find, so it is not allowed to fail quietly.
+6. If a camera node is on the network, it photographs the find and broadcasts
+   what it saved.
+
+If the base is too far away, a rover in the middle of the field relays for the
+one at the far end, with no configuration at all.
+
+## Setting up a fleet
+
+Every rover runs the identical sketch. The only edit per board:
+
+```cpp
+#define MY_NODE_ID   11   // 11, 12, 13, ... one per rover, all different
+```
+
+`MY_NET_ID` and `MY_CHANNEL` must be **the same** on every board including the
+base. If two classes are running on one field at the same time, give each class
+a different `MY_NET_ID` and they will not hear each other.
+
+Write the node number on the board with a marker.
+
+## Wiring a rover
+
+Only the button is required. Everything else is optional and switched off by
+default, so the sketch compiles on a fresh Arduino install with no libraries
+added.
+
+| Part | Pin | Notes |
+|---|---|---|
+| FIND button | GPIO 4 to GND | no resistor — the internal pull-up is used |
+| HC-SR04 sonar | TRIG 32, ECHO 25 | **ECHO must go through a voltage divider** — it is 5 V and the pin is 3.3 V. 1k from ECHO to the pin, 2k from the pin to GND. |
+| NeoPixels | GPIO 15 | set `USE_NEOPIXEL 1`; needs the Adafruit NeoPixel library |
+| GPS GT-U7 | GPS TX → GPIO 16 | set `USE_GPS 1`; needs TinyGPSPlus |
+
+Without GPS a find still gets announced — it just carries no position, and the
+dashboard plots nothing for it. The announcement is the part that matters.
+
+## Running the base station
+
+Flash `PorpoiseNet_Base/`, open the serial monitor at **115200 with line ending
+"Newline"**, and type commands:
+
+| Type | Effect |
+|---|---|
+| `start` | every rover: begin the hunt |
+| `stop` | every rover: stop reporting finds |
+| `recall` | every rover: come back to the start line |
+| `reset` | clear the found-target state, start a new round |
+| `ping` | every node answers — the fastest possible network test |
+| `ping 12` | just node 12 answers |
+| `id 12` | node 12 flashes, so you can tell which board it is |
+| `roster` | list every node heard recently |
+| `snapshot` | any camera on the network takes a picture now |
+| `help` | the list |
+
+The JSON telemetry lines are unchanged from v3, so `base_station.py` and
+`dashboard.html` work with this sketch without modification.
+
+**One program at a time can hold the USB port.** Close the Arduino serial
+monitor before starting `base_station.py`, or Python reports "no port found"
+while looking straight at the board.
+
+## Trying it with no vehicle at all
+
+Two ESP32 boards on a desk are enough to see the whole thing work: flash one as
+the base and one as a vehicle, type `ping` at the base, then short GPIO 4 to GND
+on the vehicle with a piece of wire. That is a complete two-way exchange, and it
+takes about ten minutes including installing the library.

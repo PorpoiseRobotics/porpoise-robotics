@@ -34,24 +34,30 @@ Also read [CONTRIBUTING.md](CONTRIBUTING.md) before your first change. It is sho
 
 ## What is in this repository
 
-Three projects, each in its own top-level folder:
+Three projects, each in its own top-level folder — plus one folder holding code they share:
 
 ### [`homeland-security-camera/`](homeland-security-camera/README.md)
 A security camera system intended for **deployment at a school**. Because it involves a camera
 system on a campus, this project has stricter rules about what may be written down here — see
-its README before contributing.
+its README before contributing. It now has its first code: a camera node and a perimeter sensor
+node that talk to each other over radio, with no router or server between them.
 
 ### [`ground-vehicle/`](ground-vehicle/README.md)
-A ground-based unmanned vehicle platform — a rover that drives on land. **This is the only
-project with code in it so far:** the Pathfinder vehicle firmware and the "Find the Target"
-telemetry mission.
+A ground-based unmanned vehicle platform — a rover that drives on land. Holds the Pathfinder
+vehicle firmware and the "Find the Target" mission, in which a rover that spots the target
+announces it to every other rover on the field.
 
 ### [`submersible-vehicle/`](submersible-vehicle/README.md)
 An underwater vehicle platform. Porpoise Robotics publicly lists two ROV platforms, Explorer ROV
 and Pathfinder ROV; the team should confirm which of these this folder covers and record that in
 the project README.
 
-Every project folder has the same starter layout:
+### [`shared/`](shared/README.md)
+Not a project — code that more than one project uses, so a fix made once is a fix everywhere.
+Today that is [**PorpoiseNet**](shared/PorpoiseNet/README.md), the two-way ESP-NOW radio layer
+that both the Find the Target game and the security camera system run on.
+
+Every *project* folder has the same starter layout:
 
 ```
 project-name/
@@ -61,13 +67,13 @@ project-name/
 └── hardware/      wiring notes, bill of materials, mechanical files
 ```
 
-**Most of those folders are still empty.** That is expected — the code has not been written yet.
-Each empty one contains a file called `.gitkeep`, which exists purely so that git will keep the
-empty folder. [Here is why that is necessary.](docs/05-gitkeep-and-empty-folders.md) Delete a
+**Several of those folders are still empty.** That is expected — the code has not been written
+yet. Each empty one contains a file called `.gitkeep`, which exists purely so that git will keep
+the empty folder. [Here is why that is necessary.](docs/05-gitkeep-and-empty-folders.md) Delete a
 `.gitkeep` once its folder has real files in it.
 
-The exception is `ground-vehicle/`, which now has working code in `src/` and reference documents
-in `docs/`. See [its README](ground-vehicle/README.md) for what is in there.
+`ground-vehicle/` and `homeland-security-camera/` both have working code in `src/`; see their
+READMEs for what is in there.
 
 ---
 
@@ -86,8 +92,9 @@ Details and the safe way to handle configuration are in
 ## Status
 
 Early. `ground-vehicle/` holds the team's existing ESP32 and Python code, moved in from a
-OneDrive export. The other two projects are still structure and documentation only. Sections
-marked **TBD** are waiting on the team to fill in.
+OneDrive export. `homeland-security-camera/` has its radio layer and nothing above it — and its
+privacy questions are still unanswered, which blocks any actual deployment. `submersible-vehicle/`
+is still structure and documentation only. Sections marked **TBD** are waiting on the team.
 
 ## License
 
