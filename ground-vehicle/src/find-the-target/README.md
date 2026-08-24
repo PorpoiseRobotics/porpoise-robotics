@@ -202,8 +202,50 @@ dashboard plots nothing for it. The announcement is the part that matters.
 
 ## Running the base station
 
-Flash `PorpoiseNet_Base/`, open the serial monitor at **115200 with line ending
-"Newline"**, and type commands:
+The base station joins your WiFi network, so you can see the fleet from a phone
+or a browser without a laptop plugged in. Before flashing it:
+
+1. Copy `PorpoiseNet_Base/secrets.example.h` to `PorpoiseNet_Base/secrets.h`
+2. Put your network name and password in `secrets.h` — **not** in the `.ino`.
+   `secrets.h` is gitignored so it can never be committed; this repository is
+   public and has been burned by a committed password before.
+3. The network must be **2.4 GHz**. An ESP32 cannot see 5 GHz at all, and a
+   5 GHz-only network looks exactly like a wrong password from the board.
+
+Set `USE_WIFI 0` at the top of the sketch to go back to a USB-only base station.
+
+### The channel consequence — read this once, properly
+
+Joining a router means **the router decides the base station's radio channel**,
+and every other board has to be on that same channel or the fleet cannot hear
+the base at all. Nothing prints an error; the roster is just empty.
+
+The sketch prints the channel it ended up on at boot, in capitals, and prints a
+much louder warning if it disagrees with `MY_CHANNEL`. Either set `MY_CHANNEL`
+to that number on every other board, or — better — lock the router's 2.4 GHz
+channel to a fixed 1 and leave `MY_CHANNEL 1` everywhere. Do not leave the
+router on "Auto": it will move channel by itself, usually overnight, and the
+fleet that worked yesterday will not work today.
+
+If WiFi fails to connect, the sketch falls back to `MY_CHANNEL` and carries on
+over USB. A typo'd password does not take the game down.
+
+### The status page
+
+Once connected, the serial output prints an address. Open it in a browser:
+
+- `http://<base-ip>/` — a live page showing the roster, signal strength per
+  node, how long since each was heard, and the last find and alert. It refreshes
+  itself every 2 seconds.
+- `http://<base-ip>/status.json` — the same data as JSON, for `base_station.py`
+  or anything else to poll.
+
+The USB serial output is unchanged and still works exactly as before. The WiFi
+is an addition, not a replacement.
+
+### Commands
+
+Open the serial monitor at **115200 with line ending "Newline"**, and type:
 
 | Type | Effect |
 |---|---|
@@ -215,6 +257,7 @@ Flash `PorpoiseNet_Base/`, open the serial monitor at **115200 with line ending
 | `ping 12` | just node 12 answers |
 | `id 12` | node 12 flashes, so you can tell which board it is |
 | `roster` | list every node heard recently |
+| `wifi` | show the base station's IP address and radio channel |
 | `snapshot` | any camera on the network takes a picture now |
 | `help` | the list |
 

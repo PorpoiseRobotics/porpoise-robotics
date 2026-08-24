@@ -193,17 +193,29 @@ joins a WiFi router, the router decides that channel — and the board silently
 stops hearing every other PorpoiseNet node. Nothing prints an error. The mesh
 just goes quiet.
 
-This only affects boards that use real WiFi, which today means the camera when
-`USE_WIFI_UPLOAD` is on. Three ways out, best first:
+This affects every board that uses real WiFi. Today that is **the base station**
+(`USE_WIFI 1`, on by default) and the camera when `USE_WIFI_UPLOAD` is on.
+
+**The base station case is the one that matters most**, because everything on
+the network talks to it. If the router puts the base on channel 6 while every
+rover is still set to `MY_CHANNEL 1`, the whole fleet is deaf to the base and
+the base's roster stays empty — with no error printed anywhere. The base sketch
+prints the channel it landed on at boot, in capitals, and prints a second louder
+warning if that number disagrees with its own `MY_CHANNEL`. Read the first ten
+lines of its serial output before debugging anything else.
+
+Three ways out, best first:
 
 1. **Lock the router to a fixed channel.** In the router's admin page set the
    2.4 GHz channel to `1` (not "Auto"), then use `MY_CHANNEL 1` everywhere.
-   Simple and stable. Do this.
-2. **Let the camera announce the channel.** The camera sketch connects to WiFi
-   first, then starts PorpoiseNet with `PN_CHANNEL_FOLLOW_WIFI`, which reads
-   the channel the router handed out and prints it in capitals. Put that number
-   in `MY_CHANNEL` on every other board. Works, but must be re-checked after
-   any router change — including ones nobody told you about.
+   Simple and stable. Do this. "Auto" routers move channels on their own,
+   usually overnight, which produces a fleet that worked yesterday and does not
+   work this morning with nothing having changed.
+2. **Let the WiFi board announce the channel.** The base station and the camera
+   both connect to WiFi first, then start PorpoiseNet with
+   `PN_CHANNEL_FOLLOW_WIFI`, which reads the channel the router handed out and
+   prints it in capitals. Put that number in `MY_CHANNEL` on every other board.
+   Works, but must be re-checked after any router change.
 3. **Do not put WiFi and ESP-NOW on the same board.** Use two boards joined by
    two wires. Costs five dollars and removes the entire problem.
 
@@ -267,12 +279,13 @@ Work down this list in order. It is sorted by how often each one is the answer.
 
 | What you see | Almost always |
 |---|---|
-| Roster empty, everything looks fine | `MY_CHANNEL` differs between boards. Check every one. |
+| Roster empty, everything looks fine | `MY_CHANNEL` differs between boards. If the base station is on WiFi, the router chose its channel — read the base's boot output and match it. |
 | Roster empty, and `not ours` is climbing | `MY_NET_ID` differs — you *are* hearing them, and correctly ignoring them. |
 | One board missing from the roster | That board is not running. Open its serial monitor; it will say why. |
 | `NO ACK` on every find | The base station is off, out of range, or on another channel. Nothing else answers acknowledgements. |
 | Roster fine, messages arrive rarely | Range. Check `rssi` and `lost`. Move a rover into the middle to act as a relay. |
-| Worked on the bench, dead in the field | The camera joined a router and dragged its channel with it. See the channel trap. |
+| Worked on the bench, dead in the field | A WiFi board joined a different router and dragged its channel with it. See the channel trap. |
+| Worked yesterday, dead this morning | The router is on "Auto" and moved channel overnight. Lock it. |
 | Two nodes flickering in and out of one roster row | Two boards share a `MY_NODE_ID`. |
 | `DROPPED (loop too slow)` in the stats | Something in `loop()` blocks for too long — usually a `delay()`. |
 | Camera captures nothing | It is `DISARMED`, or inside its cooldown window, or its SD card is missing. It prints which. |
