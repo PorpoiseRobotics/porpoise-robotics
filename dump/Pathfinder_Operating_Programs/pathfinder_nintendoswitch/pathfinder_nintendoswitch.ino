@@ -127,7 +127,7 @@ const int REAR_RIGHT_PIN_B  = 17, REAR_RIGHT_CH_B  = 7;
 
 const int MOTOR_PWM_FREQ = 20000;  // 20 kHz is above human hearing, so no motor whine
 const int MOTOR_PWM_BITS = 8;      // 8 bits of resolution means speed values 0..255
-const int MOTOR_MAX      = 255;    // Full speed
+const int MOTOR_MAX      = 180;    // Top speed. 255 is as fast as the motors go.
 const int MOTOR_MIN      = 60;     // Slowest speed that can still turn a wheel
 
 // --- Servos ----------------------------------------------------------

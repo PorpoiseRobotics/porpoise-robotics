@@ -59,7 +59,7 @@
 // ===================================================================
 
 // --- Bluetooth address this program answers to -----------------------
-const char *PS3_MAC_ADDRESS = "02:02:03:04:05:25";
+const char *PS3_MAC_ADDRESS = "02:02:03:04:05:08";
 
 // --- LED strip -------------------------------------------------------
 const int LED_PIN        = 5;    // Data wire for the LED strip
@@ -87,7 +87,7 @@ const int REAR_RIGHT_A  = 16, REAR_RIGHT_B  = 17;
 
 const int MOTOR_PWM_FREQ = 20000;  // 20 kHz is above human hearing, so no motor whine
 const int MOTOR_PWM_BITS = 8;      // 8 bits of resolution means speed values 0..255
-const int MOTOR_MAX      = 255;    // Full speed
+const int MOTOR_MAX      = 180;    // Top speed. 255 is as fast as the motors go.
 const int MOTOR_MIN      = 60;     // Slowest speed that can still turn a wheel
 
 // --- Servos ----------------------------------------------------------
