@@ -27,6 +27,7 @@
   CONTROLS
   --------
     Left stick        Drive. Up = forward, down = reverse, left/right = turn.
+    Left stick CLICK  Sharp steering on / off  (this is the L3 button)
     Right stick X     Servo 1 (pin 25)
     Right stick Y     Servo 2 (pin 26)
     TRIANGLE          KITT scanner on / off
@@ -86,8 +87,14 @@ const int REAR_RIGHT_A  = 16, REAR_RIGHT_B  = 17;
 
 const int MOTOR_PWM_FREQ = 20000;  // 20 kHz is above human hearing, so no motor whine
 const int MOTOR_PWM_BITS = 8;      // 8 bits of resolution means speed values 0..255
-const int MOTOR_MAX      = 255;    // Top speed. 255 is as fast as the motors go.
+const int MOTOR_MAX      = 255;    // Full speed. This is as fast as the motors go.
 const int MOTOR_MIN      = 60;     // Slowest speed that can still turn a wheel
+
+// Steering strength. Driving forwards and backwards always gets the full
+// MOTOR_MAX, but turning is held to half of that by default, which makes the
+// vehicle much easier to aim. Click the left stick to switch between the two.
+const int TURN_MAX_NORMAL = MOTOR_MAX / 2;   // Gentle steering, and the default
+const int TURN_MAX_SHARP  = MOTOR_MAX;       // Full power turns, spins on the spot
 
 // --- Servos ----------------------------------------------------------
 // A hobby servo wants one pulse every 20 ms. The LENGTH of that pulse sets
@@ -133,6 +140,9 @@ unsigned long scannerLastMove = 0;
 bool wasConnected    = false;   // Used to notice the moment a controller connects
 bool triangleWasDown = false;   // Used to notice the moment a button is pressed
 bool squareWasDown   = false;
+bool stickClickWasDown = false;
+
+int turnMax = TURN_MAX_NORMAL;  // Clicking the left stick swaps this over
 
 // ===================================================================
 // SMALL HELPER FUNCTIONS
@@ -152,15 +162,20 @@ bool justPressed(bool isDown, bool &wasDown) {
 /*
   Turns a thumbstick reading into a motor speed.
   Inside the deadzone the answer is 0. Outside it, the rest of the stick travel
-  is stretched across MOTOR_MIN..MOTOR_MAX, so the wheels actually move as soon
+  is stretched across MOTOR_MIN..maxSpeed, so the wheels actually move as soon
   as you leave the deadzone instead of just buzzing.
+
+  maxSpeed is handed in rather than always being MOTOR_MAX, because driving and
+  steering are allowed different limits. Note that the bottom of the range stays
+  at MOTOR_MIN either way, so even a gentle turn still has enough power to break
+  the wheels loose.
 */
-int stickToSpeed(int stickValue) {
+int stickToSpeed(int stickValue, int maxSpeed) {
   if (abs(stickValue) < STICK_DEADZONE) {
     return 0;
   }
-  int size = map(abs(stickValue), STICK_DEADZONE, STICK_MAX, MOTOR_MIN, MOTOR_MAX);
-  size = constrain(size, MOTOR_MIN, MOTOR_MAX);
+  int size = map(abs(stickValue), STICK_DEADZONE, STICK_MAX, MOTOR_MIN, maxSpeed);
+  size = constrain(size, MOTOR_MIN, maxSpeed);
   return (stickValue > 0) ? size : -size;
 }
 
@@ -428,6 +443,12 @@ void loop() {
     Serial.println(lightsOn ? "Lights ON" : "Lights OFF");
   }
 
+  // Clicking the left stick swaps between gentle and sharp steering.
+  if (justPressed(Ps3.data.button.l3, stickClickWasDown)) {
+    turnMax = (turnMax == TURN_MAX_SHARP) ? TURN_MAX_NORMAL : TURN_MAX_SHARP;
+    Serial.println(turnMax == TURN_MAX_SHARP ? "Steering: SHARP" : "Steering: NORMAL");
+  }
+
   if (Ps3.data.button.up && headlightLevel != 255) {
     headlightLevel = 255;
     lightsChanged = true;
@@ -443,8 +464,9 @@ void loop() {
 
   // The stick gives a negative number when pushed up, so flip the sign to get a
   // "forward" number that is positive when we want to go forward.
-  int forward = stickToSpeed(-leftStickY);
-  int turn    = stickToSpeed(leftStickX);
+  // Driving gets full power; steering gets whatever turnMax is set to.
+  int forward = stickToSpeed(-leftStickY, MOTOR_MAX);
+  int turn    = stickToSpeed(leftStickX, turnMax);
 
   // Mixing forward and turn together is what lets you steer while moving.
   int leftSpeed  = constrain(forward + turn, -MOTOR_MAX, MOTOR_MAX);
