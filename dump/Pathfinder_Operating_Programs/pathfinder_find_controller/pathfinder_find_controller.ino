@@ -40,8 +40,6 @@
   5. Paste that line over the MY_CONTROLLER line in pathfinder_nintendoswitch.ino,
      upload that program to the vehicle, and the pair is locked together.
      Write the address on a sticker on both the controller and the vehicle.
-
-  Porpoise Robotics
 */
 
 #include <Bluepad32.h>
