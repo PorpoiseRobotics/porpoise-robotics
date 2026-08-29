@@ -91,7 +91,12 @@ const int REAR_RIGHT_A  = 16, REAR_RIGHT_B  = 17;
 const int MOTOR_PWM_FREQ = 20000;  // 20 kHz is above human hearing, so no motor whine
 const int MOTOR_PWM_BITS = 8;      // 8 bits of resolution means speed values 0..255
 const int MOTOR_MAX      = 255;    // Full speed. This is as fast as the motors go.
-const int MOTOR_MIN      = 60;     // Slowest speed that can still turn a wheel
+// The slowest speed a motor is ever given, just outside the deadzone. At 0 the
+// speed climbs smoothly from nothing, which is the simplest behaviour. A real
+// motor needs a certain amount of power before it will turn at all, so if the
+// first part of the stick travel feels dead, raise this until the wheels start
+// moving as soon as you leave the deadzone.
+const int MOTOR_MIN      = 0;
 
 // Steering strength. Driving forwards and backwards always gets the full
 // MOTOR_MAX, but turning is held to half of that by default, which makes the
@@ -165,13 +170,11 @@ bool justPressed(bool isDown, bool &wasDown) {
 /*
   Turns a thumbstick reading into a motor speed.
   Inside the deadzone the answer is 0. Outside it, the rest of the stick travel
-  is stretched across MOTOR_MIN..maxSpeed, so the wheels actually move as soon
-  as you leave the deadzone instead of just buzzing.
+  is stretched across MOTOR_MIN..maxSpeed.
 
   maxSpeed is handed in rather than always being MOTOR_MAX, because driving and
-  steering are allowed different limits. Note that the bottom of the range stays
-  at MOTOR_MIN either way, so even a gentle turn still has enough power to break
-  the wheels loose.
+  steering are allowed different limits. The bottom of the range stays at
+  MOTOR_MIN either way, so raising MOTOR_MIN lifts the slowest speed for both.
 */
 int stickToSpeed(int stickValue, int maxSpeed) {
   if (abs(stickValue) < STICK_DEADZONE) {
