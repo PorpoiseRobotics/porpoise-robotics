@@ -218,6 +218,9 @@ yarn-error.log*
 # -----------------------------------------------------------------------------
 *.log
 *.tmp
+
+# Microsoft Office lock files, created while a document is open
+~$*
 *.bak
 *.orig
 *.rej
