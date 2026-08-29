@@ -2,8 +2,12 @@
 
 > An unmanned ground vehicle platform — a robot that drives on land.
 
-**Status: scaffold only.** No code has been written yet. Everything marked TBD is waiting on the
-team.
+**Status: code has landed, documentation has not.** The Pathfinder operating programs now live in
+[`src/`](src/). Everything marked TBD below is still waiting on the team.
+
+> **Naming warning.** The vehicle in this folder is the Pathfinder *rover*. Porpoise Robotics also
+> publicly lists a "Pathfinder ROV", which is a submersible. Same name, different vehicle — check
+> which one somebody means before acting on it.
 
 ---
 
@@ -33,23 +37,36 @@ The specifics are **TBD**. The team should agree on and record here:
 ```
 ground-vehicle/
 ├── README.md      this file
-├── src/           source code — motor control, sensors, navigation, autonomy
+├── src/           source code — the Pathfinder operating programs
+│   ├── pathfinder_ps3/               beginner program, PS3 controller
+│   ├── pathfinder_nintendoswitch/    beginner program, Switch controller
+│   ├── pathfinder_find_controller/   setup tool: reads a controller's Bluetooth address
+│   ├── Pathfinder_Op_Program12/      advanced program
+│   └── legacy/                       superseded programs, kept for reference
 ├── docs/          design notes, architecture, decisions
 └── hardware/      chassis, motors, wiring diagrams, bill of materials
 ```
 
-Those folders are empty. Each holds a `.gitkeep` file so git preserves the empty folder —
-[here is why that is needed](../docs/05-gitkeep-and-empty-folders.md).
+`docs/` and `hardware/` are still empty. Each holds a `.gitkeep` file so git preserves the empty
+folder — [here is why that is needed](../docs/05-gitkeep-and-empty-folders.md). Delete the
+`.gitkeep` once a folder has real files in it.
 
-Delete the `.gitkeep` once a folder has real files in it.
+### Which program to open
 
-Suggested structure inside `src/` once code exists — adjust freely, this is a starting point:
+| If you are | Use |
+|---|---|
+| New to robotics, driving with a PS3 controller | `pathfinder_ps3` |
+| New to robotics, driving with a Nintendo Switch controller | `pathfinder_nintendoswitch` |
+| Setting up a Switch controller for a vehicle | `pathfinder_find_controller`, once |
+| Experienced, and want current sensing, a self-test, and four servos | `Pathfinder_Op_Program12` |
 
-- Motor and drive control
-- Sensor input
-- Teleoperation and communications
-- Navigation and autonomy
-- Shared utilities and configuration
+The two beginner programs are deliberately near-identical, so a student who has read one can read
+the other. Everything in [`src/legacy/`](src/legacy/) has been replaced — see the README there
+before building any of it.
+
+Each program's own header comment lists the board package and libraries it needs. The board
+packages are **mutually exclusive** in the Arduino IDE, so check before switching between
+programs.
 
 ## Hardware
 
