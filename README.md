@@ -34,7 +34,7 @@ Also read [CONTRIBUTING.md](CONTRIBUTING.md) before your first change. It is sho
 
 ## What is in this repository
 
-Three projects, each in its own top-level folder:
+Four projects, each in its own top-level folder:
 
 ### [`homeland-security-camera/`](homeland-security-camera/README.md)
 A security camera system intended for **deployment at a school**. Because it involves a camera
@@ -42,12 +42,18 @@ system on a campus, this project has stricter rules about what may be written do
 its README before contributing.
 
 ### [`ground-vehicle/`](ground-vehicle/README.md)
-A ground-based unmanned vehicle platform — a rover that drives on land.
+A ground-based unmanned vehicle platform — a rover that drives on land. This is where the
+Pathfinder operating programs live. Note that the Pathfinder rover is a different vehicle from
+the "Pathfinder ROV" mentioned below, despite the shared name.
 
 ### [`submersible-vehicle/`](submersible-vehicle/README.md)
 An underwater vehicle platform. Porpoise Robotics publicly lists two ROV platforms, Explorer ROV
 and Pathfinder ROV; the team should confirm which of these this folder covers and record that in
 the project README.
+
+### [`find-the-target/`](find-the-target/README.md)
+A STEM mission activity built from an ESP32-CAM, a pair of ESP-NOW radios, and a laptop base
+station, with the slides and setup guide students follow.
 
 Every project folder has the same starter layout:
 
@@ -59,9 +65,13 @@ project-name/
 └── hardware/      wiring notes, bill of materials, mechanical files
 ```
 
-**Those folders are empty right now.** That is expected — the code has not been written yet.
-Each one contains a file called `.gitkeep`, which exists purely so that git will keep the empty
-folder. [Here is why that is necessary.](docs/05-gitkeep-and-empty-folders.md)
+**Most of those folders are still empty.** That is expected — most of the code has not been
+written yet. An empty one contains a file called `.gitkeep`, which exists purely so that git will
+keep the folder. [Here is why that is necessary.](docs/05-gitkeep-and-empty-folders.md) Delete the
+`.gitkeep` once a folder has real files in it.
+
+Where a project has code that has been replaced but is worth keeping, it lives in a `legacy/`
+folder inside `src/`, with a README saying what replaced it and why.
 
 ---
 
