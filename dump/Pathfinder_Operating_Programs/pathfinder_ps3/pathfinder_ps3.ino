@@ -16,12 +16,13 @@
   2. Libraries (Tools > Manage Libraries):
        - "PS3 Controller Host" by Jeffrey van Pernis   (gives us Ps3Controller.h)
        - "Adafruit NeoPixel" by Adafruit               (gives us Adafruit_NeoPixel.h)
+  A library takes your code and converts it to machine language that operates your vehicle
 
   PAIRING THE CONTROLLER
   ----------------------
   A PS3 controller only talks to the one Bluetooth address it was paired with.
   Use SixaxisPairTool on a PC to write the address below into the controller.
-  Any address works, as long as the controller and this program use the SAME one.
+  Any address works, as long as the controller and this program use the SAME one. Write MAC address in PS3_
 
   CONTROLS
   --------
@@ -47,8 +48,6 @@
   ------
   Put the vehicle up on a block so the wheels spin free the first time you
   upload a change. It is much easier to debug a robot that cannot drive away.
-
-  Porpoise Robotics
 */
 
 #include <Ps3Controller.h>
@@ -59,18 +58,18 @@
 // ===================================================================
 
 // --- Bluetooth address this program answers to -----------------------
-const char *PS3_MAC_ADDRESS = "02:02:03:04:05:08";
+const char *PS3_MAC_ADDRESS = "02:02:03:04:05:08"; // The first number in the MAC address needs to be even for the program to work
 
 // --- LED strip -------------------------------------------------------
-const int LED_PIN        = 5;    // Data wire for the LED strip
-const int LED_COUNT      = 32;   // Four bars of 8 LEDs
+const int LED_PIN        = 5;    // GPIO 5 controls the LED strip
+const int LED_COUNT      = 32;   // Two bars of 16 LEDs
 const int LED_BRIGHTNESS = 120;  // Master brightness, 0 (off) to 255 (blinding)
 
 // LED numbers for each part of the loop. Naming them keeps the code readable.
-const int FRONT_FIRST = 0;
-const int FRONT_LAST  = 15;
-const int REAR_FIRST  = 16;
-const int REAR_LAST   = 31;
+const int FRONT_FIRST = 0; // Front left
+const int FRONT_LAST  = 15; // Front right
+const int REAR_FIRST  = 16; // Rear right
+const int REAR_LAST   = 31; // Rear left
 
 // The strip object. We talk to the LEDs through this.
 Adafruit_NeoPixel strip(LED_COUNT, LED_PIN, NEO_GRB + NEO_KHZ800);
@@ -79,7 +78,7 @@ Adafruit_NeoPixel strip(LED_COUNT, LED_PIN, NEO_GRB + NEO_KHZ800);
 // Each motor is wired to TWO pins on its DRV8871 driver board.
 // Put power on pin A and the motor spins one way, put it on pin B and it
 // spins the other way. If one motor runs backwards on your vehicle, swap
-// that motor's two pin numbers here.
+// that motor's two pin numbers here. All wires to A are red and all wires to B are black.
 const int FRONT_LEFT_A  = 12, FRONT_LEFT_B  = 13;
 const int REAR_LEFT_A   = 18, REAR_LEFT_B   = 19;
 const int FRONT_RIGHT_A = 22, FRONT_RIGHT_B = 23;
@@ -87,7 +86,7 @@ const int REAR_RIGHT_A  = 16, REAR_RIGHT_B  = 17;
 
 const int MOTOR_PWM_FREQ = 20000;  // 20 kHz is above human hearing, so no motor whine
 const int MOTOR_PWM_BITS = 8;      // 8 bits of resolution means speed values 0..255
-const int MOTOR_MAX      = 180;    // Top speed. 255 is as fast as the motors go.
+const int MOTOR_MAX      = 255;    // Top speed. 255 is as fast as the motors go.
 const int MOTOR_MIN      = 60;     // Slowest speed that can still turn a wheel
 
 // --- Servos ----------------------------------------------------------
