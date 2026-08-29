@@ -27,6 +27,10 @@
        The Bluepad32 library itself arrives with the board package, so there is
        nothing else to install.
 
+  A library is code somebody else already wrote that your program can use. The
+  compiler is what turns your code and the libraries together into the machine
+  language the ESP32 actually runs.
+
   LOCKING ONE CONTROLLER TO THIS VEHICLE
   --------------------------------------
   In a classroom there are many vehicles and many controllers switched on at
@@ -53,6 +57,7 @@
   CONTROLS
   --------
     Left stick        Drive. Up = forward, down = reverse, left/right = turn.
+    Left stick CLICK  Sharp steering on / off
     Right stick X     Servo 1 (pin 25)
     Right stick Y     Servo 2 (pin 26)
     TOP face button   KITT scanner on / off   (marked X on most Switch pads)
@@ -74,8 +79,6 @@
   ------
   Put the vehicle up on a block so the wheels spin free the first time you
   upload a change. It is much easier to debug a robot that cannot drive away.
-
-  Porpoise Robotics
 */
 
 #include <Bluepad32.h>
@@ -91,15 +94,15 @@
 const uint8_t MY_CONTROLLER[6] = { 0x00, 0x00, 0x00, 0x00, 0x00, 0x00 };
 
 // --- LED strip -------------------------------------------------------
-const int LED_PIN        = 5;    // Data wire for the LED strip
-const int LED_COUNT      = 32;   // Four bars of 8 LEDs
+const int LED_PIN        = 5;    // GPIO 5 controls the LED strip
+const int LED_COUNT      = 32;   // Two bars of 16 LEDs
 const int LED_BRIGHTNESS = 120;  // Master brightness, 0 (off) to 255 (blinding)
 
 // LED numbers for each part of the loop. Naming them keeps the code readable.
-const int FRONT_FIRST = 0;
-const int FRONT_LAST  = 15;
-const int REAR_FIRST  = 16;
-const int REAR_LAST   = 31;
+const int FRONT_FIRST = 0;   // Front left
+const int FRONT_LAST  = 15;  // Front right
+const int REAR_FIRST  = 16;  // Rear right
+const int REAR_LAST   = 31;  // Rear left
 
 // The strip object. We talk to the LEDs through this.
 Adafruit_NeoPixel strip(LED_COUNT, LED_PIN, NEO_GRB + NEO_KHZ800);
@@ -109,6 +112,7 @@ Adafruit_NeoPixel strip(LED_COUNT, LED_PIN, NEO_GRB + NEO_KHZ800);
 // Put power on pin A and the motor spins one way, put it on pin B and it
 // spins the other way. If one motor runs backwards on your vehicle, swap
 // that motor's two PIN numbers here (leave the channel numbers alone).
+// All wires to A are red and all wires to B are black.
 //
 // PWM CHANNELS: this board package is built on an older ESP32 core than
 // pathfinder_ps3.ino uses, and it does not let us talk to a pin directly.
@@ -127,8 +131,14 @@ const int REAR_RIGHT_PIN_B  = 17, REAR_RIGHT_CH_B  = 7;
 
 const int MOTOR_PWM_FREQ = 20000;  // 20 kHz is above human hearing, so no motor whine
 const int MOTOR_PWM_BITS = 8;      // 8 bits of resolution means speed values 0..255
-const int MOTOR_MAX      = 180;    // Top speed. 255 is as fast as the motors go.
+const int MOTOR_MAX      = 255;    // Full speed. This is as fast as the motors go.
 const int MOTOR_MIN      = 60;     // Slowest speed that can still turn a wheel
+
+// Steering strength. Driving forwards and backwards always gets the full
+// MOTOR_MAX, but turning is held to half of that by default, which makes the
+// vehicle much easier to aim. Click the left stick to switch between the two.
+const int TURN_MAX_NORMAL = MOTOR_MAX / 2;   // Gentle steering, and the default
+const int TURN_MAX_SHARP  = MOTOR_MAX;       // Full power turns, spins on the spot
 
 // --- Servos ----------------------------------------------------------
 // A hobby servo wants one pulse every 20 ms. The LENGTH of that pulse sets
@@ -180,6 +190,9 @@ bool wasConnected = false;      // Used to notice the moment a controller connec
 
 bool scannerButtonWasDown = false;   // Used to notice the moment a button is pressed
 bool lightsButtonWasDown  = false;
+bool stickClickWasDown    = false;
+
+int turnMax = TURN_MAX_NORMAL;  // Clicking the left stick swaps this over
 
 // ===================================================================
 // BLUETOOTH
@@ -263,15 +276,20 @@ bool justPressed(bool isDown, bool &wasDown) {
 /*
   Turns a thumbstick reading into a motor speed.
   Inside the deadzone the answer is 0. Outside it, the rest of the stick travel
-  is stretched across MOTOR_MIN..MOTOR_MAX, so the wheels actually move as soon
+  is stretched across MOTOR_MIN..maxSpeed, so the wheels actually move as soon
   as you leave the deadzone instead of just buzzing.
+
+  maxSpeed is handed in rather than always being MOTOR_MAX, because driving and
+  steering are allowed different limits. Note that the bottom of the range stays
+  at MOTOR_MIN either way, so even a gentle turn still has enough power to break
+  the wheels loose.
 */
-int stickToSpeed(int stickValue) {
+int stickToSpeed(int stickValue, int maxSpeed) {
   if (abs(stickValue) < STICK_DEADZONE) {
     return 0;
   }
-  int size = map(abs(stickValue), STICK_DEADZONE, STICK_MAX, MOTOR_MIN, MOTOR_MAX);
-  size = constrain(size, MOTOR_MIN, MOTOR_MAX);
+  int size = map(abs(stickValue), STICK_DEADZONE, STICK_MAX, MOTOR_MIN, maxSpeed);
+  size = constrain(size, MOTOR_MIN, maxSpeed);
   return (stickValue > 0) ? size : -size;
 }
 
@@ -606,6 +624,12 @@ void loop() {
     Serial.println(lightsOn ? "Lights ON" : "Lights OFF");
   }
 
+  // Clicking the left stick swaps between gentle and sharp steering.
+  if (justPressed(myController->thumbL(), stickClickWasDown)) {
+    turnMax = (turnMax == TURN_MAX_SHARP) ? TURN_MAX_NORMAL : TURN_MAX_SHARP;
+    Serial.println(turnMax == TURN_MAX_SHARP ? "Steering: SHARP" : "Steering: NORMAL");
+  }
+
   uint8_t dpad = myController->dpad();
   if ((dpad & DPAD_UP) && headlightLevel != 255) {
     headlightLevel = 255;
@@ -622,8 +646,9 @@ void loop() {
 
   // The stick gives a negative number when pushed up, so flip the sign to get a
   // "forward" number that is positive when we want to go forward.
-  int forward = stickToSpeed(-leftStickY);
-  int turn    = stickToSpeed(leftStickX);
+  // Driving gets full power; steering gets whatever turnMax is set to.
+  int forward = stickToSpeed(-leftStickY, MOTOR_MAX);
+  int turn    = stickToSpeed(leftStickX, turnMax);
 
   // Mixing forward and turn together is what lets you steer while moving.
   int leftSpeed  = constrain(forward + turn, -MOTOR_MAX, MOTOR_MAX);
