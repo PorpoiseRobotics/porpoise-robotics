@@ -16,13 +16,16 @@
   2. Libraries (Tools > Manage Libraries):
        - "PS3 Controller Host" by Jeffrey van Pernis   (gives us Ps3Controller.h)
        - "Adafruit NeoPixel" by Adafruit               (gives us Adafruit_NeoPixel.h)
-  A library takes your code and converts it to machine language that operates your vehicle
+  A library is code somebody else already wrote that your program can use. The
+  compiler is what turns your code and the libraries together into the machine
+  language the ESP32 actually runs.
 
   PAIRING THE CONTROLLER
   ----------------------
   A PS3 controller only talks to the one Bluetooth address it was paired with.
   Use SixaxisPairTool on a PC to write the address below into the controller.
-  Any address works, as long as the controller and this program use the SAME one. Write MAC address in PS3_
+  Any address works, as long as the controller and this program use the SAME one.
+  Write that address into PS3_MAC_ADDRESS below.
 
   CONTROLS
   --------

@@ -27,6 +27,10 @@
        The Bluepad32 library itself arrives with the board package, so there is
        nothing else to install.
 
+  A library is code somebody else already wrote that your program can use. The
+  compiler is what turns your code and the libraries together into the machine
+  language the ESP32 actually runs.
+
   LOCKING ONE CONTROLLER TO THIS VEHICLE
   --------------------------------------
   In a classroom there are many vehicles and many controllers switched on at
@@ -75,8 +79,6 @@
   ------
   Put the vehicle up on a block so the wheels spin free the first time you
   upload a change. It is much easier to debug a robot that cannot drive away.
-
-  Porpoise Robotics
 */
 
 #include <Bluepad32.h>
@@ -92,15 +94,15 @@
 const uint8_t MY_CONTROLLER[6] = { 0x00, 0x00, 0x00, 0x00, 0x00, 0x00 };
 
 // --- LED strip -------------------------------------------------------
-const int LED_PIN        = 5;    // Data wire for the LED strip
-const int LED_COUNT      = 32;   // Four bars of 8 LEDs
+const int LED_PIN        = 5;    // GPIO 5 controls the LED strip
+const int LED_COUNT      = 32;   // Two bars of 16 LEDs
 const int LED_BRIGHTNESS = 120;  // Master brightness, 0 (off) to 255 (blinding)
 
 // LED numbers for each part of the loop. Naming them keeps the code readable.
-const int FRONT_FIRST = 0;
-const int FRONT_LAST  = 15;
-const int REAR_FIRST  = 16;
-const int REAR_LAST   = 31;
+const int FRONT_FIRST = 0;   // Front left
+const int FRONT_LAST  = 15;  // Front right
+const int REAR_FIRST  = 16;  // Rear right
+const int REAR_LAST   = 31;  // Rear left
 
 // The strip object. We talk to the LEDs through this.
 Adafruit_NeoPixel strip(LED_COUNT, LED_PIN, NEO_GRB + NEO_KHZ800);
@@ -110,6 +112,7 @@ Adafruit_NeoPixel strip(LED_COUNT, LED_PIN, NEO_GRB + NEO_KHZ800);
 // Put power on pin A and the motor spins one way, put it on pin B and it
 // spins the other way. If one motor runs backwards on your vehicle, swap
 // that motor's two PIN numbers here (leave the channel numbers alone).
+// All wires to A are red and all wires to B are black.
 //
 // PWM CHANNELS: this board package is built on an older ESP32 core than
 // pathfinder_ps3.ino uses, and it does not let us talk to a pin directly.
