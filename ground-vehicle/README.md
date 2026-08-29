@@ -42,14 +42,16 @@ ground-vehicle/
 │   ├── pathfinder_nintendoswitch/    beginner program, Switch controller
 │   ├── pathfinder_find_controller/   setup tool: reads a controller's Bluetooth address
 │   ├── Pathfinder_Op_Program12/      advanced program
+│   ├── lessons/                      small follow-along sketches for the courses
 │   └── legacy/                       superseded programs, kept for reference
 ├── docs/          design notes, architecture, decisions
+│   └── courses/                      the lesson slides
 └── hardware/      chassis, motors, wiring diagrams, bill of materials
 ```
 
-`docs/` and `hardware/` are still empty. Each holds a `.gitkeep` file so git preserves the empty
-folder — [here is why that is needed](../docs/05-gitkeep-and-empty-folders.md). Delete the
-`.gitkeep` once a folder has real files in it.
+`hardware/` is still empty. It holds a `.gitkeep` file so git preserves the empty folder —
+[here is why that is needed](../docs/05-gitkeep-and-empty-folders.md). Delete the `.gitkeep`
+once it has real files in it.
 
 ### Which program to open
 
@@ -67,6 +69,22 @@ before building any of it.
 Each program's own header comment lists the board package and libraries it needs. The board
 packages are **mutually exclusive** in the Arduino IDE, so check before switching between
 programs.
+
+## Teaching with these
+
+Three courses, five three-hour lessons each, one per operating program.
+
+| | Slides | Follow-along sketches |
+|---|---|---|
+| Beginner, PS3 | [`docs/courses/beginner-ps3/`](docs/courses/beginner-ps3/) | [`src/lessons/beginner_ps3/`](src/lessons/beginner_ps3/) |
+| Beginner, Switch | [`docs/courses/beginner-switch/`](docs/courses/beginner-switch/) | [`src/lessons/beginner_switch/`](src/lessons/beginner_switch/) |
+| Advanced | [`docs/courses/advanced/`](docs/courses/advanced/) | [`src/lessons/advanced/`](src/lessons/advanced/) |
+
+The slides are editable PowerPoint files. The sketches are small programs students upload during
+the lesson — one idea each, heavily commented, each ending with things to change and see what
+happens. Every sketch uses the same Arduino IDE settings as the full program for its track.
+
+Start at [`docs/courses/README.md`](docs/courses/README.md).
 
 ## Hardware
 
