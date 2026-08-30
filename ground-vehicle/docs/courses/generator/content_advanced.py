@@ -26,6 +26,8 @@ BYLINE = [
     "Kevin P. Bowen, President  -  kbowen6@icloud.com",
 ]
 
+LOGO = img("porpoise-logo.png")
+
 TRACK_LABEL = "Pathfinder Advanced - Op Program 12"
 
 SRC = "ground-vehicle/src/lessons/advanced"
@@ -40,7 +42,7 @@ def lesson1(deck):
         "How a real embedded program is put together: tabs, headers, "
         "capability flags, and a console you can talk to.",
         BYLINE + ["", "Three hours.  Assumes you have driven a Pathfinder before."],
-        hero_image=img("vehicle-top-plate-esp32.jpg"))
+        hero_image=img("vehicle-top-plate-esp32.jpg"), logo=LOGO)
 
     deck.bullets(
         "Who this course is for, and what it is not",
@@ -375,7 +377,7 @@ def lesson2(deck):
         "Resolution against frequency, four states of an H-bridge, fast "
         "decay, and a ramp that used to stall one count short.",
         BYLINE + ["", "Three hours.  Wheels off the ground throughout."],
-        hero_image=img("vehicle-rear-battery.jpg"))
+        hero_image=img("vehicle-rear-battery.jpg"), logo=LOGO)
 
     deck.table(
         "Today, in order",
@@ -628,7 +630,7 @@ def lesson3(deck):
         "Allowlists, callbacks, EEPROM that is not EEPROM, and making a "
         "vehicle remember which controller is its own.",
         BYLINE + ["", "Three hours.  Bring two controllers per group if you can."],
-        hero_image=img("control-board-bare.jpg"))
+        hero_image=img("control-board-bare.jpg"), logo=LOGO)
 
     deck.table(
         "Today, in order",
@@ -902,7 +904,7 @@ def lesson4(deck):
         "Six modes, one variable, no delay() anywhere, and geometry that is "
         "not symmetric.",
         BYLINE + ["", "Three hours.  Nothing moves today."],
-        hero_image=img("vehicle-green-leds.jpg"))
+        hero_image=img("vehicle-green-leds.jpg"), logo=LOGO)
 
     deck.table(
         "Today, in order",
@@ -1227,7 +1229,7 @@ def lesson5(deck):
         "I2C, shunt resistors, current signatures, and a vehicle that can "
         "tell you which motor is unplugged.",
         BYLINE + ["", "Three hours.  Gen 3 vehicles for the sensor work."],
-        hero_image=img("vehicle-with-rangefinder.jpg"))
+        hero_image=img("vehicle-with-rangefinder.jpg"), logo=LOGO)
 
     deck.table(
         "Today, in order",
@@ -1303,6 +1305,9 @@ def lesson5(deck):
           "shunt register reports in units of 10 microvolts, which is where the "
           "0.01 in the maths comes from.", 0)],
         lead="A tiny resistor, and Ohm's law")
+
+    diagrams.ohms_and_power_law(
+        deck, title="The two relationships the whole lesson rests on")
 
     deck.code(
         "Driving a chip with no library",
@@ -1464,6 +1469,33 @@ def lesson5(deck):
         note="Read the change log at the top of Pathfinder_Op_Program12.ino "
              "again now. It should read very differently than it did in "
              "Lesson 1.")
+
+    deck.two_columns(
+        "The same test, done twice: on the bench and in software",
+        "The factory bench test",
+        [("Before a control board leaves the factory:", 0),
+         ("Check 15 V, 5 V and 3.3 V rails", 1),
+         ("Break the motor 1 high side into an ammeter", 1),
+         ("Issue a full throttle 255 command", 1),
+         ("Measure current at no load, then at stall", 1),
+         ("Repeat for motors 2, 3 and 4, then reconnect", 1),
+         ("Calibrate and test the I2C devices", 1),
+         ("", 0),
+         ("Accurate, and it needs a meter, a bench and a person.", 0)],
+        "The self-test in the program",
+        [("Jumper GPIO 34 high at boot and the vehicle does the same thing to "
+          "itself:", 0),
+         ("Measure the resting current with the motors off", 1),
+         ("Drive each motor full throttle, both ways", 1),
+         ("Watch the peak and the average against that baseline", 1),
+         ("Blink green for pass, red for fail", 1),
+         ("", 0),
+         ("Less accurate than a meter. But it runs in ten seconds, in a "
+          "classroom, with no equipment and nobody who knows how to use a "
+          "multimeter.", 0)],
+        note="That is usually the trade with built-in test: you give up "
+             "precision to get a check that will actually be run. A test that "
+             "needs a bench is a test that happens once.")
 
     deck.bullets(
         "Capstone  -  choose one, and build it properly",

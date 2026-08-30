@@ -339,7 +339,7 @@ class Deck:
     # slide kinds
     # ---------------------------------------------------------------
 
-    def title_slide(self, subtitle, byline_lines, hero_image=None):
+    def title_slide(self, subtitle, byline_lines, hero_image=None, logo=None):
         slide = self._new(layout=LAYOUT_BLANK, title=None, numbered=False)
 
         band = slide.shapes.add_shape(MSO_SHAPE.RECTANGLE, 0, 0,
@@ -348,6 +348,12 @@ class Deck:
         band.fill.fore_color.rgb = NAVY
         band.line.fill.background()
         band.shadow.inherit = False
+
+        # House mark, top right, clear of the hero image below it.
+        if logo and os.path.exists(logo):
+            mark = slide.shapes.add_picture(logo, 0, Inches(0.5),
+                                            height=Inches(0.85))
+            mark.left = SLIDE_W - MARGIN_R - mark.width
 
         text_w = Inches(7.1) if hero_image else CONTENT_W
 

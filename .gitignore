@@ -226,3 +226,6 @@ yarn-error.log*
 *.rej
 tmp/
 temp/
+
+# Rendered course decks - build output, regenerate with generator/render_decks.py
+ground-vehicle/docs/courses/pdf/

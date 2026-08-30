@@ -914,3 +914,90 @@ def current_signature(deck, title="What a healthy motor looks like to a current 
                "fixed absolutes anyway - so a vehicle idling at half an amp failed "
                "every motor. Op 12 fixed it.", "warn")
     return slide
+
+
+# ===================================================================
+# 14. Ohm's law and the power law
+# ===================================================================
+
+def ohms_and_power_law(deck,
+                       title="Ohm's law, and the power law you need for the LEDs"):
+    """
+    The two relationships the course keeps coming back to: sizing the LED
+    current budget, reading the shunt resistor, and working out battery life.
+    Drawn rather than borrowed, so it stays editable and prints sharp.
+    """
+    slide = deck.blank(title)
+
+    top = BODY_TOP + Inches(0.35)
+    tri_w = Inches(3.0)
+    tri_h = Inches(2.2)
+
+    groups = [
+        ("OHM'S LAW", MARGIN_L + Inches(0.7), "V", "I", "R", TEAL, LIGHT_TEAL,
+         ["V = I x R", "I = V / R", "R = V / I"],
+         ["V  volts", "I  amps", "R  ohms"]),
+        ("POWER LAW", MARGIN_L + Inches(6.9), "P", "I", "V", AMBER, LIGHT_AMBER,
+         ["P = I x V", "I = P / V", "V = P / I"],
+         ["P  watts", "I  amps", "V  volts"]),
+    ]
+
+    for name, left, apex, bl, br, edge, fill, formulas, legend in groups:
+        _label(slide, left, top - Inches(0.42), tri_w, name, size=16, bold=True,
+               color=edge, align=PP_ALIGN.CENTER)
+
+        tri = slide.shapes.add_shape(MSO_SHAPE.ISOSCELES_TRIANGLE, left, top,
+                                     tri_w, tri_h)
+        tri.fill.solid()
+        tri.fill.fore_color.rgb = fill
+        tri.line.color.rgb = edge
+        tri.line.width = Pt(1.5)
+        tri.shadow.inherit = False
+        _set_fitted(tri.text_frame, [""], width=tri_w, height=tri_h, size=10)
+
+        # The divider under the apex, the way the mnemonic is always drawn.
+        mid_y = top + Emu(int(tri_h * 0.56))
+        _plain_line(slide, left + Inches(0.62), mid_y,
+                    left + tri_w - Inches(0.62), mid_y, color=edge, width=1.75)
+
+        _label(slide, left, top + Inches(0.42), tri_w, apex, size=26, bold=True,
+               color=NAVY, align=PP_ALIGN.CENTER)
+        _label(slide, left + Inches(0.35), mid_y + Inches(0.30), Inches(0.9), bl,
+               size=22, bold=True, color=NAVY, align=PP_ALIGN.CENTER)
+        _label(slide, left + tri_w - Inches(1.25), mid_y + Inches(0.30),
+               Inches(0.9), br, size=22, bold=True, color=NAVY,
+               align=PP_ALIGN.CENTER)
+
+        _box(slide, left - Inches(0.15), top + tri_h + Inches(0.3),
+             tri_w + Inches(0.3), Inches(1.0), formulas, fill=CODE_BG,
+             edge=RULE, size=14, font=CODE_FONT, shape=MSO_SHAPE.RECTANGLE,
+             edge_w=0.75, align=PP_ALIGN.CENTER)
+
+        _label(slide, left - Inches(0.15), top + tri_h + Inches(1.42),
+               tri_w + Inches(0.3), "     ".join(legend), size=12, color=GREY,
+               align=PP_ALIGN.CENTER)
+
+    # Worked example, between the two triangles.
+    mid_left = MARGIN_L + Inches(4.15)
+    _box(slide, mid_left, top - Inches(0.2), Inches(2.4), Inches(4.0),
+         ["ONE NEOPIXEL",
+          "at full white",
+          "",
+          "3 LEDs x 20 mA",
+          "= 60 mA",
+          "",
+          "P = I x V",
+          "= 0.06 x 5",
+          "= 0.3 W",
+          "",
+          "x 32 pixels",
+          "= 1.92 A",
+          "= 9.6 W"],
+         fill=PANEL, edge=TEAL, size=13, shape=MSO_SHAPE.RECTANGLE,
+         edge_w=1.0, align=PP_ALIGN.CENTER)
+
+    deck._note(slide,
+               "Cover the quantity you want with your thumb and the triangle "
+               "shows you the sum. These two turn up again in the LED budget, "
+               "the shunt resistor, and how long your battery lasts.", "info")
+    return slide

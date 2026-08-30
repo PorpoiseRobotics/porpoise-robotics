@@ -26,6 +26,8 @@ BYLINE = [
     "Kevin P. Bowen, President  -  kbowen6@icloud.com",
 ]
 
+LOGO = img("porpoise-logo.png")
+
 # ===================================================================
 # TRACKS
 # ===================================================================
@@ -87,7 +89,7 @@ SWITCH = {
     "pwm_story": "This board package is built on an older ESP32 core, so you "
                  "work through numbered PWM channels.",
     "hero": img("vehicle-front-blue-leds.jpg"),
-    "pad_image": None,
+    "pad_image": img("switch-controller-labelled.jpg"),
     "lock_story": "the VEHICLE is told which controller address it will accept",
     "lock_tool": "l3a_controller_check, which prints the address for you",
     "btn_scanner": "the TOP face button (marked X on most Switch pads)",
@@ -109,7 +111,7 @@ def lesson1(deck, T):
         "Mechatronics, the Pathfinder vehicle, the Arduino IDE, and your "
         "first three programs.",
         BYLINE + ["", "Three hours.  Work in groups of three."],
-        hero_image=T["hero"])
+        hero_image=T["hero"], logo=LOGO)
 
     deck.bullets(
         "Welcome",
@@ -225,6 +227,27 @@ def lesson1(deck, T):
         note="\"GPIO\" is General Purpose Input/Output: a pin your program can "
              "switch on and off, or read.")
 
+    deck.two_columns(
+        "Gen 2 and Gen 3  -  which vehicle are you holding?",
+        "Gen 2",
+        [("The vehicle most of the fleet is built from.", 0),
+         ("ESP32, four DRV8871 H-bridges, 32 LEDs, four servo outputs.", 0),
+         ("No current sensor.", 0),
+         ("", 0),
+         ("Everything in this course works on it. Nothing in these five "
+          "lessons needs anything a Gen 2 does not have.", 0)],
+        "Gen 3",
+        [("The current build. Same layout, same pins, same programs.", 0),
+         ("Adds an INA219 digital power monitor, so the vehicle can measure "
+          "its own battery voltage and how much current it is drawing.", 0),
+         ("That makes a powered self-test possible: drive each motor and "
+          "watch what it costs.", 0),
+         ("", 0),
+         ("The advanced course spends a whole lesson on it.", 0)],
+        note="The programs detect which one they are running on at boot, by "
+             "looking for the sensor. One program, either vehicle - you do not "
+             "have to know which you have before you upload.")
+
     diagrams.system_block(deck, controller=T["pad_short"])
 
     deck.two_columns(
@@ -248,7 +271,7 @@ def lesson1(deck, T):
          ("There is no error message on a screen unless you print one. That "
           "is why the Serial Monitor matters so much.", 0)])
 
-    deck.section("Setting up the Arduino IDE", "About 35 minutes", minutes=35)
+    deck.section("Setting up the Arduino IDE", minutes=35)
 
     deck.bullets(
         "Step 1  -  install the Arduino IDE",
@@ -299,7 +322,7 @@ def lesson1(deck, T):
          (T["extra_lib_note"], 0)],
         note="Without the NeoPixel library, nothing in Lesson 4 will compile.")
 
-    deck.section("Your first program", "About 25 minutes", minutes=25)
+    deck.section("Your first program", minutes=25)
 
     diagrams.program_structure(deck)
 
@@ -349,7 +372,7 @@ def lesson1(deck, T):
                     "fast, and why can you barely see it?", 0)],
         minutes=15)
 
-    deck.section("Making the vehicle talk back", "About 25 minutes", minutes=25)
+    deck.section("Making the vehicle talk back", minutes=25)
 
     deck.bullets(
         "The Serial Monitor",
@@ -421,7 +444,7 @@ def lesson1(deck, T):
                    ("What does millis() / 1000 give you, and why?", 0)],
         minutes=15)
 
-    deck.section("Your first light", "About 20 minutes", minutes=20)
+    deck.section("Your first light", minutes=20)
 
     deck.bullets(
         "An addressable LED is a small computer of its own",
@@ -576,7 +599,7 @@ def lesson2(deck, T):
         "H-bridges, pulse width modulation, tank steering, and driving a "
         "square you worked out on paper.",
         BYLINE + ["", "Three hours.  Wheels off the ground until told otherwise."],
-        hero_image=img("vehicle-top-plate-esp32.jpg"))
+        hero_image=img("vehicle-top-plate-esp32.jpg"), logo=LOGO)
 
     deck.bullets(
         "Where we got to last week",
@@ -755,7 +778,7 @@ def lesson2(deck, T):
         safety="Wheels off the ground. This one reaches full speed.",
         minutes=20)
 
-    deck.section("Making it go where you want", "About 60 minutes", minutes=60)
+    deck.section("Making it go where you want", minutes=60)
 
     deck.bullets(
         "Tank drive",
@@ -794,6 +817,49 @@ def lesson2(deck, T):
              "corner takes 3 seconds.")
 
     diagrams.square_path(deck)
+
+    deck.table(
+        "The three kinds of loop in C",
+        ["Loop", "When the test happens", "Use it when"],
+        [["for", "Before each pass", "You know how many times. Stepping through the 32 LEDs, or four sides of a square."],
+         ["while", "Before each pass", "You do not know how many times. It depends on a condition, and it might not run at all."],
+         ["do-while", "After each pass", "The body must run at least once, whatever the condition says."]],
+        lead="You have been using for loops all lesson. There are two more, and "
+             "between them they turn up in almost every program you will ever "
+             "read.",
+        col_widths=[1.4, 2.6, 7],
+        size=14,
+        note="Study these three properly. If you genuinely understand when to "
+             "reach for each one, you are already a better programmer than the "
+             "syntax alone would make you.")
+
+    deck.code(
+        "The same job, written three ways",
+        ["// for  -  a known number of passes",
+         "for (int i = 0; i < 32; i++) {",
+         "  strip.setPixelColor(i, colour);",
+         "}",
+         "",
+         "// while  -  keep going until something changes",
+         "while (!Ps3.isConnected()) {",
+         "  showWaitingLights();        // may never run at all",
+         "}",
+         "",
+         "// do-while  -  always at least one pass",
+         "do {",
+         "  reading = analogRead(PIN);  // take a reading FIRST,",
+         "} while (reading > LIMIT);    // then decide whether to repeat"],
+        filename="the three loop forms",
+        notes=[("The for loop is three things in one line: where to start, "
+                "when to keep going, and what to change each pass.", 0),
+               ("A while loop can run zero times. That is usually what you "
+                "want when you are waiting for something.", 0),
+               ("A do-while always runs once before it checks. Useful when "
+                "the test needs a value you have not got yet.", 0),
+               ("", 0),
+               ("loop() itself is really a while(true) that the Arduino "
+                "framework writes for you.", 0)],
+        size=13, highlight={1, 6, 11})
 
     deck.code(
         "l2c_maneuver_square  -  the loop",
@@ -880,6 +946,35 @@ def lesson2(deck, T):
           "short time and see how far it slides.", 0)],
         lead="Calibrate first, then race")
 
+    deck.two_columns(
+        "If you want to go further this week",
+        "Watch",
+        [("How PWM works, controlling a motor   (10:10)", 0),
+         ("youtube.com/watch?v=5nwNKPs2gco", 1),
+         ("", 0),
+         ("Arduino DC motor control   (11:44)", 0),
+         ("youtube.com/watch?v=HtbCL2NruUY", 1),
+         ("", 0),
+         ("Motor speed tutorial with PWM motors   (17:33)", 0),
+         ("youtube.com/watch?v=UPTU6nYSaMo", 1),
+         ("", 0),
+         ("Loops in C   (video)", 0),
+         ("youtube.com/watch?v=b4DPj0XAfSg", 1)],
+        "Read",
+        [("Loops in C, worked through properly", 0),
+         ("geeksforgeeks.org/c/c-loops/", 1),
+         ("", 0),
+         ("Control structures - loops and conditionals", 0),
+         ("cplusplus.com/doc/tutorial/control/", 1),
+         ("", 0),
+         ("Functions", 0),
+         ("cplusplus.com/doc/tutorial/functions/", 1),
+         ("", 0),
+         ("Everything above is optional and none of it is examined.", 0)],
+        size=15,
+        note="Watch the PWM video before Lesson 3 if today felt fast. It covers "
+             "the same ground more slowly, and with an oscilloscope.")
+
     deck.quiz(
         "Check yourself",
         [("1.  Why does each motor need two pins instead of one?", 0),
@@ -910,7 +1005,7 @@ def lesson3(deck, T):
         "thumb into a speed for four wheels.",
         BYLINE + ["", "Three hours.  Bring the {} paired to your vehicle.".format(
             T["pad_short"])],
-        hero_image=T["hero"])
+        hero_image=T["hero"], logo=LOGO)
 
     deck.bullets(
         "Where we got to last week",
@@ -1273,9 +1368,36 @@ def _pairing_slide(deck, T):
                  "is always the single source of truth about who may drive. Write "
                  "the address on a sticker on the vehicle AND the controller.")
 
+        deck.two_columns(
+            "Two ways a Switch pad gets paired  -  know which one you are on",
+            "This course:  pathfinder_nintendoswitch",
+            [("The address is a CONSTANT IN THE PROGRAM, MY_CONTROLLER.", 0),
+             ("You find it with l3a_controller_check, paste it in, and "
+              "upload.", 0),
+             ("To change controllers you edit the sketch and upload again.", 0),
+             ("", 0),
+             ("Simple, visible, and nothing is hidden. You can read the whole "
+              "mechanism in the file in front of you - which is the point at "
+              "this stage.", 0)],
+            "The advanced program:  Op Program 12",
+            [("The address is stored in EEPROM the first time it pairs, so it "
+              "survives a power cycle.", 0),
+             ("No laptop needed to change it:", 0),
+             ("press the BOOT button on the ESP32, or type  pair  into the "
+              "Serial Monitor", 1),
+             ("the LEDs breathe blue", 1),
+             ("on the controller, press A and HOME", 1),
+             ("it connects, and the vehicle remembers it from then on", 1),
+             ("", 0),
+             ("Lesson 3 of the advanced course is about how that works.", 0)],
+            note="If somebody hands you a Gen 3 vehicle and tells you to type "
+                 "'pair', it is running the advanced program, not this one. "
+                 "Same hardware, different pairing.",
+            note_kind="warn")
+
 
 def _pad_map_slide(deck, T):
-    if T["pad_image"]:
+    if T["key"].endswith("ps3"):
         deck.image_slide(
             "The PS3 controller",
             T["pad_image"],
@@ -1284,6 +1406,15 @@ def _pad_map_slide(deck, T):
             items=[("Every one of those has a name in the program. Today you "
                     "will press all of them and see what each is called.", 0)])
     else:
+        deck.image_slide(
+            "The Switch controller",
+            T["pad_image"],
+            caption="Two analog sticks, a D-pad, four face buttons, shoulders "
+                    "and triggers, and the small ones in the middle",
+            items=[("Every one of those has a name in the program - but not "
+                    "always the name printed on it. The next slide is the "
+                    "table you will actually need.", 0)])
+
         deck.table(
             "The Switch controller, as Bluepad32 sees it",
             ["Printed on the pad", "In the program", "Where it is"],
@@ -1316,7 +1447,7 @@ def lesson4(deck, T):
         "Addressable LEDs, colour, power budgets, and making 32 lights do "
         "what you tell them.",
         BYLINE + ["", "Three hours.  Nothing moves today."],
-        hero_image=img("vehicle-green-leds.jpg"))
+        hero_image=img("vehicle-green-leds.jpg"), logo=LOGO)
 
     deck.bullets(
         "Where we got to last week",
@@ -1460,6 +1591,8 @@ def lesson4(deck, T):
         note="Power = voltage x current. Energy from the battery becomes light "
              "and heat, and the ratio is not as favourable as you would hope.",
         note_kind="warn")
+
+    diagrams.ohms_and_power_law(deck)
 
     deck.activity(
         "Do it now  -  all 32, one colour at a time",
@@ -1642,7 +1775,7 @@ def lesson5(deck, T):
         "Non-blocking timing, edge detection, and the full {} "
         "program.".format(T["full_program"]),
         BYLINE + ["", "Three hours.  Bring a charged battery."],
-        hero_image=img("vehicle-side-blue-leds.jpg"))
+        hero_image=img("vehicle-side-blue-leds.jpg"), logo=LOGO)
 
     deck.bullets(
         "Everything so far",
@@ -1859,7 +1992,7 @@ def lesson5(deck, T):
         safety="Check the controls with the wheels off the ground first.",
         minutes=30)
 
-    deck.section("The full program", "About 45 minutes", minutes=45)
+    deck.section("The full program", minutes=45)
 
     deck.table(
         "{}  -  what it adds".format(T["full_program"]),
@@ -1940,6 +2073,33 @@ def lesson5(deck, T):
          ("Tape out a course with corners. Now sharp steering earns its keep.", 1),
          ("Fastest clean lap. Touching a cone costs you two seconds.", 1)],
         lead="Measure first. Then argue about who is fastest.")
+
+    deck.bullets(
+        "Take it further  -  projects that fit on this vehicle",
+        [("Each of these is a real addition to the program you now understand. "
+          "Pick one and build it.", 0),
+         ("", 0),
+         ("LOW BATTERY WARNING.  Flash the LEDs yellow below 12 volts and red "
+          "below 10. A 4S pack should never be run flat, and the vehicle is in "
+          "a better position to notice than you are.", 0),
+         ("", 0),
+         ("COLLISION WARNING.  An ultrasonic range finder on the top plate. "
+          "Closer than 20 inches: stop the motors, flash red, wait three "
+          "seconds, then carry on.", 0),
+         ("", 0),
+         ("AUTOMATIC LIGHTS.  You already switch the turn signals from the "
+          "stick. Add reversing beeps, hazard lights, or headlights that come "
+          "on only when the vehicle is moving.", 0),
+         ("", 0),
+         ("WAYPOINT NAVIGATION.  Lesson 2 drove one square. Give the program a "
+          "LIST of moves - distance and heading - and drive a course you typed "
+          "in rather than one that was hard-coded.", 0),
+         ("", 0),
+         ("SERVO PAN AND TILT.  Two servos and a bracket, aimed with the right "
+          "stick. The mount points are already on the top plate.", 0)],
+        note="All five are within reach of what you learned in five lessons. "
+             "The range finder and the servos are the two the kit already has "
+             "parts for.")
 
     deck.two_columns(
         "Where this goes next",

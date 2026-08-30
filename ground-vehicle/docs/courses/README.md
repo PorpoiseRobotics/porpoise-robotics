@@ -91,18 +91,34 @@ It needs `python-pptx` (`pip install python-pptx`). Files in
 |---|---|
 | `build_decks.py` | Runs everything. Start here. |
 | `slidelib.py` | The slide types: bullets, tables, code, activities, quizzes |
-| `diagrams.py` | The thirteen drawn figures, as native shapes |
+| `diagrams.py` | The fourteen drawn figures, as native shapes |
 | `content_beginner.py` | The five beginner lessons, parameterised by track |
 | `content_advanced.py` | The five advanced lessons |
 | `lint_decks.py` | Checks every deck for text overflow and off-slide shapes |
+| `render_decks.py` | Renders the decks to PDF, and optionally to contact sheets |
 
-`lint_decks.py` exists because there is no renderer on the build machine. It
-estimates how tall each block of text will be once it wraps and reports
-anything that will not fit. Run it after any content change:
+Two checks, and both are worth running after any content change.
+
+`lint_decks.py` is fast and needs nothing installed. It estimates how tall each
+block of text will be once it wraps, and reports anything that will not fit its
+box or that runs off the slide. It should report zero issues.
 
 ```bash
 python ground-vehicle/docs/courses/generator/lint_decks.py
 ```
+
+`render_decks.py` needs LibreOffice and actually draws the slides, so you can
+look at them. It also produces the print-ready PDFs.
+
+```bash
+python ground-vehicle/docs/courses/generator/render_decks.py --sheets
+```
+
+PDFs land in `docs/courses/pdf/`, which is gitignored — it is a build output. A
+PDF prints identically everywhere, whether or not the machine has Calibri and
+Consolas installed, so hand those out rather than the `.pptx` when you only
+need paper. `--sheets` also writes one PNG per deck showing every slide at
+thumbnail size, which is the quickest way to spot a broken layout.
 
 ---
 
@@ -113,19 +129,26 @@ were taken from the previous Porpoise Robotics lesson PDFs so the new decks
 keep continuity with the old ones.
 
 Only material Porpoise Robotics owns was carried over — vehicle and control
-board photographs, the engineering-to-mechatronics chart, and the annotated PS3
-button map. Generic technical figures that came from third parties in the old
-decks were **redrawn** as native PowerPoint shapes instead, because this
-repository is public. That is why the duty-cycle, H-bridge, colour-mixing and
-servo-timing figures look different from the versions in the old PDFs.
+board photographs, the engineering-to-mechatronics chart, the house logo, and
+the annotated PS3 and Switch controller maps. Generic technical figures that
+came from third parties in the old decks were **redrawn** as native PowerPoint
+shapes instead, because this repository is public. That is why the duty-cycle,
+H-bridge, colour-mixing, servo-timing and Ohm's-law figures look different from
+the versions in the old PDFs.
+
+Four images came from the **P3 Gen 3 decks**: the Porpoise Robotics logo, the
+labelled Switch controller, a second Switch controller shot, and the vehicle
+with a robotic arm fitted.
 
 ---
 
 ## Still to do
 
-- Photographs of a **Gen 3** vehicle. Every photograph here is Gen 2, so the
-  advanced course has no picture of the current sensor it spends a lesson on.
-- A photograph of a **Nintendo Switch controller** with the button positions
-  annotated, to match the PS3 button map. The Switch track currently uses a
-  table instead.
+- Photographs of a **Gen 3 vehicle**, ideally showing the INA219 current
+  sensor. Every vehicle photograph here is Gen 2, so the advanced course has no
+  picture of the sensor it spends a whole lesson on. The P3 decks did not have
+  one either.
+- The two **controller images** are vendor product shots rather than Porpoise
+  photography. They were already in the P2 and P3 decks, but this repository is
+  public — worth a decision.
 - Nobody has taught from these yet. Timings on the agenda slides are estimates.
