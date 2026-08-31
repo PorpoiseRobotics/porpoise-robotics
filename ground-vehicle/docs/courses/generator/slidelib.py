@@ -637,6 +637,9 @@ class Deck:
 
         panel_h = Inches(6.85) - top
         panel = self._panel(slide, MARGIN_L, top, code_w, panel_h, CODE_BG, RULE)
+        # Tagged so check_code.py can tell a real listing from a diagram label
+        # that merely happens to be set in the code font.
+        panel.name = "CODE_PANEL"
         frame = panel.text_frame
         frame.margin_left = Inches(0.16)
         frame.margin_right = Inches(0.1)

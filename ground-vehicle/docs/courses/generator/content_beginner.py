@@ -12,6 +12,7 @@ Each lesson is a function that takes a Deck and a track, and fills it.
 import os
 
 import diagrams
+import srcfacts
 from slidelib import Deck
 
 IMAGES = os.path.join(os.path.dirname(os.path.abspath(__file__)), "..", "images")
@@ -45,9 +46,10 @@ PS3 = {
     "extra_lib": "\"PS3 Controller Host\" by Jeffrey van Pernis",
     "extra_lib_note": "Searching Library Manager for \"Ps3Controller\" finds nothing. "
                       "The display name is the longer one.",
-    "stick_max": 127,
+    "drive_sketch": "lessons/beginner_ps3/l3c_tank_drive/l3c_tank_drive.ino",
+    "led_sketch": "lessons/beginner_ps3/l4a_all_one_colour/l4a_all_one_colour.ino",
+    "pin_style": "pin",
     "stick_range": "-128 to +127",
-    "deadzone": 20,
     "deadzone_pct": "about 16%",
     "attach": "ledcAttach(pin, freq, bits);",
     "write": "ledcWrite(pin, duty);",
@@ -63,6 +65,7 @@ PS3 = {
     "read_y": "Ps3.data.analog.stick.ly",
     "read_button": "Ps3.data.button.square",
     "connected": "Ps3.isConnected()",
+    "guard": "!Ps3.isConnected()",
 }
 
 SWITCH = {
@@ -80,9 +83,10 @@ SWITCH = {
     "extra_lib": "none - Bluepad32 arrives with the board package",
     "extra_lib_note": "You still need \"Adafruit NeoPixel\" by Adafruit for the "
                       "lighting lessons.",
-    "stick_max": 511,
+    "drive_sketch": "lessons/beginner_switch/l3c_tank_drive/l3c_tank_drive.ino",
+    "led_sketch": "lessons/beginner_switch/l4a_all_one_colour/l4a_all_one_colour.ino",
+    "pin_style": "channel",
     "stick_range": "-512 to +511",
-    "deadzone": 60,
     "deadzone_pct": "about 12%",
     "attach": "ledcSetup(channel, freq, bits);\nledcAttachPin(pin, channel);",
     "write": "ledcWrite(channel, duty);",
@@ -99,6 +103,7 @@ SWITCH = {
     "read_y": "myController->axisY()",
     "read_button": "myController->x()",
     "connected": "myController->isConnected()",
+    "guard": "myController == nullptr || !myController->isConnected()",
 }
 
 
@@ -214,11 +219,11 @@ def lesson1(deck, T):
     deck.table(
         "Which GPIO pin does what",
         ["Pin", "What it drives", "Notes"],
-        [["12, 13", "Front left motor", "Two pins per motor: one per direction"],
-         ["18, 19", "Rear left motor", ""],
-         ["22, 23", "Front right motor", ""],
-         ["16, 17", "Rear right motor", ""],
-         ["5", "All 32 NeoPixel LEDs", "One wire drives the whole chain"],
+        [[", ".join(T["motor_pins"][0][1:]), "Front left motor", "Two pins per motor: one per direction"],
+         [", ".join(T["motor_pins"][1][1:]), "Rear left motor", ""],
+         [", ".join(T["motor_pins"][2][1:]), "Front right motor", ""],
+         [", ".join(T["motor_pins"][3][1:]), "Rear right motor", ""],
+         [str(T["led_pin"]), "All {} NeoPixel LEDs".format(T["led_count"]), "One wire drives the whole chain"],
          ["25, 26", "Servos 1 and 2", "27 and 14 are servos 3 and 4"],
          ["2", "The blue LED on the ESP32 module", "Your first program uses this"],
          ["0", "The BOOT button", "Used for pairing on the advanced program"]],
@@ -472,13 +477,13 @@ def lesson1(deck, T):
          "const int LED_PIN   = 5;      // all 32 LEDs are on GPIO 5",
          "const int LED_COUNT = 32;",
          "const int WHICH_LED = 0;      // the one we light",
+         "const int BRIGHTNESS = 60;    // master brightness, 0 to 255",
          "",
-         "Adafruit_NeoPixel strip(LED_COUNT, LED_PIN,",
-         "                        NEO_GRB + NEO_KHZ800);",
+         "Adafruit_NeoPixel strip(LED_COUNT, LED_PIN, NEO_GRB + NEO_KHZ800);",
          "",
          "void setup() {",
          "  strip.begin();",
-         "  strip.setBrightness(60);",
+         "  strip.setBrightness(BRIGHTNESS);",
          "  strip.clear();",
          "  strip.show();",
          "}",
@@ -653,10 +658,7 @@ def lesson2(deck, T):
     deck.table(
         "Your four motors and their eight pins",
         ["Motor", "Pin A", "Pin B", "Driving A gives you"],
-        [["Front left", "12", "13", "forward"],
-         ["Rear left", "18", "19", "forward"],
-         ["Front right", "22", "23", "forward"],
-         ["Rear right", "16", "17", "forward"]],
+        [[label, a, b, "forward"] for label, a, b in T["motor_pins"]],
         lead="Two pins per motor. Which one you drive is the direction; how hard "
              "you drive it is the speed.",
         col_widths=[3, 1.5, 1.5, 4],
@@ -692,12 +694,14 @@ def lesson2(deck, T):
          ("", 0),
          (T["pwm_story"], 0)],
         "The numbers we use, and why",
-        [("Frequency 20000 Hz. Human hearing stops around 20 kHz, so the "
+        [("Frequency {} Hz. Human hearing stops around 20 kHz, so the "
           "switching is silent. Set it to 300 and you will hear the motors "
-          "sing - try it.", 0),
-         ("Resolution 8 bits. That gives duty values 0 to 255, because 2 to the "
-          "power 8 is 256.", 0),
-         ("0 is off, 128 is about half power, 255 is flat out.", 0),
+          "sing - try it.".format(T["pwm_freq"]), 0),
+         ("Resolution {0} bits. That gives duty values 0 to {1}, because 2 to "
+          "the power {0} is {2}.".format(T["pwm_bits"], T["motor_max"],
+                                         T["motor_max"] + 1), 0),
+         ("0 is off, {} is about half power, {} is flat out.".format(
+             (T["motor_max"] + 1) // 2, T["motor_max"]), 0),
          ("", 0),
          ("The advanced program uses 10 bits, 0 to 1023, for finer control at "
           "low speed.", 0)],
@@ -1211,7 +1215,7 @@ def lesson3(deck, T):
     deck.code(
         "l3c_tank_drive  -  the whole of loop()",
         ["void loop() {",
-         "  if (!{}) {{".format(T["connected"]),
+         "  if ({}) {{".format(T["guard"]),
          "    drive(0, 0);        // never drive without a controller",
          "    return;",
          "  }",
@@ -1222,8 +1226,8 @@ def lesson3(deck, T):
          "  int forward = stickToSpeed(-leftStickY, MOTOR_MAX);",
          "  int turn    = stickToSpeed(leftStickX,  turnMax);",
          "",
-         "  int leftSpeed  = constrain(forward + turn, -255, 255);",
-         "  int rightSpeed = constrain(forward - turn, -255, 255);",
+         "  int leftSpeed  = constrain(forward + turn, -MOTOR_MAX, MOTOR_MAX);",
+         "  int rightSpeed = constrain(forward - turn, -MOTOR_MAX, MOTOR_MAX);",
          "",
          "  drive(leftSpeed, rightSpeed);",
          "}"],
@@ -1368,32 +1372,29 @@ def _pairing_slide(deck, T):
                  "is always the single source of truth about who may drive. Write "
                  "the address on a sticker on the vehicle AND the controller.")
 
-        deck.two_columns(
-            "Two ways a Switch pad gets paired  -  know which one you are on",
-            "This course:  pathfinder_nintendoswitch",
-            [("The address is a CONSTANT IN THE PROGRAM, MY_CONTROLLER.", 0),
-             ("You find it with l3a_controller_check, paste it in, and "
-              "upload.", 0),
-             ("To change controllers you edit the sketch and upload again.", 0),
+        deck.bullets(
+            "How YOUR vehicle gets paired",
+            [("In pathfinder_nintendoswitch - the program this whole course is "
+              "about - the address is a CONSTANT IN THE PROGRAM, called "
+              "MY_CONTROLLER.", 0),
              ("", 0),
-             ("Simple, visible, and nothing is hidden. You can read the whole "
-              "mechanism in the file in front of you - which is the point at "
-              "this stage.", 0)],
-            "The advanced program:  Op Program 12",
-            [("The address is stored in EEPROM the first time it pairs, so it "
-              "survives a power cycle.", 0),
-             ("No laptop needed to change it:", 0),
-             ("press the BOOT button on the ESP32, or type  pair  into the "
-              "Serial Monitor", 1),
-             ("the LEDs breathe blue", 1),
-             ("on the controller, press A and HOME", 1),
-             ("it connects, and the vehicle remembers it from then on", 1),
+             ("1.  Upload l3a_controller_check and connect your pad.", 0),
+             ("2.  It prints a ready-made MY_CONTROLLER line.", 0),
+             ("3.  Paste that line into the top of the sketch.", 0),
+             ("4.  Upload. From now on the vehicle answers only to that pad.", 0),
              ("", 0),
-             ("Lesson 3 of the advanced course is about how that works.", 0)],
-            note="If somebody hands you a Gen 3 vehicle and tells you to type "
-                 "'pair', it is running the advanced program, not this one. "
-                 "Same hardware, different pairing.",
-            note_kind="warn")
+             ("To change controllers, you edit the sketch and upload again.", 0),
+             ("", 0),
+             ("Nothing is hidden. The whole mechanism is visible in the file in "
+              "front of you, which is exactly what you want while you are still "
+              "learning what the pieces are.", 0)],
+            lead="pathfinder_nintendoswitch: the address lives in the sketch",
+            note="Side note: the ADVANCED program, Pathfinder_Op_Program12, does "
+                 "this differently - it stores the address in EEPROM and you "
+                 "pair by typing 'pair' in the Serial Monitor, or pressing the "
+                 "BOOT button, then A and HOME on the pad. If somebody hands you "
+                 "a vehicle and tells you to type 'pair', it is running that "
+                 "program, not this one.")
 
 
 def _pad_map_slide(deck, T):
@@ -2170,6 +2171,30 @@ def lesson5(deck, T):
 # BUILD
 # ===================================================================
 
+def enrich(track):
+    """
+    Fills in the numbers the slides quote by reading them out of the sketches,
+    so a retune of the vehicle cannot leave a stale figure on a slide. If a
+    constant has been renamed, srcfacts raises and the build stops.
+    """
+    drive = track["drive_sketch"]
+    led = track["led_sketch"]
+
+    track["stick_max"] = srcfacts.number(drive, "STICK_MAX")
+    track["deadzone"] = srcfacts.number(drive, "STICK_DEADZONE")
+    track["motor_max"] = srcfacts.number(drive, "MOTOR_MAX")
+    track["motor_min"] = srcfacts.number(drive, "MOTOR_MIN")
+    track["pwm_freq"] = srcfacts.number(drive, "MOTOR_PWM_FREQ")
+    track["pwm_bits"] = srcfacts.number(drive, "MOTOR_PWM_BITS")
+    track["led_pin"] = srcfacts.number(led, "LED_PIN")
+    track["led_count"] = srcfacts.number(led, "LED_COUNT")
+    track["motor_pins"] = srcfacts.motor_pins(drive, track["pin_style"])
+
+    percent = 100.0 * track["deadzone"] / track["stick_max"]
+    track["deadzone_pct"] = "about %d%%" % round(percent)
+    return track
+
+
 LESSONS = [
     ("l1_introduction.pptx", "Lesson 1", "Introduction", lesson1),
     ("l2_motor_control.pptx", "Lesson 2", "Motor Control", lesson2),
@@ -2181,6 +2206,7 @@ LESSONS = [
 
 def build(track, out_dir):
     made = []
+    enrich(track)
     for filename, label, title, builder in LESSONS:
         deck = Deck(filename, title, label, track["track_label"])
         builder(deck, track)

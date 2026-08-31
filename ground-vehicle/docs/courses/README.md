@@ -94,10 +94,12 @@ It needs `python-pptx` (`pip install python-pptx`). Files in
 | `diagrams.py` | The fourteen drawn figures, as native shapes |
 | `content_beginner.py` | The five beginner lessons, parameterised by track |
 | `content_advanced.py` | The five advanced lessons |
+| `srcfacts.py` | Reads constants out of the `.ino` files so slides cannot quote stale numbers |
 | `lint_decks.py` | Checks every deck for text overflow and off-slide shapes |
+| `check_code.py` | Checks every code listing still matches the source it came from |
 | `render_decks.py` | Renders the decks to PDF, and optionally to contact sheets |
 
-Two checks, and both are worth running after any content change.
+Three checks. Run all of them after any change, to the decks or to the code.
 
 `lint_decks.py` is fast and needs nothing installed. It estimates how tall each
 block of text will be once it wraps, and reports anything that will not fit its
@@ -105,6 +107,17 @@ box or that runs off the slide. It should report zero issues.
 
 ```bash
 python ground-vehicle/docs/courses/generator/lint_decks.py
+```
+
+`check_code.py` is the one that matters most. Every code listing on a slide is
+supposed to be a real excerpt from a real file under `src/`, and this proves it
+still is — it pulls every line out of every code panel and looks for it in the
+sources. Illustrative lines (generic C, the deliberately-broken examples) are
+listed in `ALLOWED` inside that file. It exits non-zero on a mismatch, so it
+can gate a commit.
+
+```bash
+python ground-vehicle/docs/courses/generator/check_code.py
 ```
 
 `render_decks.py` needs LibreOffice and actually draws the slides, so you can
@@ -119,6 +132,28 @@ PDF prints identically everywhere, whether or not the machine has Calibri and
 Consolas installed, so hand those out rather than the `.pptx` when you only
 need paper. `--sheets` also writes one PNG per deck showing every slide at
 thumbnail size, which is the quickest way to spot a broken layout.
+
+---
+
+## Keeping the slides and the code together
+
+This is the failure mode that got the old decks: somebody improves a function,
+and a slide somewhere quietly goes on teaching last month's version. Two
+mechanisms stop it happening here.
+
+**Numbers are read, not retyped.** The deadzone, the stick range, the PWM
+frequency and resolution, the motor pin assignments and the LED count are all
+pulled out of the `.ino` files at build time by `srcfacts.py`. Change
+`STICK_DEADZONE` in a sketch, rebuild, and the slide that quotes it changes
+with it — including the percentage worked out from it. If a constant is
+renamed, the build stops rather than printing a stale figure.
+
+**Code listings are verified.** `check_code.py` confirms every line in every
+code panel appears verbatim in a source file. A listing that has drifted is a
+build failure, not something you have to notice by eye.
+
+Neither can check prose. If you rewrite a paragraph describing what a program
+does, that is still on you.
 
 ---
 
