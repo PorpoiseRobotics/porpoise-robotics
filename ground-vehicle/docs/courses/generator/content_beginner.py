@@ -23,8 +23,14 @@ def img(name):
 
 
 BYLINE = [
-    "Porpoise Robotics  -  porpoiserobotics.org",
-    "Kevin P. Bowen, President  -  kbowen6@icloud.com",
+    "PORPOISE ROBOTICS  -  Precision Oceanographic Program On and In the Sea Environment",
+    "porpoiserobotics.org",
+    "",
+    "Kevin Bowen, President  -  kbowen6@icloud.com",
+    "Malcom Graham, VP Education      Louis Parker, VP Technology",
+    "Valen Farre, System Engineer      Gary Howland, Animation",
+    "Eddie Revollo, Artificial Intelligence",
+    "Interns: Oscar Canazales, Krishnansh Vemulapalli, Soham Gangal, Erik Olsen",
 ]
 
 LOGO = img("porpoise-logo.png")
@@ -46,6 +52,8 @@ PS3 = {
     "extra_lib": "\"PS3 Controller Host\" by Jeffrey van Pernis",
     "extra_lib_note": "Searching Library Manager for \"Ps3Controller\" finds nothing. "
                       "The display name is the longer one.",
+    "lib_short": "PS3 Controller Host",
+    "lib_and": " + PS3 Controller Host",
     "drive_sketch": "lessons/beginner_ps3/l3c_tank_drive/l3c_tank_drive.ino",
     "led_sketch": "lessons/beginner_ps3/l4a_all_one_colour/l4a_all_one_colour.ino",
     "pin_style": "pin",
@@ -83,6 +91,8 @@ SWITCH = {
     "extra_lib": "none - Bluepad32 arrives with the board package",
     "extra_lib_note": "You still need \"Adafruit NeoPixel\" by Adafruit for the "
                       "lighting lessons.",
+    "lib_short": "none (Bluepad32 ships with the board package)",
+    "lib_and": "",
     "drive_sketch": "lessons/beginner_switch/l3c_tank_drive/l3c_tank_drive.ino",
     "led_sketch": "lessons/beginner_switch/l4a_all_one_colour/l4a_all_one_colour.ino",
     "pin_style": "channel",
@@ -107,6 +117,43 @@ SWITCH = {
 }
 
 
+# The stages each lesson moves through, used by the progress markers.
+STAGES = {
+    "lesson1": [
+        "The vehicle",
+        "Setting up the IDE",
+        "Your first circuit and program",
+        "Talking back",
+        "Your first light",
+    ],
+    "lesson2": [
+        "H-bridges and PWM",
+        "One motor",
+        "Duty against speed",
+        "Ohm's law and circuits",
+        "Driving a square",
+    ],
+    "lesson3": [
+        "Bluetooth and pairing",
+        "What the pad sends",
+        "Deadzone and map",
+        "Driving it",
+    ],
+    "lesson4": [
+        "Addressable LEDs",
+        "The power budget",
+        "The LED map",
+        "Patterns",
+    ],
+    "lesson5": [
+        "Why delay() has to go",
+        "Two speeds at once",
+        "Edge detection",
+        "Lights from state",
+        "The full program",
+    ],
+}
+
 # ===================================================================
 # LESSON 1
 # ===================================================================
@@ -117,6 +164,20 @@ def lesson1(deck, T):
         "first three programs.",
         BYLINE + ["", "Three hours.  Work in groups of three."],
         hero_image=T["hero"], logo=LOGO)
+
+    deck.objectives([
+        "Say what mechatronics is, and point to three parts of the "
+         "Pathfinder that are mechanical, electrical and software",
+        "Set up the Arduino IDE, the board package and the libraries, "
+         "and get the course files into your Arduino folder",
+        "Name the three parts of every Arduino program and say when "
+         "each runs",
+        "Build a working LED circuit on a breadboard, and say why the "
+         "resistor is there",
+        "Upload a program to the vehicle and change it",
+        "Read what the vehicle prints back on the Serial Monitor",
+        "Light any one of the 32 LEDs, in any colour",
+    ])
 
     deck.bullets(
         "Welcome",
@@ -150,13 +211,14 @@ def lesson1(deck, T):
         "Today, in order",
         ["Time", "What we do"],
         [["0:00", "What mechatronics is, and what a Pathfinder is"],
-         ["0:35", "A tour of the vehicle: computer, motors, lights, battery"],
-         ["1:00", "Install the Arduino IDE, the board package and the libraries"],
-         ["1:35", "Break"],
-         ["1:45", "The three parts of every program.  Upload l1a_blink"],
-         ["2:10", "Talking back: the Serial Monitor.  Upload l1b_serial_monitor"],
-         ["2:35", "Your first light.  Upload l1c_first_pixel"],
-         ["2:55", "Safety, batteries, and what to expect next week"]],
+         ["0:30", "A tour of the vehicle: computer, motors, lights, battery"],
+         ["0:55", "BREAK  (10 minutes)"],
+         ["1:05", "Install the Arduino IDE, the board package and the libraries"],
+         ["1:40", "The three parts of every program.  Upload l1a_blink"],
+         ["2:05", "BREAK  (10 minutes)"],
+         ["2:15", "Talking back: the Serial Monitor.  Upload l1b_serial_monitor"],
+         ["2:40", "Your first light.  Upload l1c_first_pixel"],
+         ["2:55", "Safety, batteries, and what to expect next lesson"]],
         col_widths=[1, 9])
 
     deck.bullets_image(
@@ -172,7 +234,7 @@ def lesson1(deck, T):
           "than a flooded electronics bay.", 0)],
         img("engineering-to-mechatronics.png"),
         caption="Engineering, narrowing down to what you are about to build",
-        image_ratio=0.46)
+        image_ratio=0.60)
 
     deck.two_columns(
         "STEM, and where it shows up in this course",
@@ -194,15 +256,25 @@ def lesson1(deck, T):
         note="STEM is not four subjects. It is using maths and science to build "
              "something that has to actually work.")
 
-    deck.image_slide(
+    deck.image_pair(
         "The Pathfinder",
         img("vehicle-front-blue-leds.jpg"),
-        caption="Four-wheel drive, computer controlled, 32 addressable LEDs",
-        items=[("A fast, rugged, four-wheel-drive vehicle with an ESP32 computer, "
-                "four independently driven motors, 32 programmable LEDs, four servo "
-                "outputs and a rechargeable lithium battery.", 0)])
+        "Turn signal running on one side...",
+        img("vehicle-side-blue-leds.jpg"),
+        "...and on the other. Same 32 LEDs, different program.",
+        lead="A fast, rugged, four-wheel-drive vehicle with an ESP32 computer, "
+             "four independently driven motors, 32 programmable LEDs, four "
+             "servo outputs and a rechargeable lithium battery.",
+        speaker=[
+            "Pass a vehicle round while you talk over this slide. Let them pick "
+            "it up - it is built to be handled.",
+            "Point out that BOTH pictures are the same vehicle running the same "
+            "hardware. The only difference is which LEDs the program lit.",
+            "That is the through-line of the whole course: the hardware is "
+            "fixed, and everything interesting comes from the program.",
+        ])
 
-    deck.bullets_image(
+    deck.bullets(
         "What is on the vehicle",
         [("ESP32 computer - a small, fast microcontroller with Bluetooth and "
           "Wi-Fi built in. Your program runs here.", 0),
@@ -210,27 +282,25 @@ def lesson1(deck, T):
          ("32 WS2812B addressable LEDs, in two bars of 16.", 0),
          ("Four servo outputs on the top plate.", 0),
          ("A 4S 3300 mAh lithium polymer battery, about 16 volts charged.", 0),
-         ("A top plate with a breadboard area, for sensors you add later.", 0)],
-        img("vehicle-top-esp32.jpg"),
-        caption="Top view: the ESP32 module and the battery",
+         ("A top plate with a breadboard area, for the sensors you add later.", 0)],
         note="No steering rack. It turns by driving one side faster than the "
-             "other, like a tank. That matters from Lesson 2 onwards.")
+             "other, like a tank. That matters from Lesson 2 onwards.",
+        speaker=[
+            "Name each part while holding a vehicle, then put the labelled "
+            "picture up on the next slide and let them match the two.",
+            "The tank-steering point is the one to land. Everything in Lesson 2 "
+            "follows from it.",
+        ])
 
-    deck.table(
-        "Which GPIO pin does what",
-        ["Pin", "What it drives", "Notes"],
-        [[", ".join(T["motor_pins"][0][1:]), "Front left motor", "Two pins per motor: one per direction"],
-         [", ".join(T["motor_pins"][1][1:]), "Rear left motor", ""],
-         [", ".join(T["motor_pins"][2][1:]), "Front right motor", ""],
-         [", ".join(T["motor_pins"][3][1:]), "Rear right motor", ""],
-         [str(T["led_pin"]), "All {} NeoPixel LEDs".format(T["led_count"]), "One wire drives the whole chain"],
-         ["25, 26", "Servos 1 and 2", "27 and 14 are servos 3 and 4"],
-         ["2", "The blue LED on the ESP32 module", "Your first program uses this"],
-         ["0", "The BOOT button", "Used for pairing on the advanced program"]],
-        lead="Keep this page. Every program in the course refers back to it.",
-        col_widths=[1.2, 4, 5],
-        note="\"GPIO\" is General Purpose Input/Output: a pin your program can "
-             "switch on and off, or read.")
+    deck.image_slide(
+        "Every part, called out",
+        img("vehicle-parts-labelled.jpg"),
+        caption="Keep this page open for the rest of the lesson",
+        speaker=[
+            "Give them a minute to find each part on a real vehicle.",
+            "Worth pointing out the two LED bars are 16 each, front and rear - "
+            "that becomes important in Lesson 4.",
+        ])
 
     deck.two_columns(
         "Gen 2 and Gen 3  -  which vehicle are you holding?",
@@ -242,13 +312,16 @@ def lesson1(deck, T):
          ("Everything in this course works on it. Nothing in these five "
           "lessons needs anything a Gen 2 does not have.", 0)],
         "Gen 3",
-        [("The current build. Same layout, same pins, same programs.", 0),
-         ("Adds an INA219 digital power monitor, so the vehicle can measure "
-          "its own battery voltage and how much current it is drawing.", 0),
-         ("That makes a powered self-test possible: drive each motor and "
-          "watch what it costs.", 0),
-         ("", 0),
-         ("The advanced course spends a whole lesson on it.", 0)],
+        [("A UNIBODY frame. The structure is one piece, and the board, battery "
+          "and wiring sit inside it rather than on top, so nothing catches on "
+          "anything when the vehicle rolls.", 0),
+         ("The wheels are mounted at the vehicle's VERTICAL CENTRE, so it "
+          "drives just as well upside down. Flip it over and keep going.", 0),
+         ("A clear lexan TOP PLATE: somewhere to mount sensors, and you can "
+          "see the electronics working underneath it.", 0),
+         ("An INA219 power monitor, so the vehicle can measure its own battery "
+          "voltage and current draw - which is what makes a powered self-test "
+          "possible.", 0)],
         note="The programs detect which one they are running on at boot, by "
              "looking for the sensor. One program, either vehicle - you do not "
              "have to know which you have before you upload.")
@@ -292,8 +365,9 @@ def lesson1(deck, T):
           "vehicle, and read what the vehicle prints back.", 0),
          ("\"Compile\" means turn your C++ into the machine language the ESP32 "
           "runs. \"Upload\" means send that down the USB cable.", 0)],
-        note="If the IDE will not install, that is a school IT problem, not a "
-             "robotics problem. Pair up with a neighbour and carry on.")
+        note="If the install will not go through, pair up with a neighbour and "
+             "carry on - you lose nothing today. Note down the error and we "
+             "will sort the machine out afterwards.")
 
     _board_setup_slide(deck, T)
 
@@ -327,13 +401,130 @@ def lesson1(deck, T):
          (T["extra_lib_note"], 0)],
         note="Without the NeoPixel library, nothing in Lesson 4 will compile.")
 
+    deck.table(
+        "Every program in this course, and what it needs",
+        ["Lesson", "Sketch", "Libraries beyond the board package"],
+        [["1", "l1a_blink", "none"],
+         ["1", "l1b_serial_monitor", "none"],
+         ["1", "l1c_first_pixel", "Adafruit NeoPixel"],
+         ["2", "l2a_one_motor", "none"],
+         ["2", "l2b_speed_ramp", "none"],
+         ["2", "l2c_maneuver_square", "none"],
+         ["3", "l3a_controller_check", T["lib_short"]],
+         ["3", "l3b_deadzone_and_map", T["lib_short"]],
+         ["3", "l3c_tank_drive", T["lib_short"]],
+         ["4", "l4a / l4b / l4c", "Adafruit NeoPixel"],
+         ["5", "l5a / l5b / l5c", "Adafruit NeoPixel" + T["lib_and"]],
+         ["5", T["full_program"], "Adafruit NeoPixel" + T["lib_and"]]],
+        lead="Install both libraries now and you are set for all five lessons.",
+        col_widths=[1, 3.6, 5.4],
+        size=14,
+        note="If a sketch will not compile, check this table before you change "
+             "any code. A missing library is by far the most common cause.",
+        speaker=[
+            "This is the reference page. Tell students to photograph it.",
+            "Worth saying out loud: the board package is not a library. The "
+            "board package teaches the IDE what an ESP32 is; a library is code "
+            "your program calls.",
+        ])
+
+    deck.bullets(
+        "Getting the course files onto your computer",
+        [("The sketches arrive on a thumb drive, or as a zip in an email. They "
+          "have to end up in the right folder or the IDE will not find them.", 0),
+         ("", 0),
+         ("WINDOWS", 0),
+         ("Copy the sketch folders into  Documents\\\\Arduino\\\\", 1),
+         ("Copy the library folders into  Documents\\\\Arduino\\\\libraries\\\\", 1),
+         ("", 0),
+         ("MAC", 0),
+         ("Copy the sketch folders into  Documents/Arduino/", 1),
+         ("Copy the library folders into  Documents/Arduino/libraries/", 1),
+         ("", 0),
+         ("If they came as .zip files, UNZIP them first - except a library you "
+          "are adding through Sketch > Include Library > Add .ZIP Library, "
+          "which wants the zip as it is.", 0),
+         ("", 0),
+         ("Then restart the Arduino IDE. It only looks for sketches and "
+          "libraries when it starts.", 0)],
+        lead="Thumb drive or email, into your Arduino folder",
+        note="One folder per sketch, and the folder name must match the .ino "
+             "inside it. l1a_blink/l1a_blink.ino. The IDE will refuse to open a "
+             "sketch whose folder is named differently.",
+        note_kind="warn",
+        speaker=[
+            "Do this together. It is the single most common place a beginner "
+            "gets stuck, and it costs ten minutes now against forty later.",
+            "Walk the room. Check File > Sketchbook actually lists the lessons "
+            "before you move on.",
+        ])
+
     deck.section("Your first program", minutes=25)
 
     diagrams.program_structure(deck)
 
+    deck.bullets(
+        "The ESP32 has no LED we can use, so you are going to give it one",
+        [("Some development boards have a little LED soldered on. The module on "
+          "this vehicle does not have one free for us, so your first program "
+          "will blink an LED you wire up yourself.", 0),
+         ("", 0),
+         ("That is a better place to start anyway. Before you can make "
+          "something blink, you have to make a circuit that works - and a "
+          "circuit is the thing underneath everything else on this vehicle.", 0),
+         ("", 0),
+         ("You need three things from the kit:", 0),
+         ("a breadboard", 1),
+         ("an LED", 1),
+         ("a 220 ohm resistor", 1),
+         ("two jumper wires", 1)],
+        lead="Your first circuit",
+        speaker=[
+            "Hold up the three parts as you name them.",
+            "If anyone asks why the resistor: tell them to wait ninety seconds, "
+            "it is the next slide but one.",
+        ])
+
+    deck.image_pair(
+        "What a breadboard is",
+        img("breadboard-parts-named.jpg"),
+        "Terminal strips down the middle, power rails along the edges",
+        img("breadboard-parts.jpg"),
+        "A 220 ohm resistor and an LED. Note the LED has one leg longer.",
+        lead="A breadboard lets you build a circuit without soldering, and take "
+             "it apart again.",
+        note="The five holes in a row are joined to each other under the "
+             "plastic. That is the whole trick: push two legs into the same "
+             "row and they are connected.",
+        speaker=[
+            "Get them to look down into the holes. The metal clips are visible.",
+            "The row-of-five rule is the single fact that makes breadboards "
+            "make sense. Say it twice.",
+        ])
+
+    diagrams.led_circuit(deck)
+
+    deck.image_pair(
+        "Building it",
+        img("breadboard-step1.jpg"),
+        "Resistor and LED in the same row, so they are connected",
+        img("breadboard-complete.jpg"),
+        "Powered up. Kevin's photos use a 9 V battery; yours runs from GPIO 2.",
+        lead="Bend the resistor legs, push everything into the board, and "
+             "connect GPIO 2 and GND with the two jumper wires.",
+        note="Long leg of the LED towards the resistor and GPIO 2. Short leg "
+             "towards ground. Backwards means no light, no damage - just turn "
+             "it round.",
+        note_kind="warn",
+        speaker=[
+            "Circulate. The two failures you will see are the LED in "
+            "backwards and legs in different rows so nothing is connected.",
+            "Nobody uploads anything until their circuit is built and checked.",
+        ])
+
     deck.code(
         "l1a_blink  -  the whole program",
-        ["const int LED_PIN = 2;",
+        ["const int LED_PIN = 2;   // the pin your LED is wired to",
          "const int BLINK_MS = 1000;",
          "",
          "void setup() {",
@@ -349,7 +540,8 @@ def lesson1(deck, T):
          "}"],
         filename="l1a_blink.ino",
         notes=[("const int  says this is a whole number that never changes. "
-                "Naming it means you change it in one place.", 0),
+                "Naming it means you change it in one place - move your LED "
+                "to another pin and only this line changes.", 0),
                ("pinMode(..., OUTPUT)  tells the ESP32 we intend to WRITE to "
                 "that pin. Without it, digitalWrite does nothing.", 0),
                ("HIGH puts 3.3 volts on the pin.  LOW puts 0 volts on it. "
@@ -358,23 +550,29 @@ def lesson1(deck, T):
                 "we will throw it away.", 0)],
         size=14)
 
+    deck.progress(STAGES["lesson1"], 1)
+
     deck.activity(
         "Do it now  -  blink",
         "l1a_blink",
         [("1.  File > Open, and find l1a_blink.ino.", 0),
          ("2.  Click the tick to VERIFY. It should compile with no errors.", 0),
          ("3.  Click the arrow to UPLOAD. Do not unplug during upload.", 0),
-         ("4.  Wait for \"Done uploading\" and look at the ESP32 module.", 0),
+         ("4.  Wait for \"Done uploading\" and look at your LED.", 0),
          ("", 0),
          ("Then change things:", 0),
          ("5.  Set BLINK_MS to 100. Upload. Then 2000. Upload.", 0),
          ("6.  Delete ONE of the two delay lines and upload.", 0)],
-        expect=[("A small blue LED on the ESP32 module itself, one second on "
-                 "and one second off.", 0)],
+        expect=[("YOUR LED, on the breadboard, one second on and one "
+                 "second off.", 0),
+                ("Nothing at all means the LED is in backwards, or a leg is "
+                 "in the wrong row.", 0)],
         questions=[("Which makes it blink faster, a bigger number or a "
                     "smaller one? Why?", 0),
                    ("With one delay deleted, the LED is still blinking. How "
-                    "fast, and why can you barely see it?", 0)],
+                    "fast, and why can you barely see it?", 0),
+                   ("What resistor would a RED LED need? It drops about "
+                    "1.8 V instead of 2.0 V.", 0)],
         minutes=15)
 
     deck.section("Making the vehicle talk back", minutes=25)
@@ -432,6 +630,8 @@ def lesson1(deck, T):
                ("This bites everybody eventually, usually when a speed "
                 "calculation quietly comes out as zero.", 0)],
         size=14, highlight={1, 4})
+
+    deck.progress(STAGES["lesson1"], 2)
 
     deck.activity(
         "Do it now  -  make it talk",
@@ -504,6 +704,8 @@ def lesson1(deck, T):
                ("show() is what actually sends it.", 0)],
         size=12, highlight={18})
 
+    deck.progress(STAGES["lesson1"], 3)
+
     deck.activity(
         "Do it now  -  light one pixel",
         "l1c_first_pixel",
@@ -535,7 +737,7 @@ def lesson1(deck, T):
          ("Carry the vehicle by the base plate, not by the top plate or the "
           "wires.", 0)],
         note="Everything in Lesson 2 onwards moves. This page stops being "
-             "theoretical next week.",
+             "theoretical next lesson.",
         note_kind="safety")
 
     deck.quiz(
@@ -551,7 +753,7 @@ def lesson1(deck, T):
           "that a message is for it?", 0),
          ("6.  You call setPixelColor() and nothing lights up. What did you "
           "forget?", 0)],
-        lead="Next week: motors. Bring the drawing you made of the LED numbers.")
+        lead="Next lesson: motors. Bring the drawing you made of the LED numbers.")
 
     return deck
 
@@ -606,8 +808,22 @@ def lesson2(deck, T):
         BYLINE + ["", "Three hours.  Wheels off the ground until told otherwise."],
         hero_image=img("vehicle-top-plate-esp32.jpg"), logo=LOGO)
 
+    deck.objectives([
+        "Explain how an H-bridge reverses a motor, in terms of current",
+        "Say what a duty cycle is, and work out the duty value for a "
+         "given percentage of full power",
+        "Use Ohm's law to find voltage, current or resistance given the "
+         "other two",
+        "Tell a series circuit from a parallel one, and say what is "
+         "shared in each",
+        "Measure your own vehicle's speed in feet per second",
+        "Predict where a pre-programmed maneuver will finish, then tune "
+         "it",
+        "Explain why dead reckoning drifts",
+    ])
+
     deck.bullets(
-        "Where we got to last week",
+        "Where we got to last lesson",
         [("You installed the Arduino IDE, the board package and the libraries.", 0),
          ("You know the three parts of a program: the top of the file, setup(), "
           "and loop().", 0),
@@ -615,8 +831,7 @@ def lesson2(deck, T):
          ("You lit one of the 32 LEDs and found out where number 0 is.", 0),
          ("", 0),
          ("Today the vehicle moves.", 0)],
-        note="Wheels off the ground for everything until slide 22. Then we clear "
-             "the floor and do it properly.",
+        note="Wheels off the ground for everything until the square maneuver at the end. Then we clear the floor and do it properly.",
         note_kind="safety")
 
     deck.table(
@@ -625,12 +840,13 @@ def lesson2(deck, T):
         [["0:00", "Recap. Two kinds of motor, and how an H-bridge works"],
          ["0:25", "Pulse width modulation and duty cycle"],
          ["0:50", "Upload l2a_one_motor. Find your vehicle's minimum speed"],
-         ["1:20", "Break"],
-         ["1:30", "Upload l2b_speed_ramp. Duty against actual speed"],
-         ["1:55", "Tank drive, and mixing forward with turn"],
-         ["2:10", "The maths: circumference, speed, distance, turn rate"],
-         ["2:35", "Clear the floor. Upload l2c_maneuver_square and tune it"],
-         ["2:55", "Sources of error, and what dead reckoning cannot do"]],
+         ["1:15", "BREAK  (10 minutes)"],
+         ["1:25", "Upload l2b_speed_ramp. Duty against actual speed"],
+         ["1:45", "STEM break: Ohm's law, and a circuit on a breadboard"],
+         ["2:10", "BREAK  (10 minutes)"],
+         ["2:20", "Tank drive, mixing, and the maths that predicts the square"],
+         ["2:40", "Clear the floor. Upload l2c_maneuver_square and tune it"],
+         ["2:57", "Sources of error, and what dead reckoning cannot do"]],
         col_widths=[1, 9])
 
     deck.two_columns(
@@ -654,6 +870,45 @@ def lesson2(deck, T):
              "other way when it flows the other way. Everything else is detail.")
 
     diagrams.h_bridge(deck)
+
+    deck.two_columns(
+        "Why driving A rather than B reverses the motor",
+        "What is physically happening",
+        [("A motor is a coil of wire sitting in a magnetic field. Push current "
+          "through the coil and the field around the coil pushes against the "
+          "magnets, and the shaft turns.", 0),
+         ("", 0),
+         ("Reverse the direction of the current and the coil's field reverses "
+          "with it. Same magnets, same coil, opposite push - so the shaft "
+          "turns the other way.", 0),
+         ("", 0),
+         ("That is the whole trick. DIRECTION OF ROTATION IS DIRECTION OF "
+          "CURRENT. Everything the H-bridge does is in service of that one "
+          "fact.", 0)],
+        "What the two pins do about it",
+        [("The motor has two terminals. Current flows from the one at the "
+          "higher voltage to the one at the lower.", 0),
+         ("", 0),
+         ("A at 3.3 V, B at 0 V  ->  current flows A to B", 1),
+         ("A at 0 V, B at 3.3 V  ->  current flows B to A", 1),
+         ("", 0),
+         ("So the pins do not mean \"forwards\" and \"backwards\". They mean "
+          "\"this end is positive\". Which way the wheel then turns depends on "
+          "which way round the motor was wired - which is why swapping the two "
+          "pin numbers in the program fixes a wheel that runs backwards.", 0),
+         ("", 0),
+         ("How MUCH current flows sets how hard it pushes, and that is what "
+          "the duty cycle controls.", 0)],
+        note="Voltage is the push, current is the flow, and the motor turns "
+             "because of the flow. Hold that and the next slide - Ohm's law - "
+             "is the same idea with a resistor instead of a motor.",
+        speaker=[
+            "If a student asks about back-EMF, that is a good question and it "
+            "belongs in the advanced course. Park it.",
+            "The practical takeaway is the last sentence on the right: a wheel "
+            "running backwards is a two-number fix in the sketch, not a "
+            "rewiring job.",
+        ])
 
     deck.table(
         "Your four motors and their eight pins",
@@ -729,6 +984,8 @@ def lesson2(deck, T):
                 "advanced course uses that.", 0)],
         size=14)
 
+    deck.progress(STAGES["lesson2"], 1)
+
     deck.activity(
         "Do it now  -  one motor",
         "l2a_one_motor",
@@ -761,9 +1018,11 @@ def lesson2(deck, T):
           "MOTOR_MIN is the fix - it lifts the slowest speed the vehicle is ever "
           "given, so the wheels start moving the moment you leave the deadzone.", 0),
          ("", 0),
-         ("You will meet the deadzone next week.", 0)],
+         ("You will meet the deadzone next lesson.", 0)],
         note="Measure it, do not guess it. The number in the program was once a "
              "guess, and it was wrong.")
+
+    deck.progress(STAGES["lesson2"], 2)
 
     deck.activity(
         "Do it now  -  duty against speed",
@@ -781,6 +1040,85 @@ def lesson2(deck, T):
                    ("What is the 300 Hz whine, and where does it go at 20 kHz?", 0)],
         safety="Wheels off the ground. This one reaches full speed.",
         minutes=20)
+
+    deck.section("STEM break: Ohm's law and circuits", minutes=25)
+
+    deck.bullets(
+        "Three quantities, one relationship",
+        [("You met these in Lesson 1 when you sized the resistor for your LED. "
+          "Here they are properly.", 0),
+         ("", 0),
+         ("VOLTAGE (V), in volts. The push. How hard the supply is trying to "
+          "move charge round the circuit.", 0),
+         ("CURRENT (I), in amps. The flow. How much charge is actually "
+          "moving past a point each second.", 0),
+         ("RESISTANCE (R), in ohms. The opposition. How much the circuit "
+          "fights the flow.", 0),
+         ("", 0),
+         ("Ohm's law ties all three together. Know any two and you can work "
+          "out the third - which is exactly what you did to pick 220 ohms.", 0)],
+        lead="Voltage, current, resistance",
+        speaker=[
+            "Ask them to draw the triangle in their engineering notebook "
+            "before you show the next slide.",
+            "Kevin's Ohm's Law deck has more practice problems if this group "
+            "wants them.",
+        ])
+
+    diagrams.ohms_and_power_law(
+        deck, title="Ohm's law, and the power law that goes with it")
+
+    deck.bullets(
+        "Practise it",
+        [("Work these in your engineering notebook. Cover the unknown on the "
+          "triangle with your thumb and the triangle tells you the sum.", 0),
+         ("", 0),
+         ("1.  V = 12 volts, I = 15 mA.  R = ?", 0),
+         ("     (careful: convert milliamps to amps first)", 1),
+         ("", 0),
+         ("2.  V = 12 volts, R = 220 ohms.  I = ?", 0),
+         ("", 0),
+         ("3.  I = 2 mA, R = 1.5k ohms.  V = ?", 0),
+         ("     (1.5k means 1500 ohms)", 1),
+         ("", 0),
+         ("4.  Your vehicle's battery is 16 V. A motor stalls and draws "
+          "3 amps. What resistance is it presenting?", 0)],
+        lead="Four minutes, in your notebook",
+        note="Answers: 800 ohms, 0.055 A (55 mA), 3 volts, and about "
+             "5.3 ohms. The last one is why a stalled motor gets hot.",
+        speaker=[
+            "Give them four minutes, then take answers from the room rather "
+            "than reading them out.",
+            "Question 4 is the one worth dwelling on - it connects the maths "
+            "back to the vehicle they are about to drive.",
+        ])
+
+    diagrams.series_parallel(deck)
+
+    deck.bullets(
+        "Series and parallel on the vehicle",
+        [("SERIES. Your LED circuit from Lesson 1: supply, resistor, LED, "
+          "back to ground. One loop, one current.", 0),
+         ("Add resistance and the current everywhere drops.", 1),
+         ("", 0),
+         ("PARALLEL. The four motors. Each one hangs across the same supply, "
+          "so each gets the full battery voltage, and the currents add up.", 0),
+         ("Four motors at 1.5 A each is 6 A out of the battery.", 1),
+         ("That is why the battery goes flat four times faster with all four "
+          "driving than with one.", 1),
+         ("", 0),
+         ("The 32 LEDs are in parallel too. Each pixel draws its own current "
+          "from the same 5 V rail, which is exactly why the power budget in "
+          "Lesson 4 adds up the way it does.", 0)],
+        lead="You have already built both",
+        note="Series: current is shared, voltage divides. Parallel: voltage is "
+             "shared, current divides. Almost every wiring question comes down "
+             "to knowing which one you are looking at.",
+        speaker=[
+            "This is the payoff slide. Tie it to hardware they have handled.",
+            "If time is short, this is the slide to keep and the practice "
+            "problems are the ones to drop.",
+        ])
 
     deck.section("Making it go where you want", minutes=60)
 
@@ -892,6 +1230,8 @@ def lesson2(deck, T):
                 "walking towards it.", 0)],
         size=14, highlight={4, 7})
 
+    deck.progress(STAGES["lesson2"], 3)
+
     deck.activity(
         "Do it now  -  drive a square",
         "l2c_maneuver_square",
@@ -933,8 +1273,32 @@ def lesson2(deck, T):
              "gets bigger. Nothing in the program changed.",
         note_kind="warn")
 
+    deck.bullets_image(
+        "The same ideas, underwater",
+        [("The Explorer Gen 2 ROV is built from the pieces you just met:", 0),
+         ("", 0),
+         ("An ESP32, like the one on your desk", 0),
+         ("Brushless motors on ESCs, not brushed on H-bridges - more "
+          "thrust for the weight", 0),
+         ("A pressure sensor and an IMU on an I2C bus", 0),
+         ("A CAN bus tying it together", 0),
+         ("", 0),
+         ("Different vehicle, same engineering.", 0)],
+        img("rov-can-bus.jpg"),
+        caption="Explorer Gen 2 ROV: ESP32, ESC, sensors, CAN bus",
+        image_ratio=0.50,
+        note="If this looks interesting, there is a whole ROV course. The "
+             "ground vehicle is the easiest place to learn the ideas; the "
+             "submersible is where they get hard.",
+        speaker=[
+            "Worth thirty seconds of enthusiasm. Several students each year "
+            "come for the rover and stay for the ROV.",
+            "The honest pitch: a mistake on a rover bumps a wall. A mistake on "
+            "a submersible floods an electronics bay.",
+        ])
+
     deck.bullets(
-        "Drag race  -  next week and the week after",
+        "Drag race  -  next lesson and the one after",
         [("Mark a start line and a finish line with tape. Measure the distance.", 0),
          ("Line up two or three vehicles. Hold the reset button until the start "
           "signal, then let go.", 0),
@@ -951,7 +1315,7 @@ def lesson2(deck, T):
         lead="Calibrate first, then race")
 
     deck.two_columns(
-        "If you want to go further this week",
+        "If you want to go further before the next lesson",
         "Watch",
         [("How PWM works, controlling a motor   (10:10)", 0),
          ("youtube.com/watch?v=5nwNKPs2gco", 1),
@@ -994,7 +1358,7 @@ def lesson2(deck, T):
           "which way should you change it?", 0),
          ("8.  Give two reasons the same program gives a different square today "
           "than it did yesterday.", 0)],
-        lead="Next week: you get to drive it yourself.")
+        lead="Next lesson: you get to drive it yourself.")
 
     return deck
 
@@ -1011,8 +1375,18 @@ def lesson3(deck, T):
             T["pad_short"])],
         hero_image=T["hero"], logo=LOGO)
 
+    deck.objectives([
+        "Explain how a controller reaches one vehicle and not another",
+        "Say what a deadzone is for, and what goes wrong without one",
+        "Use map() to turn a stick reading into a motor speed",
+        "Mix a forward value and a turn value into two wheel speeds",
+        "Drive the vehicle under your own control",
+        "Write the failsafe that stops the motors when the controller "
+         "drops",
+    ])
+
     deck.bullets(
-        "Where we got to last week",
+        "Where we got to last lesson",
         [("You know how an H-bridge reverses a motor, and how PWM sets its speed.", 0),
          ("You measured your own vehicle's minimum turning speed.", 0),
          ("You drove a square you calculated, and found out why it did not "
@@ -1026,15 +1400,15 @@ def lesson3(deck, T):
         "Today, in order",
         ["Time", "What we do"],
         [["0:00", "Recap. What Bluetooth is, and how a pad finds a vehicle"],
-         ["0:25", "One vehicle, one controller: {}".format(
-             "pairing the pad" if T["key"].endswith("ps3") else "the allowlist")],
+         ["0:25", "One vehicle, one controller"],
          ["0:50", "Upload l3a_controller_check. Find every button and axis"],
-         ["1:20", "Break"],
-         ["1:30", "The deadzone problem, and map()"],
-         ["1:55", "Upload l3b_deadzone_and_map. Watch the arithmetic"],
-         ["2:15", "Mixing forward and turn"],
-         ["2:30", "Upload l3c_tank_drive. Drive it"],
-         ["2:50", "Failsafe, and what happens when the link drops"]],
+         ["1:15", "BREAK  (10 minutes)"],
+         ["1:25", "The deadzone problem, and map()"],
+         ["1:50", "Upload l3b_deadzone_and_map. Watch the arithmetic"],
+         ["2:10", "BREAK  (10 minutes)"],
+         ["2:20", "Mixing forward and turn"],
+         ["2:35", "Upload l3c_tank_drive. Drive it"],
+         ["2:55", "Failsafe, and what happens when the link drops"]],
         col_widths=[1, 9])
 
     deck.bullets(
@@ -1106,6 +1480,8 @@ def lesson3(deck, T):
         note="The PS3 controller was originally called the Sixaxis because it "
              "could sense all six. Spelled backwards, Sixaxis is still Sixaxis.")
 
+    deck.progress(STAGES["lesson3"], 1)
+
     deck.activity(
         "Do it now  -  what does the controller actually send?",
         "l3a_controller_check",
@@ -1173,6 +1549,8 @@ def lesson3(deck, T):
                 "put the direction back at the end.", 0)],
         size=13, highlight={13})
 
+    deck.progress(STAGES["lesson3"], 2)
+
     deck.activity(
         "Do it now  -  watch the arithmetic",
         "l3b_deadzone_and_map",
@@ -1239,6 +1617,8 @@ def lesson3(deck, T):
                ("Driving gets MOTOR_MAX; steering gets turnMax.", 0),
                ("Everything else you have already seen.", 0)],
         size=13, highlight={1, 2, 3, 9, 10})
+
+    deck.progress(STAGES["lesson3"], 3)
 
     deck.activity(
         "Do it now  -  drive it",
@@ -1318,7 +1698,7 @@ def lesson3(deck, T):
          ("6.  Why is steering limited to half power by default?", 0),
          ("7.  Write the three lines that stop the vehicle when the controller "
           "disconnects.", 0)],
-        lead="Next week: the 32 LEDs, and what colour actually is.")
+        lead="Next lesson: the 32 LEDs, and what colour actually is.")
 
     return deck
 
@@ -1450,8 +1830,19 @@ def lesson4(deck, T):
         BYLINE + ["", "Three hours.  Nothing moves today."],
         hero_image=img("vehicle-green-leds.jpg"), logo=LOGO)
 
+    deck.objectives([
+        "Explain how 32 LEDs are controlled independently over one wire",
+        "Mix any colour from red, green and blue values",
+        "Work out the current a lighting pattern will draw, and say "
+         "whether the battery can afford it",
+        "Find any LED on the vehicle from its number, and the LED "
+         "opposite it",
+        "Write a for loop that lights a chosen run of LEDs",
+        "Write a lighting pattern of your own as a function",
+    ])
+
     deck.bullets(
-        "Where we got to last week",
+        "Where we got to last lesson",
         [("You know how a controller reaches the vehicle, and why every vehicle "
           "needs its own address.", 0),
          ("You know what a deadzone is and why it exists.", 0),
@@ -1461,7 +1852,7 @@ def lesson4(deck, T):
          ("", 0),
          ("Today: the 32 lights. Nothing on the vehicle moves, so the wheels can "
           "stay on the desk.", 0)],
-        note="Next week everything comes together and we race.")
+        note="Next lesson everything comes together and we race.")
 
     deck.table(
         "Today, in order",
@@ -1469,10 +1860,11 @@ def lesson4(deck, T):
         [["0:00", "Recap. What an addressable LED is"],
          ["0:25", "Colour: RGB, wavelength, and how your eye works"],
          ["0:50", "The power budget. Upload l4a_all_one_colour"],
-         ["1:20", "Break"],
-         ["1:30", "Mapping the loop. Upload l4b_led_map"],
-         ["2:00", "for loops, and four patterns. Upload l4c_patterns"],
-         ["2:35", "Design a pattern of your own"],
+         ["1:15", "BREAK  (10 minutes)"],
+         ["1:25", "Mapping the loop. Upload l4b_led_map"],
+         ["1:55", "for loops, and four patterns. Upload l4c_patterns"],
+         ["2:20", "BREAK  (10 minutes)"],
+         ["2:30", "Design a pattern of your own"],
          ["2:55", "Recap"]],
         col_widths=[1, 9])
 
@@ -1595,6 +1987,8 @@ def lesson4(deck, T):
 
     diagrams.ohms_and_power_law(deck)
 
+    deck.progress(STAGES["lesson4"], 1)
+
     deck.activity(
         "Do it now  -  all 32, one colour at a time",
         "l4a_all_one_colour",
@@ -1613,6 +2007,8 @@ def lesson4(deck, T):
         minutes=20)
 
     diagrams.led_map(deck)
+
+    deck.progress(STAGES["lesson4"], 2)
 
     deck.activity(
         "Do it now  -  learn the map",
@@ -1688,6 +2084,8 @@ def lesson4(deck, T):
              "brightness in a straight line. Without it, the middle of a fade "
              "looks too bright.")
 
+    deck.progress(STAGES["lesson4"], 3)
+
     deck.activity(
         "Do it now  -  four patterns",
         "l4c_patterns",
@@ -1720,7 +2118,7 @@ def lesson4(deck, T):
          ("Rules: it must be a function you call from loop(), and it must use "
           "at least one for loop.", 0),
          ("", 0),
-         ("Then show the class. Best one gets used in the race next week.", 0)],
+         ("Then show the class. Best one gets used in the race next lesson.", 0)],
         lead="Twenty minutes, in your groups")
 
     deck.table(
@@ -1762,7 +2160,7 @@ def lesson4(deck, T):
          ("6.  Which LEDs are on the LEFT side of the vehicle?", 0),
          ("7.  Which LED is directly opposite front LED 6?", 0),
          ("8.  Write a for loop that lights only the rear bar in red.", 0)],
-        lead="Next week: everything at once, and a race.")
+        lead="Next lesson: everything at once, and a race.")
 
     return deck
 
@@ -1777,6 +2175,17 @@ def lesson5(deck, T):
         "program.".format(T["full_program"]),
         BYLINE + ["", "Three hours.  Bring a charged battery."],
         hero_image=img("vehicle-side-blue-leds.jpg"), logo=LOGO)
+
+    deck.objectives([
+        "Explain why delay() breaks a program that has to do two things "
+         "at once",
+        "Write the millis() pattern from memory",
+        "Detect the edge of a button press, and say what happens "
+         "without it",
+        "Explain what a dirty flag saves",
+        "Drive the vehicle with its full lighting behaviour running",
+        "Calibrate your vehicle's speed and race it",
+    ])
 
     deck.bullets(
         "Everything so far",
@@ -1799,12 +2208,13 @@ def lesson5(deck, T):
         [["0:00", "Recap. Why delay() has to go"],
          ["0:25", "Upload l5a_millis_not_delay"],
          ["0:45", "Edge detection. Upload l5b_button_toggle"],
-         ["1:10", "Break"],
+         ["1:10", "BREAK  (10 minutes)"],
          ["1:20", "Driving lights from driving state. Upload l5c_drive_with_lights"],
-         ["1:50", "A tour of {}".format(T["full_program"])],
-         ["2:15", "Servos, the scanner, and sharp steering"],
-         ["2:30", "Calibrate, then race"],
-         ["2:55", "Where this course goes next"]],
+         ["1:50", "A tour of the full program"],
+         ["2:10", "BREAK  (10 minutes)"],
+         ["2:20", "Servos, the scanner, and sharp steering"],
+         ["2:35", "Calibrate, then race"],
+         ["2:57", "Where this course goes next"]],
         col_widths=[1, 9])
 
     deck.bullets(
@@ -1856,6 +2266,8 @@ def lesson5(deck, T):
                 "program.", 0)],
         size=14, highlight={3, 4})
 
+    deck.progress(STAGES["lesson5"], 1)
+
     deck.activity(
         "Do it now  -  two speeds at once",
         "l5a_millis_not_delay",
@@ -1896,6 +2308,8 @@ def lesson5(deck, T):
          ("That is justPressed(), and the full program uses it for every "
           "single button.", 0)],
         lead="The level is not the event")
+
+    deck.progress(STAGES["lesson5"], 2)
 
     deck.activity(
         "Do it now  -  see the bug, then the fix",
@@ -1975,6 +2389,8 @@ def lesson5(deck, T):
                ("Only if it CHANGED do we set the dirty flag.", 0)],
         size=14, highlight={6, 7, 8})
 
+    deck.progress(STAGES["lesson5"], 3)
+
     deck.activity(
         "Do it now  -  drive with lights",
         "l5c_drive_with_lights",
@@ -2035,6 +2451,8 @@ def lesson5(deck, T):
           "before you drive off.", 1)],
         note="Read the top of the file. Every setting you might want to change "
              "is in the SETTINGS block, with a comment saying what it does.")
+
+    deck.progress(STAGES["lesson5"], 4)
 
     deck.activity(
         "Do it now  -  the real thing",

@@ -22,8 +22,14 @@ def img(name):
 
 
 BYLINE = [
-    "Porpoise Robotics  -  porpoiserobotics.org",
-    "Kevin P. Bowen, President  -  kbowen6@icloud.com",
+    "PORPOISE ROBOTICS  -  Precision Oceanographic Program On and In the Sea Environment",
+    "porpoiserobotics.org",
+    "",
+    "Kevin Bowen, President  -  kbowen6@icloud.com",
+    "Malcom Graham, VP Education      Louis Parker, VP Technology",
+    "Valen Farre, System Engineer      Gary Howland, Animation",
+    "Eddie Revollo, Artificial Intelligence",
+    "Interns: Oscar Canazales, Krishnansh Vemulapalli, Soham Gangal, Erik Olsen",
 ]
 
 LOGO = img("porpoise-logo.png")
@@ -32,6 +38,35 @@ TRACK_LABEL = "Pathfinder Advanced - Op Program 12"
 
 SRC = "ground-vehicle/src/lessons/advanced"
 
+
+# The stages each lesson moves through, used by the progress markers.
+STAGES = {
+    "lesson1": [
+        "Architecture",
+        "Tabs and Config.h",
+        "The console",
+    ],
+    "lesson2": [
+        "The LEDC peripheral",
+        "Resolution",
+        "Decay and ramping",
+    ],
+    "lesson3": [
+        "Callbacks and allowlist",
+        "Locking a board",
+        "EEPROM",
+    ],
+    "lesson4": [
+        "State machines",
+        "Measuring a redraw",
+        "Turn signal geometry",
+    ],
+    "lesson5": [
+        "I2C",
+        "Finding the sensor",
+        "Measuring a motor",
+    ],
+}
 
 # ===================================================================
 # LESSON 1
@@ -43,6 +78,16 @@ def lesson1(deck):
         "capability flags, and a console you can talk to.",
         BYLINE + ["", "Three hours.  Assumes you have driven a Pathfinder before."],
         hero_image=img("vehicle-top-plate-esp32.jpg"), logo=LOGO)
+
+    deck.objectives([
+        "Explain how the Arduino IDE assembles a multi-tab sketch, and "
+         "why a type has to live in a header",
+        "Split a program by subsystem without breaking it",
+        "Say why the program detects its hardware rather than being "
+         "told about it",
+        "Write a serial console that does not block the vehicle",
+        "Read the boot sequence of Op Program 12 and justify its order",
+    ])
 
     deck.bullets(
         "Who this course is for, and what it is not",
@@ -78,10 +123,11 @@ def lesson1(deck):
         [["0:00", "What changed from Op 11.2, and why"],
          ["0:30", "One binary, two vehicles: capability flags"],
          ["0:50", "How Arduino tabs really work, and why Config.h is a header"],
-         ["1:20", "Break"],
-         ["1:30", "Upload a1a_tabs_and_config. Break it on purpose"],
-         ["2:00", "A serial console: reading without blocking, and parsing"],
-         ["2:20", "Upload a1b_serial_console"],
+         ["1:15", "BREAK  (10 minutes)"],
+         ["1:25", "Upload a1a_tabs_and_config. Break it on purpose"],
+         ["1:55", "A serial console: reading without blocking, and parsing"],
+         ["2:15", "BREAK  (10 minutes)"],
+         ["2:25", "Upload a1b_serial_console"],
          ["2:45", "The boot sequence of Op Program 12, line by line"]],
         col_widths=[1, 9])
 
@@ -179,6 +225,8 @@ def lesson1(deck):
              "global. It is a convention, and it is the only thing standing "
              "between you and 1292 lines again.")
 
+    deck.progress(STAGES["lesson1"], 1)
+
     deck.activity(
         "Do it now  -  three files, one program",
         "a1a_tabs_and_config",
@@ -248,6 +296,8 @@ def lesson1(deck):
                ("The length cap matters. Without it a stuck sender grows the "
                 "String until the ESP32 runs out of heap.", 0)],
         size=13, highlight={1, 4, 12})
+
+    deck.progress(STAGES["lesson1"], 2)
 
     deck.activity(
         "Do it now  -  a console",
@@ -363,7 +413,7 @@ def lesson1(deck):
          ("6.  Why does setup() initialise the motors before the LEDs?", 0),
          ("7.  Every tab can see every global. Why is that both the convenience "
           "and the danger?", 0)],
-        lead="Next week: motors, and integer maths that quietly lies to you.")
+        lead="Next lesson: motors, and integer maths that quietly lies to you.")
 
     return deck
 
@@ -379,17 +429,29 @@ def lesson2(deck):
         BYLINE + ["", "Three hours.  Wheels off the ground throughout."],
         hero_image=img("vehicle-rear-battery.jpg"), logo=LOGO)
 
+    deck.objectives([
+        "Work out the maximum PWM frequency for a given resolution, and "
+         "say what more resolution buys you",
+        "Describe the four states of an H-bridge and what the motor "
+         "does in each",
+        "Explain why fast decay holds speed better under load than slow "
+         "decay",
+        "Spot the integer-truncation bug in a ramp, and fix it",
+        "Explain why remap_axis constrains before it maps",
+    ])
+
     deck.table(
         "Today, in order",
         ["Time", "What we do"],
         [["0:00", "Recap. The LEDC peripheral and what it can actually do"],
          ["0:25", "Resolution against frequency. Upload a2a_pwm_resolution"],
-         ["1:00", "Break"],
+         ["1:00", "BREAK  (10 minutes)"],
          ["1:10", "Coast, brake, and the two decay modes"],
          ["1:40", "Upload a2b_coast_brake_hybrid. Feel the difference"],
-         ["2:10", "Speed ramping, and the truncation bug"],
-         ["2:30", "remap_axis: deadzone, scale, and per-axis tuning"],
-         ["2:45", "Four servos on one thumbstick"]],
+         ["2:10", "BREAK  (10 minutes)"],
+         ["2:20", "Speed ramping, and the truncation bug"],
+         ["2:35", "remap_axis: deadzones, scale, and per-axis tuning"],
+         ["2:50", "Four servos on one thumbstick"]],
         col_widths=[1, 9])
 
     deck.bullets(
@@ -418,6 +480,8 @@ def lesson2(deck):
              "the combination is impossible. Check it. Silence is otherwise very "
              "hard to debug.",
         note_kind="warn")
+
+    deck.progress(STAGES["lesson2"], 1)
 
     deck.activity(
         "Do it now  -  resolution you can hear",
@@ -530,6 +594,8 @@ def lesson2(deck):
                 "forever.", 0)],
         size=13, highlight={1, 14})
 
+    deck.progress(STAGES["lesson2"], 2)
+
     deck.activity(
         "Do it now  -  decay modes and ramping",
         "a2b_coast_brake_hybrid",
@@ -613,7 +679,7 @@ def lesson2(deck):
          ("7.  Why does remap_axis call constrain() before map() rather than "
           "after?", 0),
          ("8.  Why does NORMAL mode scale steering rather than top speed?", 0)],
-        lead="Next week: identity that survives a power cycle.")
+        lead="Next lesson: identity that survives a power cycle.")
 
     return deck
 
@@ -629,17 +695,28 @@ def lesson3(deck):
         BYLINE + ["", "Three hours.  Bring two controllers per group if you can."],
         hero_image=img("control-board-bare.jpg"), logo=LOGO)
 
+    deck.objectives([
+        "Explain what a callback is and when it runs",
+        "Configure a Bluetooth allowlist correctly, in the right order",
+        "Say what EEPROM.commit() actually does on an ESP32, and why it "
+         "must not be called from loop()",
+        "Design a storage map with a validity marker, and load it "
+         "defensively",
+        "Walk through the full pairing workflow end to end",
+    ])
+
     deck.table(
         "Today, in order",
         ["Time", "What we do"],
         [["0:00", "Recap. Bluepad32, callbacks, and who calls whom"],
          ["0:25", "The allowlist, and the order the calls must go in"],
          ["0:50", "Upload a3a_controller_address. Lock and unlock a board"],
-         ["1:25", "Break"],
-         ["1:35", "There is no EEPROM on an ESP32"],
-         ["2:00", "Magic bytes, storage maps, and never trusting storage"],
-         ["2:15", "Upload a3b_eeprom_settings. Pull the cable out"],
-         ["2:45", "The full pairing workflow in Op 12"]],
+         ["1:20", "BREAK  (10 minutes)"],
+         ["1:30", "There is no EEPROM on an ESP32"],
+         ["1:55", "Magic bytes, storage maps, and never trusting storage"],
+         ["2:15", "BREAK  (10 minutes)"],
+         ["2:25", "Upload a3b_eeprom_settings. Pull the cable out"],
+         ["2:50", "The full pairing workflow in Op 12"]],
         col_widths=[1, 9])
 
     deck.bullets(
@@ -692,6 +769,8 @@ def lesson3(deck):
              "allowlist AND new connections disabled - and then refuse its own "
              "controller with no way in.",
         note_kind="warn")
+
+    deck.progress(STAGES["lesson3"], 1)
 
     deck.activity(
         "Do it now  -  lock a board to one pad",
@@ -778,6 +857,8 @@ def lesson3(deck):
          ("Defensive loading is not paranoia. It is the difference between a "
           "vehicle that boots with odd settings and one that will not boot.", 0)],
         lead="Two separate checks, for two separate problems")
+
+    deck.progress(STAGES["lesson3"], 2)
 
     deck.activity(
         "Do it now  -  settings that survive",
@@ -887,7 +968,7 @@ def lesson3(deck):
           "own?", 0),
          ("8.  A vehicle refuses its own controller after a power cycle. Give "
           "two possible causes.", 0)],
-        lead="Next week: never block, and never redraw for nothing.")
+        lead="Next lesson: never block, and never redraw for nothing.")
 
     return deck
 
@@ -903,16 +984,25 @@ def lesson4(deck):
         BYLINE + ["", "Three hours.  Nothing moves today."],
         hero_image=img("vehicle-green-leds.jpg"), logo=LOGO)
 
+    deck.objectives([
+        "Say why a state machine beats a set of booleans for lighting",
+        "Write a non-blocking animation that draws one frame per pass",
+        "Explain what a dirty flag saves, and measure it",
+        "Work out the LED indices for a turn signal on either side",
+        "Add a new lighting mode without touching the existing ones",
+    ])
+
     deck.table(
         "Today, in order",
         ["Time", "What we do"],
         [["0:00", "Recap. What a state machine buys you"],
          ["0:25", "The six modes, and how control passes between them"],
          ["0:50", "Non-blocking animation as a discipline"],
-         ["1:10", "Upload a4a_led_state_machine. Measure the cost of a redraw"],
-         ["1:40", "Break"],
+         ["1:10", "Upload a4a_led_state_machine. Measure a redraw"],
+         ["1:40", "BREAK  (10 minutes)"],
          ["1:50", "Colour helpers, and why they are written out longhand"],
          ["2:10", "Turn signal geometry. Upload a4b_turn_signal_larson"],
+         ["2:35", "BREAK  (10 minutes)"],
          ["2:45", "Add a mode of your own"]],
         col_widths=[1, 9])
 
@@ -997,6 +1087,8 @@ def lesson4(deck):
                 "Anywhere redrawing is expensive, something is tracking what "
                 "actually changed.", 0)],
         size=12, highlight={12})
+
+    deck.progress(STAGES["lesson4"], 1)
 
     deck.activity(
         "Do it now  -  measure the state machine",
@@ -1091,6 +1183,8 @@ def lesson4(deck):
                ("This is a small thing that makes a machine feel considered "
                 "rather than twitchy.", 0)],
         size=12, highlight={10, 11, 12})
+
+    deck.progress(STAGES["lesson4"], 2)
 
     deck.activity(
         "Do it now  -  step through the geometry",
@@ -1212,7 +1306,7 @@ def lesson4(deck):
           "when the D-pad is released?", 0),
          ("8.  You want to add a hazard-lights mode. What exactly do you have "
           "to change?", 0)],
-        lead="Next week: a machine that tests its own hardware.")
+        lead="Next lesson: a machine that tests its own hardware.")
 
     return deck
 
@@ -1228,17 +1322,30 @@ def lesson5(deck):
         BYLINE + ["", "Three hours.  Gen 3 vehicles for the sensor work."],
         hero_image=img("vehicle-with-rangefinder.jpg"), logo=LOGO)
 
+    deck.objectives([
+        "Test whether a device is present on an I2C bus, and diagnose "
+         "an empty scan",
+        "Explain how a shunt resistor measures current, and why it is "
+         "small",
+        "Read a chip register from its datasheet with no library",
+        "Recognise the current signature of a healthy, disconnected and "
+         "jammed motor",
+        "Say why self-test thresholds are measured against a baseline",
+        "Add a subsystem to Op Program 12 without making it worse",
+    ])
+
     deck.table(
         "Today, in order",
         ["Time", "What we do"],
         [["0:00", "Recap. I2C addressing, acknowledgement, pull-ups"],
          ["0:25", "Upload a5a_i2c_scan. Find the sensor, then lose it"],
          ["0:50", "Measuring current without interrupting it"],
-         ["1:15", "Break"],
+         ["1:15", "BREAK  (10 minutes)"],
          ["1:25", "Driving a chip from its datasheet, with no library"],
          ["1:50", "Upload a5b_ina219_current. Measure a motor"],
-         ["2:20", "Current signatures, and the self-test state machine"],
-         ["2:45", "Adding a subsystem of your own, properly"]],
+         ["2:20", "BREAK  (10 minutes)"],
+         ["2:30", "Current signatures, and the self-test state machine"],
+         ["2:50", "Adding a subsystem of your own, properly"]],
         col_widths=[1, 9])
 
     deck.bullets(
@@ -1263,6 +1370,8 @@ def lesson5(deck):
         lead="Two wires, 120 possible devices",
         note="On this board I2C is on GPIO 32 and 33, not the ESP32 defaults. "
              "GPIO 34-39 are input-only and cannot drive a bus at all.")
+
+    deck.progress(STAGES["lesson5"], 1)
 
     deck.activity(
         "Do it now  -  find the sensor",
@@ -1333,6 +1442,8 @@ def lesson5(deck):
                ("Bus voltage sits in the top 13 bits, so it is shifted down.", 0),
                ("Forty lines of your own beats a library you cannot read.", 0)],
         size=12, highlight={3, 9})
+
+    deck.progress(STAGES["lesson5"], 2)
 
     deck.activity(
         "Do it now  -  what a motor costs",

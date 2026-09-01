@@ -400,10 +400,12 @@ class Deck:
                     height=Inches(1.05), size=17, floor=13, color=INK,
                     space_after=0)
 
-        box = self._textbox(slide, MARGIN_L, Inches(4.62), text_w, Inches(1.5))
+        # The credit block is chrome, like the footer - it names the team
+        # rather than teaching anything, so it is exempt from the 18pt floor.
+        box = self._textbox(slide, MARGIN_L, Inches(4.30), text_w, Inches(2.35))
         _set_fitted(box.text_frame, byline_lines, width=text_w,
-                    height=Inches(1.5), size=13, floor=10, color=GREY,
-                    space_after=2)
+                    height=Inches(2.35), size=13, floor=10, color=GREY,
+                    space_after=1)
 
         if hero_image and os.path.exists(hero_image):
             pic = slide.shapes.add_picture(hero_image, Inches(7.9), Inches(1.5),
@@ -445,6 +447,82 @@ class Deck:
                         height=Inches(1.0), size=16, floor=12, color=GREY,
                         space_after=4)
         set_notes(slide, speaker)
+        return slide
+
+    def objectives(self, items, title="What you will be able to do by the end",
+                   speaker=None):
+        """
+        The learning objectives for the lesson, stated as things the student
+        will be able to DO. Shown near the front and worth returning to at the
+        end.
+        """
+        slide = self._new(title=title)
+
+        box = self._textbox(slide, MARGIN_L, BODY_TOP, CONTENT_W, Inches(0.55))
+        _set_fitted(box.text_frame, ["By the end of this lesson you will be "
+                                     "able to:"], width=CONTENT_W,
+                    height=Inches(0.55), size=19, bold=True, color=TEAL)
+
+        numbered = [("%d.   %s" % (i + 1, text), 0)
+                    for i, text in enumerate(items)]
+        height = BODY_H - Inches(0.6)
+        box = self._textbox(slide, MARGIN_L, BODY_TOP + Inches(0.6), CONTENT_W,
+                            height)
+        _set_fitted(box.text_frame, numbered, width=CONTENT_W, height=height,
+                    size=19, space_after=13)
+
+        set_notes(slide, speaker)
+        return slide
+
+    def progress(self, stages, done, title="Where we are"):
+        """
+        A strip of the lesson's stages with the finished ones ticked and the
+        current one highlighted. Shown between sections so the class can see
+        how far through the three hours they are.
+        """
+        slide = self._new(title=title)
+
+        gap = Inches(0.16)
+        count = len(stages)
+        box_w = Emu(int((CONTENT_W - gap * (count - 1)) / count))
+        top = BODY_TOP + Inches(1.15)
+        box_h = Inches(1.9)
+
+        for index, stage in enumerate(stages):
+            left = MARGIN_L + (box_w + gap) * index
+            if index < done:
+                fill, edge, mark = PANEL, TEAL, "done"
+            elif index == done:
+                fill, edge, mark = RGBColor(0xD6, 0xEC, 0xEE), TEAL, "NOW"
+            else:
+                fill, edge, mark = WHITE, RULE, ""
+
+            shape = slide.shapes.add_shape(MSO_SHAPE.ROUNDED_RECTANGLE, left,
+                                           top, box_w, box_h)
+            shape.adjustments[0] = 0.08
+            shape.fill.solid()
+            shape.fill.fore_color.rgb = fill
+            shape.line.color.rgb = edge
+            shape.line.width = Pt(2.0 if index == done else 1.0)
+            shape.shadow.inherit = False
+
+            frame = shape.text_frame
+            frame.word_wrap = True
+            frame.margin_left = Inches(0.08)
+            frame.margin_right = Inches(0.08)
+            frame.vertical_anchor = MSO_ANCHOR.MIDDLE
+            _set_fitted(frame, [stage], width=box_w, height=box_h, size=17,
+                        floor=13, bold=(index == done),
+                        color=NAVY if index <= done else GREY,
+                        align=PP_ALIGN.CENTER, space_after=0)
+
+            if mark:
+                tag = self._textbox(slide, left, top - Inches(0.42), box_w,
+                                    Inches(0.38))
+                _set_fitted(tag.text_frame, [mark], width=box_w,
+                            height=Inches(0.38), size=13, floor=11, bold=True,
+                            color=TEAL, align=PP_ALIGN.CENTER)
+
         return slide
 
     def bullets(self, title, items, lead=None, note=None, note_kind="info",
@@ -618,6 +696,47 @@ class Deck:
                 _set_fitted(cap.text_frame, [caption], width=CONTENT_W,
                             height=Inches(0.74), size=MIN_SMALL_PT,
                             floor=MIN_SMALL_PT, color=GREY, align=PP_ALIGN.CENTER)
+
+        if note:
+            self._note(slide, note, note_kind)
+        set_notes(slide, speaker)
+        return slide
+
+    def image_pair(self, title, left_image, left_caption, right_image,
+                   right_caption, lead=None, note=None, note_kind="info",
+                   speaker=None):
+        """Two photographs side by side, for a before/after or left/right pair."""
+        slide = self._new(title=title)
+
+        top = BODY_TOP
+        if lead:
+            box = self._textbox(slide, MARGIN_L, top, CONTENT_W, Inches(0.6))
+            _set_fitted(box.text_frame, [lead], width=CONTENT_W,
+                        height=Inches(0.6), size=MIN_BODY_PT, color=INK)
+            top += Inches(0.68)
+
+        gap = Inches(0.4)
+        col_w = Emu(int((CONTENT_W - gap) / 2))
+        bottom = Inches(5.55) if note else Inches(6.85)
+        pic_h = bottom - top - Inches(0.85)
+
+        for index, (path, caption) in enumerate(
+                ((left_image, left_caption), (right_image, right_caption))):
+            left = MARGIN_L + (col_w + gap) * index
+            if not (path and os.path.exists(path)):
+                continue
+            pic = slide.shapes.add_picture(path, left, top, height=pic_h)
+            if pic.width > col_w:
+                scale = col_w / pic.width
+                pic.width = int(pic.width * scale)
+                pic.height = int(pic.height * scale)
+            pic.left = left + Emu(int((col_w - pic.width) / 2))
+
+            cap = self._textbox(slide, left, top + pic.height + Inches(0.08),
+                                col_w, Inches(0.72))
+            _set_fitted(cap.text_frame, [caption], width=col_w,
+                        height=Inches(0.72), size=MIN_SMALL_PT,
+                        floor=MIN_SMALL_PT, color=GREY, align=PP_ALIGN.CENTER)
 
         if note:
             self._note(slide, note, note_kind)

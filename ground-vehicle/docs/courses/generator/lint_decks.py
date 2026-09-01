@@ -98,6 +98,10 @@ def check_deck(path):
             frame = shape.text_frame
             if not frame.text.strip():
                 continue
+            # The title-slide credit block is chrome, sized like the
+            # footer, and is allowed to sit below the body floor.
+            if "Porpoise Robotics" in frame.text and "President" in frame.text:
+                continue
 
             inset_l = frame.margin_left.pt if frame.margin_left is not None else 7.2
             inset_r = frame.margin_right.pt if frame.margin_right is not None else 7.2

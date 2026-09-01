@@ -120,12 +120,15 @@ def _plain_line(slide, x1, y1, x2, y2, *, color=GREY, width=1.0):
 def program_structure(deck, title="Every program has the same three parts"):
     slide = deck.blank(title)
 
+    # Named the way the course names them: INITIALIZATION, SETUP, LOOP. The
+    # first has no keyword of its own in C++ - it is simply the top of the
+    # file - but giving it a name makes the three-part shape easy to hold on to.
     parts = [
-        ("1.  THE TOP OF THE FILE", "Libraries, constants, variables.\nRead before anything runs.",
+        ("1.  INITIALIZATION", "Libraries, constants, variables.\nThe top of the file.",
          "#include <Adafruit_NeoPixel.h>\nconst int LED_PIN = 5;", LIGHT_GREY),
-        ("2.  setup()", "Runs ONCE, at power-up or reset.\nGet the hardware ready.",
+        ("2.  SETUP", "setup() runs ONCE, at power-up.\nGet the hardware ready.",
          "void setup() {\n  pinMode(LED_PIN, OUTPUT);\n}", LIGHT_TEAL),
-        ("3.  loop()", "Runs OVER AND OVER, forever,\nuntil the power goes off.",
+        ("3.  LOOP", "loop() runs OVER AND OVER,\nuntil the power goes off.",
          "void loop() {\n  digitalWrite(LED_PIN, HIGH);\n  delay(1000);\n}", LIGHT_AMBER),
     ]
 
@@ -615,61 +618,82 @@ def millis_timeline(deck, title="Why the vehicle programs never call delay()"):
 # ===================================================================
 
 def square_path(deck, title="Dead reckoning: the vehicle has no idea where it is"):
+    """
+    The square the vehicle drives, with the four legs numbered and the two
+    equations that predict it. Redrawn so the corner labels sit outside the
+    path instead of on top of it.
+    """
     slide = deck.blank(title)
 
-    ox = MARGIN_L + Inches(1.4)
-    oy = BODY_TOP + Inches(4.3)
-    side = Inches(3.3)
+    side = Inches(2.9)
+    ox = MARGIN_L + Inches(1.5)
+    oy = BODY_TOP + Inches(4.05)
 
     corners = [(ox, oy), (ox, oy - side), (ox + side, oy - side), (ox + side, oy)]
 
+    # The four legs, drawn anticlockwise from the start.
     for index in range(4):
         x1, y1 = corners[index]
         x2, y2 = corners[(index + 1) % 4]
-        _arrow(slide, x1, y1, x2, y2, color=TEAL, width=2.5)
+        _arrow(slide, x1, y1, x2, y2, color=TEAL, width=3.0)
 
-    _box(slide, ox - Inches(0.28), oy - Inches(0.14), Inches(0.56), Inches(0.28),
-         "", fill=TEAL, edge=TEAL, shape=MSO_SHAPE.OVAL, size=8)
-    _label(slide, ox - Inches(1.5), oy + Inches(0.1), Inches(1.4), "start / finish",
-           size=12, bold=True, color=TEAL, align=PP_ALIGN.RIGHT)
+    # Number each leg on the OUTSIDE of the path.
+    leg_labels = [
+        (ox - Inches(1.75), oy - Emu(int(side / 2)) - Inches(0.2), "1  forward"),
+        (ox + Emu(int(side / 2)) - Inches(0.8), oy - side - Inches(0.75), "2  forward"),
+        (ox + side + Inches(0.3), oy - Emu(int(side / 2)) - Inches(0.2), "3  forward"),
+        (ox + Emu(int(side / 2)) - Inches(0.8), oy + Inches(0.35), "4  forward"),
+    ]
+    for lx, ly, text in leg_labels:
+        _label(slide, lx, ly, Inches(1.6), text, size=14, bold=True,
+               color=NAVY, align=PP_ALIGN.CENTER)
 
+    # Corner markers, small, just outside each turn.
     for index, (x, y) in enumerate(corners):
-        _label(slide, x - Inches(0.55), y - Inches(0.62), Inches(1.1),
-               "turn {} ms".format("TURN_MS"), size=10, color=AMBER,
-               align=PP_ALIGN.CENTER)
+        dot = slide.shapes.add_shape(MSO_SHAPE.OVAL, x - Inches(0.13),
+                                     y - Inches(0.13), Inches(0.26), Inches(0.26))
+        dot.fill.solid()
+        dot.fill.fore_color.rgb = AMBER
+        dot.line.fill.background()
+        dot.shadow.inherit = False
+        _set_text(dot.text_frame, [""], size=8)
 
-    _label(slide, ox, oy - Emu(int(side / 2)) - Inches(0.2), side,
-           "forward\nFORWARD_MS", size=12, color=NAVY, align=PP_ALIGN.CENTER)
+    _label(slide, ox - Inches(1.9), oy + Inches(0.30), Inches(1.7),
+           "START", size=15, bold=True, color=TEAL, align=PP_ALIGN.RIGHT)
+    _label(slide, ox - Inches(1.9), oy + Inches(0.72), Inches(1.7),
+           "each dot is a", size=13, color=AMBER, align=PP_ALIGN.RIGHT)
+    _label(slide, ox - Inches(1.9), oy + Inches(1.10), Inches(1.7),
+           "90 degree turn", size=13, color=AMBER, align=PP_ALIGN.RIGHT)
 
-    # The maths, alongside
-    right = ox + side + Inches(1.6)
-    col_w = Inches(5.6)
+    # The maths, well clear of the figure.
+    right = MARGIN_L + Inches(6.6)
+    col = Inches(5.6)
 
-    _label(slide, right, BODY_TOP + Inches(0.15), col_w,
-           "The two equations", size=18, bold=True, color=TEAL)
+    _label(slide, right, BODY_TOP, col, "The two equations", size=19,
+           bold=True, color=TEAL)
 
-    _box(slide, right, BODY_TOP + Inches(0.6), col_w, Inches(1.0),
+    _box(slide, right, BODY_TOP + Inches(0.5), col, Inches(1.15),
          ["distance = speed x time",
           "degrees turned = turn rate x time"],
          fill=CODE_BG, edge=TEAL, size=15, font=CODE_FONT,
          shape=MSO_SHAPE.RECTANGLE, edge_w=1.0, align=PP_ALIGN.LEFT)
 
-    _label(slide, right, BODY_TOP + Inches(1.85), col_w,
-           ["You know the time - you wrote it in the delay().",
+    _label(slide, right, BODY_TOP + Inches(1.85), col,
+           ["You know the TIME - you wrote it in the delay().",
             "You have to MEASURE the speed and the turn rate.",
             "",
             "wheel circumference = pi x 3.0 in = 9.42 in",
             "one wheel turn = 9.42 / 12 = 0.79 ft",
             "",
-            "Then: drive it, measure the side, divide by the",
-            "time, and you have feet per second for YOUR",
-            "vehicle on THIS floor with THIS battery charge."],
-           size=13, color=INK)
+            "Drive it, measure one side, divide by the time, and",
+            "you have feet per second for YOUR vehicle on THIS",
+            "floor with THIS battery charge."],
+           size=14, color=INK)
 
     deck._note(slide,
                "Recharge the battery and the same numbers give a bigger square. "
-               "That drift is why dead reckoning is a starting point, not an answer.",
-               "warn")
+               "That drift is why dead reckoning is a starting point, not an "
+               "answer.", "warn")
     return slide
 
 
@@ -1008,4 +1032,157 @@ def ohms_and_power_law(deck,
                "Cover the quantity you want with your thumb and the triangle "
                "shows you the sum. These two turn up again in the LED budget, "
                "the shunt resistor, and how long your battery lasts.", "info")
+    return slide
+
+
+# ===================================================================
+# 15. the LED circuit students wire in Lesson 1
+# ===================================================================
+
+def led_circuit(deck, title="The circuit you are about to build"):
+    """
+    GPIO -> resistor -> LED -> ground, drawn as a loop, with the Ohm's law
+    working that picks the resistor. Native shapes, so it prints sharp and a
+    teacher can retype the numbers for a different LED.
+    """
+    slide = deck.blank(title)
+
+    left = MARGIN_L + Inches(0.6)
+    top = BODY_TOP + Inches(0.55)
+    w = Inches(6.6)
+    h = Inches(2.6)
+
+    # The loop itself.
+    _plain_line(slide, left, top, left + w, top, color=NAVY, width=2.5)
+    _plain_line(slide, left + w, top, left + w, top + h, color=NAVY, width=2.5)
+    _plain_line(slide, left, top + h, left + w, top + h, color=NAVY, width=2.5)
+    _plain_line(slide, left, top, left, top + h, color=NAVY, width=2.5)
+
+    _box(slide, left - Inches(1.0), top - Inches(0.32), Inches(2.0),
+         Inches(0.64), "ESP32  GPIO 2", fill=LIGHT_TEAL, edge=TEAL, size=14,
+         bold=True, color=NAVY)
+    _box(slide, left - Inches(0.95), top + h - Inches(0.32), Inches(1.9),
+         Inches(0.64), "ESP32  GND", fill=LIGHT_GREY, edge=GREY, size=14,
+         bold=True, color=NAVY)
+
+    _box(slide, left + Inches(1.6), top - Inches(0.34), Inches(2.1),
+         Inches(0.68), "220 ohm", fill=WHITE, edge=AMBER, size=15, bold=True,
+         color=NAVY)
+    _box(slide, left + w - Inches(0.55), top + Inches(0.85), Inches(1.1),
+         Inches(0.9), "LED", fill=LIGHT_AMBER, edge=AMBER, size=15, bold=True,
+         color=NAVY)
+
+    _label(slide, left + w - Inches(2.35), top + Inches(0.72), Inches(1.7),
+           "long leg  +", size=14, color=TEAL, bold=True, align=PP_ALIGN.RIGHT)
+    _label(slide, left + w - Inches(2.35), top + Inches(1.68), Inches(1.7),
+           "short leg  -", size=14, color=GREY, align=PP_ALIGN.RIGHT)
+
+    _label(slide, left, top + h + Inches(0.35), w,
+           "Current goes round ONE loop. The resistor may sit on either side "
+           "of the LED - what matters is that it is in the loop.",
+           size=14, color=INK, align=PP_ALIGN.CENTER)
+
+    # The sizing calculation.
+    right = MARGIN_L + Inches(8.1)
+    col = Inches(4.1)
+
+    _label(slide, right, BODY_TOP + Inches(0.1), col, "Why 220 ohms?",
+           size=18, bold=True, color=TEAL)
+
+    _box(slide, right, BODY_TOP + Inches(0.6), col, Inches(1.65),
+         ["R = (supply - LED drop) / current",
+          "",
+          "  = (3.3 - 2.0) / 0.020",
+          "  = 65 ohms"],
+         fill=CODE_BG, edge=RULE, size=14, font=CODE_FONT,
+         shape=MSO_SHAPE.RECTANGLE, edge_w=0.75, align=PP_ALIGN.LEFT)
+
+    _label(slide, right, BODY_TOP + Inches(2.4), col,
+           ["220 ohms is in the kit, and is a good choice:",
+            "",
+            "(3.3 - 2.0) / 220 = about 6 mA",
+            "",
+            "Dimmer than flat out, but easy to see and safe."],
+           size=14, color=INK)
+
+    deck._note(slide,
+               "No resistor means one bright flash and a dead LED. An ESP32 pin "
+               "should not be asked for more than about 20 mA, so erring high "
+               "is the right way to err.", "warn")
+    return slide
+
+
+# ===================================================================
+# 16. series and parallel
+# ===================================================================
+
+def series_parallel(deck, title="Series and parallel: two ways to wire two loads"):
+    """
+    The two circuit shapes side by side with the rules that go with them.
+    Redrawn rather than lifted, because Kevin's originals are screenshots of a
+    PDF in a browser window.
+    """
+    slide = deck.blank(title)
+
+    gap = Inches(0.7)
+    col = Emu(int((CONTENT_W - gap) / 2))
+    top = BODY_TOP + Inches(0.5)
+
+    for index, kind in enumerate(("series", "parallel")):
+        left = MARGIN_L + (col + gap) * index
+        edge = TEAL if kind == "series" else AMBER
+        fill = LIGHT_TEAL if kind == "series" else LIGHT_AMBER
+
+        _label(slide, left, BODY_TOP, col,
+               "SERIES" if kind == "series" else "PARALLEL",
+               size=18, bold=True, color=edge, align=PP_ALIGN.CENTER)
+
+        bx, by = left + Inches(0.5), top + Inches(0.25)
+        bw, bh = col - Inches(1.0), Inches(1.9)
+
+        # Battery on the left edge of both.
+        _plain_line(slide, bx, by, bx, by + bh, color=NAVY, width=2.0)
+        _label(slide, bx - Inches(0.95), by + Inches(0.72), Inches(0.85),
+               "battery", size=13, color=GREY, align=PP_ALIGN.RIGHT)
+
+        if kind == "series":
+            # One loop, two resistors in line.
+            _plain_line(slide, bx, by, bx + bw, by, color=NAVY, width=2.0)
+            _plain_line(slide, bx + bw, by, bx + bw, by + bh, color=NAVY, width=2.0)
+            _plain_line(slide, bx, by + bh, bx + bw, by + bh, color=NAVY, width=2.0)
+            _box(slide, bx + Inches(0.7), by - Inches(0.28), Inches(1.2),
+                 Inches(0.56), "R1", fill=fill, edge=edge, size=14, bold=True)
+            _box(slide, bx + bw - Inches(1.9), by - Inches(0.28), Inches(1.2),
+                 Inches(0.56), "R2", fill=fill, edge=edge, size=14, bold=True)
+            rules = ["One path. The SAME current everywhere.",
+                     "",
+                     "R total = R1 + R2",
+                     "I total = I1 = I2",
+                     "V total = V1 + V2"]
+        else:
+            # Two branches between the same two rails.
+            mid = bx + Emu(int(bw / 2))
+            _plain_line(slide, bx, by, bx + bw, by, color=NAVY, width=2.0)
+            _plain_line(slide, bx, by + bh, bx + bw, by + bh, color=NAVY, width=2.0)
+            _plain_line(slide, bx + bw, by, bx + bw, by + bh, color=NAVY, width=2.0)
+            _plain_line(slide, mid, by, mid, by + bh, color=NAVY, width=2.0)
+            _box(slide, mid - Inches(0.6), by + Inches(0.62), Inches(1.2),
+                 Inches(0.6), "R1", fill=fill, edge=edge, size=14, bold=True)
+            _box(slide, bx + bw - Inches(0.6), by + Inches(0.62), Inches(1.2),
+                 Inches(0.6), "R2", fill=fill, edge=edge, size=14, bold=True)
+            rules = ["Two paths. The SAME voltage across each.",
+                     "",
+                     "V total = V1 = V2",
+                     "I total = I1 + I2",
+                     "1/R total = 1/R1 + 1/R2"]
+
+        _box(slide, left, top + Inches(2.5), col, Inches(1.75), rules,
+             fill=WHITE, edge=RULE, size=15, shape=MSO_SHAPE.RECTANGLE,
+             edge_w=0.75, align=PP_ALIGN.CENTER)
+
+    deck._note(slide,
+               "The LED circuit you built in Lesson 1 is a SERIES circuit: one "
+               "loop, so the same current flows through the resistor and the "
+               "LED. That is why the resistor protects the LED wherever you "
+               "put it.", "info")
     return slide
