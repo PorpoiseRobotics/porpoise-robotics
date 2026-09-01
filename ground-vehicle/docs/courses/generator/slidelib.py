@@ -82,8 +82,15 @@ EMU_PER_PT = 12700
 # Consolas at 18pt; near enough for a fitting estimate, and pessimistic.
 CHAR_W = {CODE_FONT: 0.56, BODY_FONT: 0.50}
 
-MIN_BODY_PT = 12.0     # Never shrink body text below this
-MIN_SMALL_PT = 9.0     # ...or captions and labels below this
+# House rule: nothing a student has to READ is ever below 18pt. Code panels
+# are the one exception - a listing at 18pt monospace fits barely nineteen
+# lines, so they may go to 14pt to keep a whole function on one slide.
+# The footer strip (track, lesson, slide number) is chrome, not content, and
+# stays small.
+MIN_BODY_PT = 18.0     # Body text, bullets, tables, captions, diagram labels
+MIN_CODE_PT = 14.0     # Code listings only
+MIN_SMALL_PT = 18.0    # Captions and diagram labels are content too
+FOOTER_PT = 10.0       # Chrome
 
 
 # ===================================================================
@@ -234,6 +241,28 @@ def _split_runs(runs, width_pt, height_pt, size, *, space_after=6):
     return final
 
 
+def set_notes(slide, notes):
+    """
+    Writes the teacher's script into the slide's notes page.
+
+    `notes` may be a string or a list of lines. These are what a teacher sees
+    in Presenter View and on a printed notes page; students never see them.
+    """
+    if not notes:
+        return
+    if isinstance(notes, str):
+        notes = [notes]
+    frame = slide.notes_slide.notes_text_frame
+    frame.text = ""
+    for index, line in enumerate(notes):
+        para = frame.paragraphs[0] if index == 0 else frame.add_paragraph()
+        para.text = line
+        for run in para.runs:
+            run.font.size = Pt(12)
+            run.font.name = BODY_FONT
+    return slide
+
+
 class Deck:
     """One lesson deck."""
 
@@ -296,14 +325,14 @@ class Deck:
         frame.margin_left = 0
         frame.margin_top = 0
         _set_text(frame, ["{}  |  {}".format(self.track_label, self.lesson_label)],
-                  size=9, color=GREY, space_after=0)
+                  size=FOOTER_PT, color=GREY, space_after=0)
 
         number = slide.shapes.add_textbox(SLIDE_W - Inches(1.05), FOOTER_TOP,
                                           Inches(0.5), Inches(0.3))
         nframe = number.text_frame
         nframe.margin_left = 0
         nframe.margin_top = 0
-        _set_text(nframe, [str(self.slide_number)], size=9, color=GREY,
+        _set_text(nframe, [str(self.slide_number)], size=FOOTER_PT, color=GREY,
                   align=PP_ALIGN.RIGHT, space_after=0)
 
     def _panel(self, slide, left, top, width, height, fill, edge=None):
@@ -389,7 +418,7 @@ class Deck:
                   space_after=0)
         return slide
 
-    def section(self, title, subtitle=None, minutes=None):
+    def section(self, title, subtitle=None, minutes=None, speaker=None):
         slide = self._new(layout=LAYOUT_BLANK, title=None)
 
         bar = slide.shapes.add_shape(MSO_SHAPE.RECTANGLE, 0, Inches(2.4),
@@ -415,10 +444,11 @@ class Deck:
             _set_fitted(box.text_frame, rows, width=Inches(11.5),
                         height=Inches(1.0), size=16, floor=12, color=GREY,
                         space_after=4)
+        set_notes(slide, speaker)
         return slide
 
     def bullets(self, title, items, lead=None, note=None, note_kind="info",
-                size=18):
+                size=18, speaker=None):
         """
         A bulleted slide. If the content will not fit even at the minimum font
         size, it spills onto "(continued)" slides, splitting only between
@@ -477,6 +507,7 @@ class Deck:
             if note and is_last:
                 self._note(slide, note, note_kind)
 
+        set_notes(slides[0], speaker)
         return slides[0]
 
     def _note(self, slide, text, kind="info", top=None, left=None, width=None):
@@ -523,7 +554,8 @@ class Deck:
         return panel
 
     def bullets_image(self, title, items, image, caption=None, note=None,
-                      note_kind="info", image_ratio=0.42, size=17):
+                      note_kind="info", image_ratio=0.42, size=17,
+                      speaker=None):
         slide = self._new(title=title)
 
         img_w = Emu(int(CONTENT_W * image_ratio))
@@ -547,17 +579,18 @@ class Deck:
             if caption:
                 cap = self._textbox(slide, pic.left,
                                     pic.top + pic.height + Inches(0.08),
-                                    pic.width, Inches(0.55))
+                                    pic.width, Inches(0.95))
                 _set_fitted(cap.text_frame, [caption], width=pic.width,
-                            height=Inches(0.55), size=11, floor=MIN_SMALL_PT,
-                            color=GREY)
+                            height=Inches(0.95), size=MIN_SMALL_PT,
+                            floor=MIN_SMALL_PT, color=GREY)
 
         if note:
             self._note(slide, note, note_kind)
+        set_notes(slide, speaker)
         return slide
 
     def image_slide(self, title, image, caption=None, items=None, note=None,
-                    note_kind="info"):
+                    note_kind="info", speaker=None):
         slide = self._new(title=title)
 
         top = BODY_TOP
@@ -568,7 +601,7 @@ class Deck:
             top += Inches(1.18)
 
         bottom_limit = Inches(5.55) if note else Inches(6.85)
-        available_h = bottom_limit - top - (Inches(0.38) if caption else Inches(0))
+        available_h = bottom_limit - top - (Inches(0.80) if caption else Inches(0))
 
         if image and os.path.exists(image) and available_h > Inches(0.6):
             pic = slide.shapes.add_picture(image, MARGIN_L, top, height=available_h)
@@ -581,117 +614,173 @@ class Deck:
             if caption:
                 cap = self._textbox(slide, MARGIN_L,
                                     pic.top + pic.height + Inches(0.06),
-                                    CONTENT_W, Inches(0.34))
+                                    CONTENT_W, Inches(0.74))
                 _set_fitted(cap.text_frame, [caption], width=CONTENT_W,
-                            height=Inches(0.34), size=11, floor=MIN_SMALL_PT,
-                            color=GREY, align=PP_ALIGN.CENTER)
+                            height=Inches(0.74), size=MIN_SMALL_PT,
+                            floor=MIN_SMALL_PT, color=GREY, align=PP_ALIGN.CENTER)
 
         if note:
             self._note(slide, note, note_kind)
+        set_notes(slide, speaker)
         return slide
 
     def two_columns(self, title, left_heading, left_items, right_heading,
-                    right_items, note=None, note_kind="info", size=16):
-        slide = self._new(title=title)
+                    right_items, note=None, note_kind="info", size=16,
+                    speaker=None):
+        """
+        Two headed columns. If either column will not fit at the minimum font
+        size, BOTH spill onto a continuation slide together, so the pairing
+        stays readable.
+        """
         gap = Inches(0.5)
         col_w = Emu(int((CONTENT_W - gap) / 2))
-        body_h = BODY_H - (Inches(1.25) if note else Inches(0))
+        body_h = BODY_H - (Inches(1.25) if note else Inches(0)) - Inches(0.5)
 
-        for index, (heading, items) in enumerate(
-                ((left_heading, left_items), (right_heading, right_items))):
-            left = MARGIN_L + (col_w + gap) * index
+        width_pt = col_w / EMU_PER_PT
+        height_pt = body_h / EMU_PER_PT - 8.0
 
-            head = self._textbox(slide, left, BODY_TOP, col_w, Inches(0.44))
-            _set_fitted(head.text_frame, [heading], width=col_w,
-                        height=Inches(0.44), size=18, floor=13, bold=True,
-                        color=TEAL)
+        _, _, left_fits = fit_size(left_items, width_pt, height_pt, size,
+                                   space_after=8)
+        _, _, right_fits = fit_size(right_items, width_pt, height_pt, size,
+                                    space_after=8)
 
-            box = self._textbox(slide, left, BODY_TOP + Inches(0.5), col_w,
-                                body_h - Inches(0.5))
-            _set_fitted(box.text_frame, items, width=col_w,
-                        height=body_h - Inches(0.5), size=size, space_after=8)
+        if left_fits and right_fits:
+            left_chunks = [_norm(left_items)]
+            right_chunks = [_norm(right_items)]
+        else:
+            left_chunks = _split_runs(left_items, width_pt, height_pt,
+                                      MIN_BODY_PT, space_after=8)
+            right_chunks = _split_runs(right_items, width_pt, height_pt,
+                                       MIN_BODY_PT, space_after=8)
 
-        if note:
-            self._note(slide, note, note_kind)
-        return slide
+        pages = max(len(left_chunks), len(right_chunks))
+        left_chunks += [[]] * (pages - len(left_chunks))
+        right_chunks += [[]] * (pages - len(right_chunks))
+
+        first = None
+        for index in range(pages):
+            slide_title = title if index == 0 else title + "  (continued)"
+            slide = self._new(title=slide_title)
+            first = first or slide
+            is_last = index == pages - 1
+
+            this_h = BODY_H - (Inches(1.25) if (note and is_last) else Inches(0))
+
+            for column, (heading, chunk) in enumerate(
+                    ((left_heading, left_chunks[index]),
+                     (right_heading, right_chunks[index]))):
+                left = MARGIN_L + (col_w + gap) * column
+                if not chunk and index > 0:
+                    continue
+
+                head = self._textbox(slide, left, BODY_TOP, col_w, Inches(0.5))
+                _set_fitted(head.text_frame,
+                            [heading if index == 0 else heading + " (cont.)"],
+                            width=col_w, height=Inches(0.5), size=18,
+                            floor=MIN_BODY_PT, bold=True, color=TEAL)
+
+                box = self._textbox(slide, left, BODY_TOP + Inches(0.56), col_w,
+                                    this_h - Inches(0.56))
+                _set_fitted(box.text_frame, chunk, width=col_w,
+                            height=this_h - Inches(0.56), size=size,
+                            space_after=8)
+
+            if note and is_last:
+                self._note(slide, note, note_kind)
+
+        set_notes(first, speaker)
+        return first
 
     def code(self, title, lines, filename=None, notes=None, size=13,
-             highlight=None):
+             highlight=None, speaker=None):
         """
         A code slide. `lines` is the listing. `notes` is an optional list of
         short explanations shown down the right-hand side. `highlight` is a
         set of zero-based line numbers to draw in the accent colour.
+
+        A listing too long for one panel even at the code floor is split over
+        continuation slides; the explanations stay with the first.
         """
-        slide = self._new(title=title)
-        highlight = highlight or set()
+        highlight = set(highlight or ())
 
         code_w = CONTENT_W if not notes else Emu(int(CONTENT_W * 0.63))
-        top = BODY_TOP
+        head_h = Inches(0.36) if filename else Inches(0)
+        panel_h = Inches(6.85) - (BODY_TOP + head_h)
 
-        if filename:
-            box = self._textbox(slide, MARGIN_L, top, code_w, Inches(0.3))
-            _set_fitted(box.text_frame, [filename], width=code_w,
-                        height=Inches(0.3), size=12, floor=MIN_SMALL_PT,
-                        bold=True, color=TEAL, font=CODE_FONT)
-            top += Inches(0.36)
-
-        panel_h = Inches(6.85) - top
-        panel = self._panel(slide, MARGIN_L, top, code_w, panel_h, CODE_BG, RULE)
-        # Tagged so check_code.py can tell a real listing from a diagram label
-        # that merely happens to be set in the code font.
-        panel.name = "CODE_PANEL"
-        frame = panel.text_frame
-        frame.margin_left = Inches(0.16)
-        frame.margin_right = Inches(0.1)
-        frame.margin_top = Inches(0.1)
-        frame.margin_bottom = Inches(0.08)
-        frame.vertical_anchor = MSO_ANCHOR.TOP
-
-        # Code must not wrap, so shrink until the longest line fits AND the
-        # whole listing fits vertically.
+        # How many lines fit at the code floor, and how wide they may be.
         avail_w_pt = code_w / EMU_PER_PT - 20
         avail_h_pt = panel_h / EMU_PER_PT - 14
-        longest = max((len(line) for line in lines), default=1)
+        longest = max((len(l) for l in lines), default=1)
+
         code_size = float(size)
-        while code_size > 8.0:
-            wide = longest * CHAR_W[CODE_FONT] * code_size
-            tall = len(lines) * code_size * 1.22
-            if wide <= avail_w_pt and tall <= avail_h_pt:
+        while code_size > MIN_CODE_PT:
+            if (longest * CHAR_W[CODE_FONT] * code_size <= avail_w_pt and
+                    len(lines) * code_size * 1.22 <= avail_h_pt):
                 break
             code_size -= 0.5
 
-        for index, line in enumerate(lines):
-            para = frame.paragraphs[0] if index == 0 else frame.add_paragraph()
-            para.text = line if line else " "
-            para.space_after = Pt(0)
-            para.line_spacing = 1.0
-            para.alignment = PP_ALIGN.LEFT
-            para.font.size = Pt(code_size)
-            para.font.name = CODE_FONT
-            for run in para.runs:
-                run.font.size = Pt(code_size)
-                run.font.name = CODE_FONT
+        per_page = max(int(avail_h_pt / (code_size * 1.22)), 4)
+        pages = [lines[i:i + per_page] for i in range(0, len(lines), per_page)]             or [lines]
+
+        first = None
+        for index, chunk in enumerate(pages):
+            slide = self._new(title=title if index == 0
+                              else title + "  (continued)")
+            first = first or slide
+            top = BODY_TOP
+
+            if filename:
+                box = self._textbox(slide, MARGIN_L, top, code_w, Inches(0.3))
+                _set_fitted(box.text_frame, [filename], width=code_w,
+                            height=Inches(0.3), size=14, floor=12,
+                            bold=True, color=TEAL, font=CODE_FONT)
+                top += Inches(0.36)
+
+            this_h = Inches(6.85) - top
+            panel = self._panel(slide, MARGIN_L, top, code_w, this_h,
+                                CODE_BG, RULE)
+            panel.name = "CODE_PANEL"
+            frame = panel.text_frame
+            frame.margin_left = Inches(0.16)
+            frame.margin_right = Inches(0.1)
+            frame.margin_top = Inches(0.1)
+            frame.margin_bottom = Inches(0.08)
+            frame.vertical_anchor = MSO_ANCHOR.TOP
+
+            offset = index * per_page
+            for row, line in enumerate(chunk):
+                para = frame.paragraphs[0] if row == 0 else frame.add_paragraph()
+                para.text = line if line else " "
+                para.space_after = Pt(0)
+                para.line_spacing = 1.0
+                para.alignment = PP_ALIGN.LEFT
+                para.font.size = Pt(code_size)
+                para.font.name = CODE_FONT
                 stripped = line.strip()
-                if index in highlight:
-                    run.font.bold = True
-                    run.font.color.rgb = TEAL
-                elif stripped.startswith("//") or stripped.startswith("/*") \
-                        or stripped.startswith("*"):
-                    run.font.color.rgb = GREY
-                else:
-                    run.font.color.rgb = INK
+                for run in para.runs:
+                    run.font.size = Pt(code_size)
+                    run.font.name = CODE_FONT
+                    if (offset + row) in highlight:
+                        run.font.bold = True
+                        run.font.color.rgb = TEAL
+                    elif stripped.startswith(("//", "/*", "*")):
+                        run.font.color.rgb = GREY
+                    else:
+                        run.font.color.rgb = INK
 
-        if notes:
-            note_left = MARGIN_L + code_w + Inches(0.35)
-            note_w = CONTENT_W - code_w - Inches(0.35)
-            box = self._textbox(slide, note_left, top, note_w, panel_h)
-            _set_fitted(box.text_frame, notes, width=note_w, height=panel_h,
-                        size=15, space_after=11)
+            # Explanations belong beside the first page of the listing.
+            if notes and index == 0:
+                note_left = MARGIN_L + code_w + Inches(0.35)
+                note_w = CONTENT_W - code_w - Inches(0.35)
+                box = self._textbox(slide, note_left, top, note_w, this_h)
+                _set_fitted(box.text_frame, notes, width=note_w, height=this_h,
+                            size=16, space_after=10)
 
-        return slide
+        set_notes(first, speaker)
+        return first
 
     def table(self, title, headers, rows, lead=None, note=None,
-              note_kind="info", col_widths=None, size=14):
+              note_kind="info", col_widths=None, size=14, speaker=None):
         slide = self._new(title=title)
         top = BODY_TOP
 
@@ -767,78 +856,104 @@ class Deck:
 
         if note:
             self._note(slide, note, note_kind)
+        set_notes(slide, speaker)
         return slide
 
     def activity(self, title, sketch, steps, expect=None, questions=None,
-                 minutes=None, safety=None):
-        """A 'stop and do this' slide, deliberately different from the rest."""
-        slide = self._new(title=title)
-
-        header = self._panel(slide, MARGIN_L, BODY_TOP, CONTENT_W, Inches(0.58),
-                             TEAL)
-        frame = header.text_frame
-        frame.margin_left = Inches(0.2)
-        frame.vertical_anchor = MSO_ANCHOR.MIDDLE
-        para = frame.paragraphs[0]
-
-        run = para.add_run()
-        run.text = "UPLOAD AND RUN:   "
-        run.font.size = Pt(13)
-        run.font.bold = True
-        run.font.color.rgb = WHITE
-        run.font.name = BODY_FONT
-
-        run = para.add_run()
-        run.text = sketch
-        run.font.size = Pt(15)
-        run.font.bold = True
-        run.font.color.rgb = WHITE
-        run.font.name = CODE_FONT
-
-        if minutes:
-            run = para.add_run()
-            run.text = "     ({} minutes)".format(minutes)
-            run.font.size = Pt(12)
-            run.font.color.rgb = WHITE
-            run.font.name = BODY_FONT
-
-        top = BODY_TOP + Inches(0.78)
-        bottom = Inches(5.55) if safety else Inches(6.85)
+                 minutes=None, safety=None, speaker=None):
+        """
+        A 'stop and do this' slide, deliberately different from the rest.
+        Long step lists spill onto a continuation slide; what students should
+        see and the questions stay with the first one.
+        """
         gap = Inches(0.45)
         has_right = bool(expect or questions)
         col_w = Emu(int((CONTENT_W - gap) / 2)) if has_right else CONTENT_W
+
+        top = BODY_TOP + Inches(0.78)
+        bottom = Inches(5.55) if safety else Inches(6.85)
         col_h = bottom - top
 
-        box = self._textbox(slide, MARGIN_L, top, col_w, col_h)
-        _set_fitted(box.text_frame, steps, width=col_w, height=col_h,
-                    size=16, space_after=8)
+        width_pt = col_w / EMU_PER_PT
+        height_pt = col_h / EMU_PER_PT - 8.0
 
-        if has_right:
-            right = MARGIN_L + col_w + gap
-            right_top = top
-            blocks = []
-            if expect:
-                blocks.append(("What you should see", expect))
-            if questions:
-                blocks.append(("Answer these", questions))
+        _, _, fits = fit_size(steps, width_pt, height_pt, 16, space_after=8)
+        chunks = [_norm(steps)] if fits else _split_runs(
+            steps, width_pt, height_pt, MIN_BODY_PT, space_after=8)
 
-            share = Emu(int((col_h - Inches(0.4) * len(blocks)) / len(blocks)))
-            for heading, body in blocks:
-                head = self._textbox(slide, right, right_top, col_w, Inches(0.34))
-                _set_fitted(head.text_frame, [heading], width=col_w,
-                            height=Inches(0.34), size=15, floor=12, bold=True,
-                            color=TEAL)
-                box = self._textbox(slide, right, right_top + Inches(0.38),
-                                    col_w, share)
-                _set_fitted(box.text_frame, body, width=col_w, height=share,
-                            size=15, space_after=6)
-                right_top += share + Inches(0.42)
+        first = None
+        for index, chunk in enumerate(chunks):
+            slide = self._new(title=title if index == 0
+                              else title + "  (continued)")
+            first = first or slide
+            is_last = index == len(chunks) - 1
 
-        if safety:
-            self._note(slide, safety, "safety")
-        return slide
+            header = self._panel(slide, MARGIN_L, BODY_TOP, CONTENT_W,
+                                 Inches(0.58), TEAL)
+            frame = header.text_frame
+            frame.margin_left = Inches(0.2)
+            frame.vertical_anchor = MSO_ANCHOR.MIDDLE
+            para = frame.paragraphs[0]
 
-    def quiz(self, title, questions, lead=None):
+            run = para.add_run()
+            run.text = "UPLOAD AND RUN:   "
+            run.font.size = Pt(13)
+            run.font.bold = True
+            run.font.color.rgb = WHITE
+            run.font.name = BODY_FONT
+
+            run = para.add_run()
+            run.text = sketch
+            run.font.size = Pt(15)
+            run.font.bold = True
+            run.font.color.rgb = WHITE
+            run.font.name = CODE_FONT
+
+            if minutes and index == 0:
+                run = para.add_run()
+                run.text = "     ({} minutes)".format(minutes)
+                run.font.size = Pt(12)
+                run.font.color.rgb = WHITE
+                run.font.name = BODY_FONT
+
+            this_bottom = Inches(5.55) if (safety and is_last) else Inches(6.85)
+            this_h = this_bottom - top
+
+            box = self._textbox(slide, MARGIN_L, top, col_w, this_h)
+            _set_fitted(box.text_frame, chunk, width=col_w, height=this_h,
+                        size=16, space_after=8)
+
+            # What to look for and the questions belong with the first page.
+            if has_right and index == 0:
+                right = MARGIN_L + col_w + gap
+                right_top = top
+                blocks = []
+                if expect:
+                    blocks.append(("What you should see", expect))
+                if questions:
+                    blocks.append(("Answer these", questions))
+
+                share = Emu(int((this_h - Inches(0.44) * len(blocks))
+                                / len(blocks)))
+                for heading, body in blocks:
+                    head = self._textbox(slide, right, right_top, col_w,
+                                         Inches(0.4))
+                    _set_fitted(head.text_frame, [heading], width=col_w,
+                                height=Inches(0.4), size=16,
+                                floor=MIN_BODY_PT, bold=True, color=TEAL)
+                    box = self._textbox(slide, right, right_top + Inches(0.44),
+                                        col_w, share)
+                    _set_fitted(box.text_frame, body, width=col_w, height=share,
+                                size=15, space_after=6)
+                    right_top += share + Inches(0.48)
+
+            if safety and is_last:
+                self._note(slide, safety, "safety")
+
+        set_notes(first, speaker)
+        return first
+
+    def quiz(self, title, questions, lead=None, speaker=None):
         slide = self._new(title=title)
         top = BODY_TOP
         if lead:
@@ -851,6 +966,7 @@ class Deck:
         box = self._textbox(slide, MARGIN_L, top, CONTENT_W, height)
         _set_fitted(box.text_frame, questions, width=CONTENT_W, height=height,
                     size=17, space_after=14)
+        set_notes(slide, speaker)
         return slide
 
     def blank(self, title):

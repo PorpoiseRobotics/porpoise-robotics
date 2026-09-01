@@ -13,9 +13,11 @@ from pptx.enum.shapes import MSO_CONNECTOR, MSO_SHAPE
 from pptx.enum.text import MSO_ANCHOR, PP_ALIGN
 from pptx.util import Emu, Inches, Pt
 
-from slidelib import (AMBER, BODY_FONT, CODE_BG, CODE_FONT, CONTENT_W, GREY,
-                      INK, MARGIN_L, MIN_SMALL_PT, NAVY, PANEL, RED, RULE,
-                      TEAL, WHITE, BODY_TOP, _set_fitted, _set_text)
+from slidelib import (AMBER, BODY_FONT, CODE_BG, CODE_FONT, CONTENT_W,
+                      EMU_PER_PT, GREY, INK, MARGIN_L, MIN_SMALL_PT, NAVY,
+                      MIN_CODE_PT, PANEL, RED, RULE, TEAL, WHITE, BODY_TOP,
+                      measure_pt,
+                      _set_fitted, _set_text)
 
 LIGHT_TEAL = RGBColor(0xD6, 0xEC, 0xEE)
 LIGHT_AMBER = RGBColor(0xFA, 0xE6, 0xC8)
@@ -47,8 +49,11 @@ def _box(slide, left, top, width, height, text, *, fill=WHITE, edge=NAVY,
     frame.margin_top = Inches(0.02)
     frame.margin_bottom = Inches(0.02)
     frame.vertical_anchor = anchor
+    # A box holding CODE follows the code floor, not the prose floor - the
+    # same rule the full-slide listings use.
+    floor = MIN_CODE_PT if font == CODE_FONT else MIN_SMALL_PT
     _set_fitted(frame, text if isinstance(text, list) else [text],
-                width=width, height=height, size=size, floor=MIN_SMALL_PT,
+                width=width, height=height, size=size, floor=floor,
                 bold=bold, color=color, align=align, space_after=0,
                 font=font)
     return box
@@ -58,9 +63,18 @@ def _label(slide, left, top, width, text, *, size=12, bold=False, color=INK,
            align=PP_ALIGN.LEFT, font=BODY_FONT, height=None):
     # A label with no explicit height gets one that suits how many lines it
     # holds, so a multi-line note is never squeezed into a single-line box.
+    # Size it for the font it will ACTUALLY render at: the house minimum wins
+    # over whatever the caller asked for, so a 12pt request still gets a box
+    # tall enough for 18pt text.
+    effective = max(size, MIN_SMALL_PT)
     if height is None:
-        lines = len(text) if isinstance(text, list) else 1
-        height = Inches(max(0.3, lines * size * 1.35 / 72.0))
+        # Measure the text properly rather than counting list items: a short
+        # label in a narrow box still wraps onto a second line at 18pt, and
+        # counting items would size the box for one.
+        items = text if isinstance(text, list) else [text]
+        wanted = measure_pt(items, width / EMU_PER_PT, effective,
+                            font=font, space_after=1)
+        height = Inches(max(0.34, (wanted + 6) / 72.0))
     box = slide.shapes.add_textbox(left, top, width, height)
     frame = box.text_frame
     frame.word_wrap = True
@@ -322,10 +336,9 @@ def h_bridge(deck, title="The H-bridge: four switches, four things a motor can d
          shape=MSO_SHAPE.OVAL)
 
     _label(slide, bx - Inches(1.05), mid_y - Inches(0.5), Inches(1.0),
-           "IN1\n(pin A)", size=12, bold=True, color=TEAL, align=PP_ALIGN.RIGHT,
-           height=Inches(0.7))
+           "IN1\n(pin A)", size=12, bold=True, color=TEAL, align=PP_ALIGN.RIGHT)
     _label(slide, bx + bw + Inches(0.1), mid_y - Inches(0.5), Inches(1.1),
-           "IN2\n(pin B)", size=12, bold=True, color=TEAL, height=Inches(0.7))
+           "IN2\n(pin B)", size=12, bold=True, color=TEAL)
     _label(slide, bx + Inches(2.6), by - Inches(0.36), Inches(1.4), "+ V",
            size=12, bold=True, color=GREY, align=PP_ALIGN.CENTER)
     _label(slide, bx + Inches(2.6), by + bh + Inches(0.06), Inches(1.4), "GND",
@@ -413,7 +426,7 @@ def deadzone_map(deck, title="From thumbstick to motor speed", stick_max=127,
            align=PP_ALIGN.CENTER)
     _label(slide, ox - Inches(1.25), oy - h - Inches(0.05), Inches(1.15),
            ["motor", "speed", "0 to 255"], size=12, color=GREY,
-           align=PP_ALIGN.RIGHT, height=Inches(0.9))
+           align=PP_ALIGN.RIGHT)
 
     dz_frac = deadzone / float(stick_max)
     dz_x = ox + Emu(int(w * dz_frac))
@@ -433,11 +446,11 @@ def deadzone_map(deck, title="From thumbstick to motor speed", stick_max=127,
 
     _label(slide, ox, oy - h - Inches(0.42), Emu(int(w * dz_frac)) + Inches(0.6),
            "DEADZONE\nanswer is 0", size=11, bold=True, color=RED,
-           align=PP_ALIGN.CENTER, height=Inches(0.6))
+           align=PP_ALIGN.CENTER)
 
     _label(slide, dz_x + Inches(0.3), oy - h + Inches(0.1), Inches(4.0),
            "map() stretches what is left\nacross the whole speed range",
-           size=13, bold=True, color=TEAL, height=Inches(0.7))
+           size=13, bold=True, color=TEAL)
 
     _label(slide, dz_x - Inches(0.5), oy + Inches(0.36), Inches(1.2),
            str(deadzone), size=12, color=RED, align=PP_ALIGN.CENTER,
@@ -520,7 +533,7 @@ def tank_mixing(deck, title="Mixing: one stick, two sides"):
              font=CODE_FONT, shape=MSO_SHAPE.RECTANGLE, edge_w=1.0)
 
         _label(slide, left, top + Inches(2.9), col_w, meaning.split("\n"),
-               size=13, color=INK, align=PP_ALIGN.CENTER, height=Inches(0.7))
+               size=13, color=INK, align=PP_ALIGN.CENTER)
 
     deck._note(slide,
                "260 is over the maximum, which is exactly what constrain() is "
@@ -542,8 +555,7 @@ def millis_timeline(deck, title="Why the vehicle programs never call delay()"):
     # ---- with delay ----
     y = BODY_TOP + Inches(0.45)
     _label(slide, MARGIN_L, y - Inches(0.02), Inches(1.8),
-           ["with delay()", "one job only"], size=13, bold=True, color=RED,
-           height=Inches(0.6))
+           ["with delay()", "one job only"], size=13, bold=True, color=RED)
 
     segments = [("blink", 0.10, LIGHT_TEAL), ("frozen - delay(1000)", 0.40, LIGHT_RED),
                 ("blink", 0.10, LIGHT_TEAL), ("frozen - delay(1000)", 0.40, LIGHT_RED)]
@@ -562,8 +574,7 @@ def millis_timeline(deck, title="Why the vehicle programs never call delay()"):
     # ---- with millis ----
     y = BODY_TOP + Inches(2.15)
     _label(slide, MARGIN_L, y - Inches(0.02), Inches(1.8),
-           ["with millis()", "many jobs"], size=13, bold=True, color=TEAL,
-           height=Inches(0.6))
+           ["with millis()", "many jobs"], size=13, bold=True, color=TEAL)
 
     jobs = [
         ("drive motors", 0.02, TEAL),
@@ -628,8 +639,7 @@ def square_path(deck, title="Dead reckoning: the vehicle has no idea where it is
                align=PP_ALIGN.CENTER)
 
     _label(slide, ox, oy - Emu(int(side / 2)) - Inches(0.2), side,
-           "forward\nFORWARD_MS", size=12, color=NAVY, align=PP_ALIGN.CENTER,
-           height=Inches(0.6))
+           "forward\nFORWARD_MS", size=12, color=NAVY, align=PP_ALIGN.CENTER)
 
     # The maths, alongside
     right = ox + side + Inches(1.6)
@@ -812,7 +822,7 @@ def state_machine(deck, title="The lighting state machine"):
         _box(slide, x, y, node_w, node_h, name, fill=fill, edge=NAVY, size=13,
              bold=True, color=NAVY, font=CODE_FONT)
         _label(slide, x, y + node_h + Inches(0.03), node_w, blurb.split("\n"),
-               size=11, color=GREY, align=PP_ALIGN.CENTER, height=Inches(0.5))
+               size=11, color=GREY, align=PP_ALIGN.CENTER)
         placed[name] = (x, y)
 
     def centre_right(name):
@@ -834,14 +844,12 @@ def state_machine(deck, title="The lighting state machine"):
         _arrow(slide, x1, y1, x2, y2, color=AMBER)
 
     _label(slide, MARGIN_L + Inches(3.5), top + Inches(0.55), Inches(1.4),
-           "controller\nconnects", size=10, color=TEAL, align=PP_ALIGN.CENTER,
-           height=Inches(0.5))
+           "controller\nconnects", size=10, color=TEAL, align=PP_ALIGN.CENTER)
     _label(slide, MARGIN_L + Inches(7.75), top + Inches(0.35), Inches(1.3),
-           "D-pad\nor button", size=10, color=AMBER, align=PP_ALIGN.CENTER,
-           height=Inches(0.5))
+           "D-pad\nor button", size=10, color=AMBER, align=PP_ALIGN.CENTER)
     _label(slide, MARGIN_L + Inches(7.6), top + Inches(2.75), Inches(1.5),
            "each animation counts\nits own cycles and\nhands itself back",
-           size=10, color=GREY, align=PP_ALIGN.CENTER, height=Inches(0.7))
+           size=10, color=GREY, align=PP_ALIGN.CENTER)
 
     deck._note(slide,
                "One variable holds the mode, so two modes can never be half-on at "
@@ -898,7 +906,7 @@ def current_signature(deck, title="What a healthy motor looks like to a current 
         _label(slide, x0, top - Inches(0.38), width, name, size=15, bold=True,
                color=colour, align=PP_ALIGN.CENTER)
         _label(slide, x0, base + Inches(0.1), width, meaning.split("\n"), size=12,
-               color=INK, align=PP_ALIGN.CENTER, height=Inches(0.6))
+               color=INK, align=PP_ALIGN.CENTER)
 
     _label(slide, left - Inches(0.85), top + Inches(2.05), Inches(0.8), "baseline",
            size=9, color=GREY, align=PP_ALIGN.RIGHT)

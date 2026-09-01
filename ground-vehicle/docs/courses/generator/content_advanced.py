@@ -564,15 +564,12 @@ def lesson2(deck):
          "  return sign * map(scaled, dz, in_max, 0, out_max);",
          "}"],
         filename="Motors.ino",
-        notes=[("A per-axis deadzone of -1 means \"use the global one\". That "
-                "sentinel is how one setting can have a default and an "
-                "override without a second flag.", 0),
-               ("lround() rather than a cast, so 0.5 rounds up instead of "
-                "truncating towards zero. The same class of bug as the ramp.", 0),
-               ("constrain() BEFORE map(), because map() does not clamp - feed "
-                "it out-of-range input and you get out-of-range output.", 0),
-               ("Sign is taken off at the start and put back at the end, so the "
-                "arithmetic in the middle only deals with magnitude.", 0)],
+        notes=[("A per-axis deadzone of -1 means \"use the global one\" - a "
+                "default and an override, with no second flag.", 0),
+               ("lround(), not a cast, so 0.5 rounds up rather than "
+                "truncating. The same class of bug as the ramp.", 0),
+               ("constrain() BEFORE map(): map() does not clamp.", 0),
+               ("Sign comes off at the start and goes back on at the end.", 0)],
         size=13, highlight={6, 7})
 
     deck.two_columns(
@@ -1329,16 +1326,12 @@ def lesson5(deck):
          "  return (float)((value >> 3) * 4) * 0.001f;   // top 13 bits, 4 mV/count",
          "}"],
         filename="Sensors.ino",
-        notes=[("endTransmission(FALSE) is a repeated start. A full stop in the "
-                "middle would let another master grab the bus between the two "
-                "halves of one logical read.", 0),
-               ("The shunt register is SIGNED - current can flow both ways. "
-                "Read it as unsigned and every regenerative braking current "
-                "becomes a huge positive number.", 0),
-               ("The bus voltage sits in the TOP 13 bits with status bits "
-                "below, so it has to be shifted down before it means anything.", 0),
-               ("There is a perfectly good Adafruit library. Forty lines of "
-                "your own makes the datasheet readable instead of mysterious.", 0)],
+        notes=[("endTransmission(FALSE) is a repeated start. A full stop "
+                "would let another master grab the bus mid-read.", 0),
+               ("The shunt register is SIGNED. Read it unsigned and every "
+                "braking current becomes a huge positive number.", 0),
+               ("Bus voltage sits in the top 13 bits, so it is shifted down.", 0),
+               ("Forty lines of your own beats a library you cannot read.", 0)],
         size=12, highlight={3, 9})
 
     deck.activity(
