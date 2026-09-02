@@ -12,7 +12,7 @@ knowing why each bug in the previous version was a bug.
 import os
 
 import diagrams
-from slidelib import Deck
+from slidelib import Deck, Placeholder
 
 IMAGES = os.path.join(os.path.dirname(os.path.abspath(__file__)), "..", "images")
 
@@ -77,7 +77,16 @@ def lesson1(deck):
         "How a real embedded program is put together: tabs, headers, "
         "capability flags, and a console you can talk to.",
         BYLINE + ["", "Three hours.  Assumes you have driven a Pathfinder before."],
-        hero_image=img("vehicle-top-plate-esp32.jpg"), logo=LOGO)
+        hero_image=img("vehicle-top-plate-esp32.jpg"), logo=LOGO,
+        speaker=[
+            "Check the room: everybody here should have driven a Pathfinder "
+            "and be comfortable reading C++. If somebody is not, pair them "
+            "up now.",
+            "Have Op Program 12 open on the projector before you start. "
+            "They will be looking at it all day.",
+            "Set expectations in the first minute: no new features. This is "
+            "about how the program is built.",
+        ])
 
     deck.objectives([
         "Explain how the Arduino IDE assembles a multi-tab sketch, and "
@@ -87,7 +96,11 @@ def lesson1(deck):
          "told about it",
         "Write a serial console that does not block the vehicle",
         "Read the boot sequence of Op Program 12 and justify its order",
-    ])
+    ],
+        speaker=[
+            "Objective one is the one that will bite in the activity. The "
+            "others are conceptual and get earned across the lesson.",
+        ])
 
     deck.bullets(
         "Who this course is for, and what it is not",
@@ -105,7 +118,17 @@ def lesson1(deck):
          ("Along the way you will meet six real bugs from the previous version "
           "and see exactly why each one was wrong.", 0)],
         note="Every idea here transfers. None of it is specific to robots - it "
-             "is how embedded software is written everywhere.")
+             "is how embedded software is written everywhere.",
+        speaker=[
+            "Be blunt about what this course is not. Some people arrive "
+            "expecting more capability and are disappointed until you "
+            "reframe it.",
+            "The six real bugs are the hook. Real code, real mistakes, and "
+            "the reasons each one was wrong.",
+            "The note matters: none of this is robot-specific. It is how "
+            "embedded software is written everywhere, and that is why it is "
+            "worth three hours.",
+        ])
 
     deck.table(
         "Where this course goes",
@@ -115,7 +138,11 @@ def lesson1(deck):
          ["3", "Bluetooth and persistent storage", "Identity that survives a power cycle"],
          ["4", "The lighting state machine", "Never block, and never redraw for nothing"],
          ["5", "Sensors, self-test, diagnostics", "A machine that can check itself"]],
-        col_widths=[0.9, 4.3, 5.8])
+        col_widths=[0.9, 4.3, 5.8],
+        speaker=[
+            "The right-hand column is the point. Each lesson has one "
+            "transferable idea underneath the vehicle-specific detail.",
+        ])
 
     deck.table(
         "Today, in order",
@@ -129,7 +156,12 @@ def lesson1(deck):
          ["2:15", "BREAK  (10 minutes)"],
          ["2:25", "Upload a1b_serial_console"],
          ["2:45", "The boot sequence of Op Program 12, line by line"]],
-        col_widths=[1, 9])
+        col_widths=[1, 9],
+        speaker=[
+            "Two breaks. The tabs activity at 1:25 is the one that overruns "
+            "- it is worth the time, so take it out of the boot-sequence "
+            "walkthrough if you have to.",
+        ])
 
     deck.table(
         "Op Program 11.2 to 12  -  what changed",
@@ -156,7 +188,20 @@ def lesson1(deck):
         col_widths=[3.6, 7.4],
         size=12,
         note="Read that list again at the end of the course. Most of them are "
-             "mistakes that are easy to make and hard to see.")
+             "mistakes that are easy to make and hard to see.",
+        speaker=[
+            "This is a real change log from a real project. Treat it as a "
+            "case study, not a list.",
+            "The FastLED row is worth dwelling on: a library minor version "
+            "broke the build through a dependency nobody chose. That "
+            "happens constantly in the field.",
+            "The servo travel row is a safety bug - 0.5 to 2.5 ms can drive "
+            "a servo into its end stops and cook it.",
+            "The address-printing bug is the cruellest kind: the program "
+            "told you the wrong answer confidently.",
+            "Ask which of these they would have caught in review. Most "
+            "people say the servo one and miss the integer truncation.",
+        ])
 
     deck.two_columns(
         "One binary, two vehicles",
@@ -181,7 +226,18 @@ def lesson1(deck):
           "no-op without it.", 0)],
         size=14,
         note="Detect what is there rather than being told what is there. A "
-             "configuration that can disagree with the hardware eventually will.")
+             "configuration that can disagree with the hardware eventually will.",
+        speaker=[
+            "Two vehicles, one binary. Set the problem up before showing "
+            "the solution.",
+            "Two separate builds is the obvious answer and the wrong one. "
+            "Ask why - somebody eventually flashes the wrong image.",
+            "Detect what is there rather than being told what is there. "
+            "That sentence is the transferable idea.",
+            "Bit flags rather than booleans: one byte carries several "
+            "independent capabilities and a test is a single & operation. "
+            "Show the arithmetic if anybody is shaky on bitwise operators.",
+        ])
 
     deck.bullets(
         "How Arduino tabs actually work",
@@ -204,7 +260,18 @@ def lesson1(deck):
           "is defined before the generated prototypes appear.", 0)],
         lead="Convenient, and exactly one trap",
         note="Op 12's Config.h opens with a paragraph saying this. Now you know "
-             "what it is warning you about.")
+             "what it is warning you about.",
+        speaker=[
+            "This is the slide the activity is built on. Go slowly.",
+            "The IDE concatenates the tabs and generates prototypes ABOVE "
+            "your code. Draw that on the board - the ordering is the whole "
+            "explanation.",
+            "Functions and globals cross tabs freely. Types do not, because "
+            "the generated prototype mentions a type that is not defined "
+            "yet at that point.",
+            "That is precisely why Config.h is a real header. Not style - "
+            "necessity.",
+        ])
 
     deck.table(
         "The eight files, and what each one owns",
@@ -223,9 +290,23 @@ def lesson1(deck):
         size=13,
         note="Nothing in the compiler enforces that. Every tab can see every "
              "global. It is a convention, and it is the only thing standing "
-             "between you and 1292 lines again.")
+             "between you and 1292 lines again.",
+        speaker=[
+            "Eight files, one subsystem each. Read the table, then say the "
+            "rule underneath it: each tab owns its own state and others go "
+            "through its functions.",
+            "The note is the honest part: nothing in the compiler enforces "
+            "this. Every tab can see every global. It is a convention held "
+            "by discipline.",
+            "Ask what happens when somebody breaks the convention. The "
+            "answer is that the program still compiles, which is exactly "
+            "why it is dangerous.",
+        ])
 
-    deck.progress(STAGES["lesson1"], 1)
+    deck.progress(STAGES["lesson1"], 1,
+        speaker=[
+            "Twenty seconds. First activity.",
+        ])
 
     deck.activity(
         "Do it now  -  three files, one program",
@@ -244,7 +325,20 @@ def lesson1(deck):
         questions=[("Whose line is the error actually on?", 0),
                    ("Why does moving a FUNCTION between tabs work fine, but "
                     "moving a TYPE does not?", 0)],
-        minutes=30)
+        minutes=30,
+        speaker=[
+            "Step 5 is the whole point of this activity. Do not warn them "
+            "what the error will look like.",
+            "The error points at a line they did not write, in generated "
+            "code. That experience is worth more than the explanation on "
+            "the previous slide.",
+            "Answer to the first question: the error is on a generated "
+            "prototype line, not on any line in their file.",
+            "Answer to the second: functions are only NAMED in the "
+            "prototype, but a type has to be DEFINED before the prototype "
+            "that mentions it.",
+            "Thirty minutes, and it is worth every one of them.",
+        ])
 
     deck.bullets(
         "Why a console changes what a vehicle is",
@@ -263,7 +357,18 @@ def lesson1(deck):
          ("", 0),
          ("This is not a toy idea. Industrial controllers, network switches and "
           "flight computers all have one, for exactly this reason.", 0)],
-        lead="From opaque binary to something you can ask questions")
+        lead="From opaque binary to something you can ask questions",
+        speaker=[
+            "A compiled binary is opaque. You can see what it does, not "
+            "what it thinks. That is the framing.",
+            "The four commands on the slide are the four things people "
+            "actually want at a track event.",
+            "Tuning stops being an edit-compile-upload cycle and becomes a "
+            "conversation. That is a real productivity difference, not a "
+            "nicety.",
+            "Industrial controllers, network switches and flight computers "
+            "all have one. This is standard practice, not a toy.",
+        ])
 
     deck.code(
         "Reading a line without stopping the vehicle",
@@ -295,9 +400,24 @@ def lesson1(deck):
                 "looks broken to whoever set theirs differently.", 0),
                ("The length cap matters. Without it a stuck sender grows the "
                 "String until the ESP32 runs out of heap.", 0)],
-        size=13, highlight={1, 4, 12})
+        size=13, highlight={1, 4, 12},
+        speaker=[
+            "Serial.readStringUntil() WAITS. On a moving vehicle that is "
+            "unacceptable. Say it plainly.",
+            "This version takes whatever bytes have arrived and returns "
+            "immediately, every time. That is the non-blocking pattern from "
+            "beginner Lesson 5, applied to input.",
+            "The line-ending handling looks like paranoia until you watch a "
+            "console appear broken because the Serial Monitor dropdown was "
+            "set differently.",
+            "The printable-character and length checks are the input "
+            "validation. Worth pointing out that they are not optional.",
+        ])
 
-    deck.progress(STAGES["lesson1"], 2)
+    deck.progress(STAGES["lesson1"], 2,
+        speaker=[
+            "Twenty seconds. Second activity.",
+        ])
 
     deck.activity(
         "Do it now  -  a console",
@@ -315,7 +435,19 @@ def lesson1(deck):
                  "run while the LED keeps blinking on its own schedule.", 0)],
         questions=[("toInt() returns 0 for anything it cannot parse. Why does "
                     "that make range checking essential rather than optional?", 0)],
-        minutes=25)
+        minutes=25,
+        speaker=[
+            "Step 4 is the one people skip. Make them try all four "
+            "line-ending settings - it is the fastest way to appreciate the "
+            "previous slide.",
+            "Step 5 is the first thing they write themselves today.",
+            "Step 6 sends them into the real program to find the same three "
+            "problems solved there. That is the bridge to the rest of the "
+            "course.",
+            "The answer to the question: toInt() returns 0 for anything "
+            "unparseable, so a typo silently becomes a valid-looking zero. "
+            "Range checking is what catches it.",
+        ])
 
     deck.code(
         "The boot sequence of Op Program 12",
@@ -355,7 +487,19 @@ def lesson1(deck):
                 "outputs into a known safe state as early as you can.", 0),
                ("Radio last. It is the slowest thing to come up and nothing "
                 "else waits on it.", 0)],
-        size=12, highlight={15, 16})
+        size=12, highlight={15, 16},
+        speaker=[
+            "The order is the lesson, not the code. Walk down it and ask "
+            "why each step is where it is.",
+            "Settings first, because everything after may depend on them. "
+            "Then detect the hardware, because behaviour branches on it.",
+            "Motors before lights, because getting the outputs into a safe "
+            "state matters more than anything pretty.",
+            "Radio last, because a controller connecting to a "
+            "half-initialised vehicle is the worst possible moment.",
+            "Ask them to justify a different order. Making them defend it "
+            "is better than telling them.",
+        ])
 
     diagrams.system_block(deck, controller="Bluetooth gamepad")
 
@@ -376,7 +520,14 @@ def lesson1(deck):
         size=12,
         note="GPIO 34-39 are INPUT ONLY on the ESP32 and have no internal pull "
              "resistors. That is why the self-test pin needs one on the board.",
-        note_kind="warn")
+        note_kind="warn",
+        speaker=[
+            "This is reference, not teaching. Point at it and move on.",
+            "The note is the one thing to say out loud: GPIO 34 to 39 are "
+            "input only and have no internal pull-up, which is why the "
+            "self-test jumper needs an external pull-down.",
+            "Worth printing for the rest of the course.",
+        ])
 
     deck.bullets(
         "Reading a program you did not write",
@@ -399,7 +550,18 @@ def lesson1(deck):
          ("EXERCISE, ten minutes. Open Pathfinder_Op_Program12, read in that "
           "order, and write down three questions. We will answer them over the "
           "next four lessons.", 0)],
-        lead="Header, then Config.h, then setup(), then loop()")
+        lead="Header, then Config.h, then setup(), then loop()",
+        speaker=[
+            "This is the most useful slide in the lesson for anybody who "
+            "will read somebody else's code again - which is all of them.",
+            "Vocabulary first, then skeleton, then detail. Say why: reading "
+            "Lighting.ino with no idea what led_mode is or who sets it is "
+            "wasted time.",
+            "Run the ten-minute exercise properly. Time it, and get answers "
+            "from three different groups.",
+            "Point out that Config.h tells you what the program can DO, "
+            "because it tells you what somebody thought was worth tuning.",
+        ])
 
     deck.quiz(
         "Check yourself",
@@ -413,7 +575,24 @@ def lesson1(deck):
          ("6.  Why does setup() initialise the motors before the LEDs?", 0),
          ("7.  Every tab can see every global. Why is that both the convenience "
           "and the danger?", 0)],
-        lead="Next lesson: motors, and integer maths that quietly lies to you.")
+        lead="Next lesson: motors, and integer maths that quietly lies to you.",
+        speaker=[
+            "Conversation, not a test.",
+            "Answers: Config.h is a header because generated prototypes sit "
+            "above the code and a type must already be defined; tabs "
+            "concatenate with the folder-named file first and the rest "
+            "alphabetically; detection avoids a configuration that can "
+            "disagree with reality.",
+            "Bit flags let one byte carry several independent capabilities "
+            "and make a test a single & operation.",
+            "readStringUntil blocks, and it also depends on a timeout you "
+            "did not choose.",
+            "Motors before LEDs so the outputs are safe before anything "
+            "else happens.",
+            "The last question has no clean answer, and that is the point - "
+            "shared globals are convenient exactly because nothing stops "
+            "you.",
+        ])
 
     return deck
 
@@ -427,7 +606,13 @@ def lesson2(deck):
         "Resolution against frequency, four states of an H-bridge, fast "
         "decay, and a ramp that used to stall one count short.",
         BYLINE + ["", "Three hours.  Wheels off the ground throughout."],
-        hero_image=img("vehicle-rear-battery.jpg"), logo=LOGO)
+        hero_image=img("vehicle-rear-battery.jpg"), logo=LOGO,
+        speaker=[
+            "Blocks on every desk. Everything today runs a motor at up to "
+            "full power and none of it should touch the floor.",
+            "Have a multimeter to hand for the voltage column in the first "
+            "activity.",
+        ])
 
     deck.objectives([
         "Work out the maximum PWM frequency for a given resolution, and "
@@ -438,7 +623,11 @@ def lesson2(deck):
          "decay",
         "Spot the integer-truncation bug in a ramp, and fix it",
         "Explain why remap_axis constrains before it maps",
-    ])
+    ],
+        speaker=[
+            "Objective four - spotting the truncation bug - is the one they "
+            "will remember. It is a real bug from a real program.",
+        ])
 
     deck.table(
         "Today, in order",
@@ -452,7 +641,11 @@ def lesson2(deck):
          ["2:20", "Speed ramping, and the truncation bug"],
          ["2:35", "remap_axis: deadzones, scale, and per-axis tuning"],
          ["2:50", "Four servos on one thumbstick"]],
-        col_widths=[1, 9])
+        col_widths=[1, 9],
+        speaker=[
+            "Two breaks. The first activity is thirty-five minutes and it "
+            "earns them; do not compress it.",
+        ])
 
     deck.bullets(
         "The LEDC peripheral, and the trade you cannot avoid",
@@ -479,9 +672,24 @@ def lesson2(deck):
         note="ledcSetup() returns the frequency it managed to configure, or 0 if "
              "the combination is impossible. Check it. Silence is otherwise very "
              "hard to debug.",
-        note_kind="warn")
+        note_kind="warn",
+        speaker=[
+            "This is a genuine engineering trade-off, so present it as one "
+            "rather than as a fact to memorise.",
+            "More bits buys finer control at the BOTTOM of the range, which "
+            "is exactly where a motor is hardest to drive smoothly.",
+            "The cost is frequency: the counter has to run 2^N times per "
+            "cycle. Do the division on the board.",
+            "Op 12 sits at 10 bits and 30 kHz. Ask them to check that "
+            "against the formula before you confirm it.",
+            "Connect it back: the beginner course ran 8 bits, and this is "
+            "what the extra two bits are for.",
+        ])
 
-    deck.progress(STAGES["lesson2"], 1)
+    deck.progress(STAGES["lesson2"], 1,
+        speaker=[
+            "Twenty seconds. First activity.",
+        ])
 
     deck.activity(
         "Do it now  -  resolution you can hear",
@@ -500,7 +708,19 @@ def lesson2(deck):
                    ("Does more resolution change the lowest speed the motor "
                     "will turn at, or only how finely you can approach it?", 0)],
         safety="Wheels off the ground. This reaches full power.",
-        minutes=35)
+        minutes=35,
+        speaker=[
+            "The console is the tool for the whole activity. Make sure "
+            "everybody has typed help and got a response before moving on.",
+            "Step 2 and 3 are a listening exercise as much as a reading "
+            "one. The bottom of the range is where the difference lives.",
+            "Step 4 is refused by the console on purpose. 12 bits caps out "
+            "at 19.5 kHz, so 30 kHz is impossible - and the console says so "
+            "rather than silently doing something else.",
+            "The second question is the subtle one: more resolution does "
+            "NOT lower the speed at which the motor starts turning. It only "
+            "lets you approach it more finely.",
+        ])
 
     diagrams.h_bridge(deck)
 
@@ -529,7 +749,18 @@ def lesson2(deck):
              "which is a hard brake, not a coast. Op 12 tests for zero "
              "separately and calls coast_all(). Miss that and the vehicle will "
              "not roll when you let go.",
-        note_kind="warn")
+        note_kind="warn",
+        speaker=[
+            "Both columns describe the same H-bridge. What changes is what "
+            "happens during the off part of each cycle.",
+            "Sign-magnitude alternates driven and coast. Hybrid alternates "
+            "driven and brake, which actively pulls the current down.",
+            "The practical consequence: hybrid holds the speed you asked "
+            "for when the load changes. They will feel this in the "
+            "activity.",
+            "Sign-magnitude is not wrong. It is simpler to read, and that "
+            "is why the beginner programs use it.",
+        ])
 
     deck.code(
         "Hybrid drive, and the trap in it",
@@ -560,7 +791,18 @@ def lesson2(deck):
                ("", 0),
                ("A vehicle that will not coast, and cannot be pushed by hand "
                 "when it is switched on, has this bug.", 0)],
-        size=13, highlight={3, 4, 5, 6, 7})
+        size=13, highlight={3, 4, 5, 6, 7},
+        speaker=[
+            "Walk the three cases on the right-hand notes before reading "
+            "the code.",
+            "The guard clause is the whole slide. Without it, duty zero "
+            "puts both pins high, and both pins high is a brake.",
+            "Ask what that feels like: a vehicle that will not coast and "
+            "cannot be pushed by hand when switched on. That is a real "
+            "symptom somebody would report as a mechanical fault.",
+            "This is a good example of a bug that hides in the ONE case the "
+            "arithmetic happens to handle differently.",
+        ])
 
     deck.code(
         "The ramp, and the bug that hid in it for a year",
@@ -592,9 +834,24 @@ def lesson2(deck):
                ("It matters because comparisons against the target then never "
                 "become true, and anything waiting for \"ramp finished\" waits "
                 "forever.", 0)],
-        size=13, highlight={1, 14})
+        size=13, highlight={1, 14},
+        speaker=[
+            "Set the scene: this bug lived for a year in shipping code.",
+            "Do the arithmetic out loud. Gap of 1, factor of 0.5, gives "
+            "0.5, which truncates to 0 - so current never changes again.",
+            "The ramp stalls one count short, forever. On a 1024-count "
+            "scale that is 0.1%, which nobody can see on a wheel.",
+            "Ask why it still matters. Because a value that never reaches "
+            "its target breaks anything that tests for equality, and "
+            "because a bug you cannot see is worse than one you can.",
+            "The fix is one line: if the step rounds to nothing, take one "
+            "count.",
+        ])
 
-    deck.progress(STAGES["lesson2"], 2)
+    deck.progress(STAGES["lesson2"], 2,
+        speaker=[
+            "Twenty seconds. Second activity.",
+        ])
 
     deck.activity(
         "Do it now  -  decay modes and ramping",
@@ -612,7 +869,20 @@ def lesson2(deck):
         questions=[("Why does fast decay hold speed better under load?", 0),
                    ("Why would a 0.1% speed error still be a real bug?", 0)],
         safety="Wheels off the ground. One motor, up to full power.",
-        minutes=35)
+        minutes=35,
+        speaker=[
+            "Steps 1 and 2 are a feel test. Pinching the tyre gently is the "
+            "load - warn them to be gentle and to keep fingers clear of the "
+            "spokes.",
+            "Step 6 recreates the bug deliberately. Watching the printout "
+            "stop one count short is the memorable part of this lesson.",
+            "Answer to the first question: fast decay actively pulls the "
+            "winding current down during the off part, so the average "
+            "tracks the command.",
+            "Answer to the second: a 0.1% error is invisible but it means a "
+            "value that never reaches its target, and anything comparing "
+            "for equality never fires.",
+        ])
 
     diagrams.pwm_duty(deck)
 
@@ -636,7 +906,19 @@ def lesson2(deck):
                 "truncating. The same class of bug as the ramp.", 0),
                ("constrain() BEFORE map(): map() does not clamp.", 0),
                ("Sign comes off at the start and goes back on at the end.", 0)],
-        size=13, highlight={6, 7})
+        size=13, highlight={6, 7},
+        speaker=[
+            "Four ideas in ten lines. Take them one at a time.",
+            "The -1 sentinel for a per-axis deadzone gives you a default "
+            "and an override with no second flag. That is a pattern worth "
+            "naming.",
+            "lround() rather than a cast, so 0.5 rounds up. Point out that "
+            "this is the SAME class of bug as the ramp, avoided this time.",
+            "constrain() before map(), because map() does not clamp. Ask "
+            "what happens if you do it the other way round.",
+            "Sign comes off at the start and goes back on at the end, so "
+            "the maths in the middle only ever deals with positive numbers.",
+        ])
 
     deck.two_columns(
         "Throttle modes, and four servos on one stick",
@@ -662,7 +944,19 @@ def lesson2(deck):
          ("", 0),
          ("Travel is 1.0 to 2.0 ms. 11.2 used 0.5 to 2.5, which can drive a "
           "servo into its mechanical end stops.", 0)],
-        size=14)
+        size=14,
+        speaker=[
+            "The left column is a design argument, not a feature list. Only "
+            "the steering scale changes between the modes.",
+            "The reasoning is worth hearing: a global speed cap makes a "
+            "vehicle feel broken, a steering cap makes it feel "
+            "controllable. Ask whether they agree.",
+            "The four-servo scheme surprises people. One stick, four "
+            "servos, each owning one direction and centred otherwise.",
+            "1.0 to 2.0 ms is the corrected travel. Point back to the "
+            "change log in Lesson 1 - the old range could drive a servo "
+            "into its stops.",
+        ])
 
     diagrams.servo_pulse(deck)
 
@@ -679,7 +973,22 @@ def lesson2(deck):
          ("7.  Why does remap_axis call constrain() before map() rather than "
           "after?", 0),
          ("8.  Why does NORMAL mode scale steering rather than top speed?", 0)],
-        lead="Next lesson: identity that survives a power cycle.")
+        lead="Next lesson: identity that survives a power cycle.",
+        speaker=[
+            "Conversation, not a test.",
+            "Answers: 12 bits caps at 19.5 kHz because 80 MHz divided by "
+            "4096 is 19,531; resolution buys fine control at the bottom of "
+            "the range; the four states are forward, reverse, coast and "
+            "brake.",
+            "Hybrid drive holds speed because the braking part actively "
+            "pulls current down. At duty 0 without the guard, both pins go "
+            "high and the motor brakes.",
+            "The truncation bug leaves the ramp one count short, which is "
+            "0.1% and invisible on a wheel.",
+            "constrain before map because map does not clamp. NORMAL scales "
+            "steering because steering authority was the problem, not top "
+            "speed.",
+        ])
 
     return deck
 
@@ -693,7 +1002,14 @@ def lesson3(deck):
         "Allowlists, callbacks, EEPROM that is not EEPROM, and making a "
         "vehicle remember which controller is its own.",
         BYLINE + ["", "Three hours.  Bring two controllers per group if you can."],
-        hero_image=img("control-board-bare.jpg"), logo=LOGO)
+        hero_image=img("control-board-bare.jpg"), logo=LOGO,
+        speaker=[
+            "Two controllers per group makes the allowlist activity far "
+            "better. If you only have one each, pair groups up for that "
+            "section.",
+            "Charge every pad before the class. A flat controller looks "
+            "exactly like a refused connection.",
+        ])
 
     deck.objectives([
         "Explain what a callback is and when it runs",
@@ -703,7 +1019,12 @@ def lesson3(deck):
         "Design a storage map with a validity marker, and load it "
          "defensively",
         "Walk through the full pairing workflow end to end",
-    ])
+    ],
+        speaker=[
+            "Objective three - what commit() actually does - is the one "
+            "that prevents a real hardware failure later. Do not let it "
+            "slide by.",
+        ])
 
     deck.table(
         "Today, in order",
@@ -717,7 +1038,11 @@ def lesson3(deck):
          ["2:15", "BREAK  (10 minutes)"],
          ["2:25", "Upload a3b_eeprom_settings. Pull the cable out"],
          ["2:50", "The full pairing workflow in Op 12"]],
-        col_widths=[1, 9])
+        col_widths=[1, 9],
+        speaker=[
+            "Two breaks. Both activities are long and both are worth their "
+            "time.",
+        ])
 
     deck.bullets(
         "Callbacks: functions you write and never call",
@@ -738,7 +1063,19 @@ def lesson3(deck):
           "chose, and it is safe to print and to touch program state.", 0),
          ("", 0),
          ("If they ran from an interrupt, neither of those would be true.", 0)],
-        lead="Inversion of control")
+        lead="Inversion of control",
+        speaker=[
+            "Name the inversion out loud: normally your code calls a "
+            "library, and with a callback the library calls your code.",
+            "The practical question is always WHEN it runs and what is safe "
+            "to do there. Ask that before you answer it.",
+            "Here both callbacks run inside BP32.update(), which they call "
+            "themselves from loop(). So it is their thread, at a moment "
+            "they chose, and printing is safe.",
+            "The last line is the important caveat. From an interrupt, "
+            "neither of those would be true - and that is a whole category "
+            "of embedded bug.",
+        ])
 
     deck.bullets(
         "The allowlist, and the two ways to get it wrong",
@@ -768,9 +1105,24 @@ def lesson3(deck):
              "survive a reboot, a vehicle could come back up with an empty "
              "allowlist AND new connections disabled - and then refuse its own "
              "controller with no way in.",
-        note_kind="warn")
+        note_kind="warn",
+        speaker=[
+            "Set the problem up first: pairing alone does not give you one "
+            "vehicle per controller.",
+            "Mistake one is the cruel one. Called before setup(), the "
+            "allowlist calls do nothing AT ALL, and they do it silently. No "
+            "error, no warning.",
+            "Mistake two is the one that rots slowly: add rather than "
+            "rebuild, and stale entries accumulate where nobody can see "
+            "them.",
+            "Rebuild from scratch every boot, and the sketch is the single "
+            "source of truth. That principle is worth stating generally.",
+        ])
 
-    deck.progress(STAGES["lesson3"], 1)
+    deck.progress(STAGES["lesson3"], 1,
+        speaker=[
+            "Twenty seconds. First activity.",
+        ])
 
     deck.activity(
         "Do it now  -  lock a board to one pad",
@@ -788,7 +1140,20 @@ def lesson3(deck):
                     "happens to it at the next reset?", 0),
                    ("Why does the sketch call applyAllowlist() AFTER "
                     "BP32.setup()?", 0)],
-        minutes=35)
+        minutes=35,
+        speaker=[
+            "Step 3 is the moment it becomes real: a second controller "
+            "turned away with a printed reason.",
+            "Step 5 locks to an address that does not exist, so nothing can "
+            "connect. Good for showing that the mechanism really is doing "
+            "the work.",
+            "Step 6 cross-checks against a phone scanner app. Worth doing - "
+            "it connects the number on screen to something outside the "
+            "room.",
+            "Answers: this sketch keeps the address in RAM only, so it is "
+            "gone at reset; and applyAllowlist() must come after "
+            "BP32.setup() because setup is what brings the stack up.",
+        ])
 
     deck.bullets(
         "There is no EEPROM on an ESP32",
@@ -809,7 +1174,18 @@ def lesson3(deck):
         lead="It is flash, pretending",
         note="A commit() in loop() at 30 Hz burns through a hundred thousand "
              "cycles in under an hour.",
-        note_kind="warn")
+        note_kind="warn",
+        speaker=[
+            "Lead with the headline: there is no EEPROM on this chip. The "
+            "library is an emulation over flash.",
+            "The three consequences are all practical. begin() first, "
+            "nothing saved without commit(), and flash wears out.",
+            "The warning panel has the arithmetic: a commit() in loop() at "
+            "30 Hz burns a hundred thousand cycles in under an hour. Say "
+            "that number out loud.",
+            "The rule to take away: write when something changed and a "
+            "person asked, never on a schedule.",
+        ])
 
     deck.code(
         "The storage map, and why the addresses are spaced out",
@@ -835,7 +1211,19 @@ def lesson3(deck):
                 "is what makes an overlap visible when you read the file.", 0),
                ("Get this wrong and one setting silently corrupts another. It "
                 "will look like a hardware fault.", 0)],
-        size=13, highlight={9, 10, 12})
+        size=13, highlight={9, 10, 12},
+        speaker=[
+            "EEPROM is a flat array of bytes and YOU choose the layout. "
+            "Nothing stops two values overlapping - the compiler cannot "
+            "help you here.",
+            "Four bytes per slot because an int and a float are both four "
+            "bytes on this chip.",
+            "Ask why the addresses are spaced out and written down in one "
+            "place. The answer is that a map you can read is a map you can "
+            "extend safely.",
+            "They break this deliberately in step 6 of the activity, so "
+            "plant the idea now.",
+        ])
 
     deck.bullets(
         "The magic byte, and never trusting storage",
@@ -856,9 +1244,24 @@ def lesson3(deck):
          ("", 0),
          ("Defensive loading is not paranoia. It is the difference between a "
           "vehicle that boots with odd settings and one that will not boot.", 0)],
-        lead="Two separate checks, for two separate problems")
+        lead="Two separate checks, for two separate problems",
+        speaker=[
+            "Start with the fact: new flash is full of 0xFF. Read an int "
+            "out of that and you get -1.",
+            "The magic byte says the bytes are OURS. It does not say they "
+            "still make sense.",
+            "That distinction is the whole slide. A value written by an "
+            "older version of the program is perfectly valid data and still "
+            "wrong for this one.",
+            "Defensive loading is not paranoia - it is the difference "
+            "between a vehicle that boots with odd settings and one that "
+            "will not boot at all.",
+        ])
 
-    deck.progress(STAGES["lesson3"], 2)
+    deck.progress(STAGES["lesson3"], 2,
+        speaker=[
+            "Twenty seconds. Second activity.",
+        ])
 
     deck.activity(
         "Do it now  -  settings that survive",
@@ -878,7 +1281,19 @@ def lesson3(deck):
         questions=[("What is at address 0 in the dump, and what does it mean?", 0),
                    ("Why is range checking needed even when the magic byte is "
                     "correct?", 0)],
-        minutes=30)
+        minutes=30,
+        speaker=[
+            "Step 1 involves physically unplugging the board. Make sure "
+            "nobody is mid-upload when they do it.",
+            "Step 5 is the deliberate bug: comment out commit(), save, "
+            "reset, and watch the setting vanish. That is the mistake they "
+            "will one day make for real.",
+            "Step 6 overlaps two addresses on purpose and one setting eats "
+            "the other. It makes the flat-array point concrete.",
+            "Answers: address 0 holds the deadzone int; and range checking "
+            "is needed even with a correct magic byte because an older "
+            "version could have written a value this version cannot use.",
+        ])
 
     deck.table(
         "Where each program keeps its controller address",
@@ -901,7 +1316,16 @@ def lesson3(deck):
         size=13,
         note="A field-serviceable machine should never need a laptop to change "
              "who is allowed to drive it. That is the whole argument for the "
-             "EEPROM version.")
+             "EEPROM version.",
+        speaker=[
+            "Four programs, four answers, and each is right for what it is "
+            "for. Do not let this become a ranking.",
+            "The cost column is where the engineering judgement lives. Read "
+            "that rather than the middle column.",
+            "The note is the argument for the EEPROM version: a "
+            "field-serviceable machine should never need a laptop to change "
+            "who is allowed to drive it.",
+        ])
 
     deck.code(
         "The pairing workflow, end to end",
@@ -932,7 +1356,20 @@ def lesson3(deck):
                ("The LEDs breathing blue is the only feedback a student gets "
                 "with no laptop attached. That is a deliberate design decision, "
                 "not decoration.", 0)],
-        size=13, highlight={12, 13, 14})
+        size=13, highlight={12, 13, 14},
+        speaker=[
+            "Two ways in, one code path. That is a design choice worth "
+            "pointing at - a button and a console command that do exactly "
+            "the same thing.",
+            "The first controller to connect during pairing becomes the "
+            "vehicle's own and is written down immediately, not at "
+            "shutdown.",
+            "Ask why it is written immediately. Because a vehicle that "
+            "loses power before saving would come back not knowing who it "
+            "belongs to.",
+            "Walk the order: forget keys, clear the marker, rebuild the "
+            "empty allowlist, enable new connections, show it on the LEDs.",
+        ])
 
     deck.bullets(
         "One more bug worth knowing about",
@@ -953,7 +1390,19 @@ def lesson3(deck):
           "specify it explicitly, and why the phrase big-endian exists.", 1)],
         lead="Endianness, and an afternoon you will not get back",
         note="Op 12 prints most significant byte first, which matches every "
-             "Bluetooth scanner you will compare against.")
+             "Bluetooth scanner you will compare against.",
+        speaker=[
+            "This is the most human bug in the course. Everything looks "
+            "correct and the address is simply backwards.",
+            "Describe the symptom before the cause: you write down what it "
+            "printed, paste it somewhere else, and nothing ever connects.",
+            "The first lesson is a debugging habit: print it at both ends "
+            "and compare character by character.",
+            "The second is a real category. Byte order is why network "
+            "protocols specify it and why the word big-endian exists.",
+            "Op 12 now prints most significant byte first, matching every "
+            "Bluetooth scanner they will ever use.",
+        ])
 
     deck.quiz(
         "Check yourself",
@@ -968,7 +1417,22 @@ def lesson3(deck):
           "own?", 0),
          ("8.  A vehicle refuses its own controller after a power cycle. Give "
           "two possible causes.", 0)],
-        lead="Next lesson: never block, and never redraw for nothing.")
+        lead="Next lesson: never block, and never redraw for nothing.",
+        speaker=[
+            "Conversation, not a test.",
+            "Answers: a callback is a function you supply and the library "
+            "calls; the allowlist needs the stack up first, which is what "
+            "BP32.setup() does; rebuilding keeps the sketch as the single "
+            "source of truth.",
+            "New connections stay enabled so a vehicle can be re-paired "
+            "without a recompile.",
+            "put() only writes the RAM copy; the flash is written by "
+            "commit(). Never from loop, because flash wears out.",
+            "The magic byte says the data is ours, not that it is still "
+            "valid for this version.",
+            "For question 8: the allowlist was applied before setup, or the "
+            "paired address was never committed to EEPROM.",
+        ])
 
     return deck
 
@@ -982,7 +1446,13 @@ def lesson4(deck):
         "Six modes, one variable, no delay() anywhere, and geometry that is "
         "not symmetric.",
         BYLINE + ["", "Three hours.  Nothing moves today."],
-        hero_image=img("vehicle-green-leds.jpg"), logo=LOGO)
+        hero_image=img("vehicle-green-leds.jpg"), logo=LOGO,
+        speaker=[
+            "Nothing moves today, so no blocks needed. Dim the room if you "
+            "can.",
+            "Have a vehicle in front of you with the LED map from the "
+            "beginner course to hand. The geometry section needs it.",
+        ])
 
     deck.objectives([
         "Say why a state machine beats a set of booleans for lighting",
@@ -990,7 +1460,12 @@ def lesson4(deck):
         "Explain what a dirty flag saves, and measure it",
         "Work out the LED indices for a turn signal on either side",
         "Add a new lighting mode without touching the existing ones",
-    ])
+    ],
+        speaker=[
+            "The last objective is the assessment: adding a mode without "
+            "touching the existing ones is what a good architecture buys "
+            "you.",
+        ])
 
     deck.table(
         "Today, in order",
@@ -1004,7 +1479,11 @@ def lesson4(deck):
          ["2:10", "Turn signal geometry. Upload a4b_turn_signal_larson"],
          ["2:35", "BREAK  (10 minutes)"],
          ["2:45", "Add a mode of your own"]],
-        col_widths=[1, 9])
+        col_widths=[1, 9],
+        speaker=[
+            "Two breaks. The final thirty minutes is a build exercise - "
+            "protect it.",
+        ])
 
     deck.bullets(
         "Why lighting needs a state machine and not a pile of booleans",
@@ -1027,7 +1506,18 @@ def lesson4(deck):
          ("", 0),
          ("enum LEDMode { DISCONNECTED, STANDBY, TURN_LEFT, TURN_RIGHT,", 1),
          ("               PAIRING, KITT_SCANNER };", 1)],
-        lead="Six booleans is 64 combinations. One enum is six.")
+        lead="Six booleans is 64 combinations. One enum is six.",
+        speaker=[
+            "Do the arithmetic on the board: six booleans is 64 "
+            "combinations, and most of them are nonsense that a bug can "
+            "still reach.",
+            "Turning left AND right at the same time is the example that "
+            "lands. Ask what the lights would actually do.",
+            "One variable, one value, so two modes can never be half-on at "
+            "once. That is not discipline, it is structure.",
+            "The second consequence is the one they will test at the end of "
+            "the lesson: adding a mode is one enum value and one branch.",
+        ])
 
     diagrams.state_machine(deck)
 
@@ -1053,7 +1543,20 @@ def lesson4(deck):
           "show, because nothing else needs to happen yet.", 0)],
         lead="One frame per pass, never a loop that waits",
         note="\"Draw one frame and return\" is the same discipline a game engine "
-             "uses. Once you see it, you will see it everywhere.")
+             "uses. Once you see it, you will see it everywhere.",
+        speaker=[
+            "This is the beginner-course millis() pattern, promoted to a "
+            "rule with no exceptions.",
+            "Three lines: is it time, remember when, draw ONE frame. Get "
+            "them to say it back.",
+            "The System Test story is the counterexample. A vehicle that "
+            "keeps driving while it ignores you is a safety problem, not a "
+            "cosmetic one.",
+            "The one legitimate delay() is the startup show, because "
+            "nothing else needs to happen yet. Being able to say exactly "
+            "why the exception is allowed is the mark of understanding the "
+            "rule.",
+        ])
 
     deck.code(
         "Dirty flags: not redrawing for nothing",
@@ -1086,9 +1589,22 @@ def lesson4(deck):
                ("Graphics engines, spreadsheets and browsers all do this. "
                 "Anywhere redrawing is expensive, something is tracking what "
                 "actually changed.", 0)],
-        size=12, highlight={12})
+        size=12, highlight={12},
+        speaker=[
+            "STANDBY is not an animation. It is one picture that changes "
+            "only when something changes it. Make that distinction clearly.",
+            "One line - clearing the flag - is what turns a redraw every "
+            "pass into a redraw when it matters.",
+            "They measure exactly what that line is worth in the next "
+            "activity, so do not give them the number now.",
+            "Pushing 32 pixels is about a millisecond of tightly timed "
+            "bit-banging. That is why it is expensive.",
+        ])
 
-    deck.progress(STAGES["lesson4"], 1)
+    deck.progress(STAGES["lesson4"], 1,
+        speaker=[
+            "Twenty seconds. First activity.",
+        ])
 
     deck.activity(
         "Do it now  -  measure the state machine",
@@ -1107,7 +1623,17 @@ def lesson4(deck):
         questions=[("How many passes per second in standby with the flag? "
                     "Without it?", 0),
                    ("What did you have to change to add ALARM? How many places?", 0)],
-        minutes=35)
+        minutes=35,
+        speaker=[
+            "The load command is the instrument for this whole activity. "
+            "Make sure everybody gets a reading before step 4.",
+            "Step 4 removes the dirty flag on purpose, and step 5 makes "
+            "them write down both numbers. That comparison IS the lesson.",
+            "Step 6 - adding an ALARM mode - is a rehearsal for the "
+            "exercise at the end. Note how few places they had to touch.",
+            "Thirty-five minutes. If a group finishes early, ask them to "
+            "add a second mode and check the cost is the same.",
+        ])
 
     deck.two_columns(
         "Colour helpers, written out longhand",
@@ -1132,7 +1658,18 @@ def lesson4(deck):
           "eventually break in a way you cannot fix. Forty lines of your own "
           "code is often the cheaper option.", 0)],
         note="It also means the whole course - beginner and advanced - now uses "
-             "one LED library instead of two.")
+             "one LED library instead of two.",
+        speaker=[
+            "The FastLED story is a real dependency failure and worth "
+            "telling properly: a minor version auto-enabled a backend that "
+            "would not build against the SDK, with no per-sketch opt-out.",
+            "Then make the constructive point. Writing the four helpers out "
+            "by hand made the bit-shifting visible instead of magic.",
+            "The line to land: a dependency you do not understand is a "
+            "dependency that will eventually break in a way you cannot fix.",
+            "That is not an argument against libraries. It is an argument "
+            "for knowing what the ones you rely on actually do.",
+        ])
 
     deck.bullets(
         "Turn signal geometry, which is the genuinely hard part",
@@ -1153,7 +1690,20 @@ def lesson4(deck):
          ("rear:   LEFT_REAR_START - 1 - i        (counts DOWN from 23)", 1),
          ("", 0),
          ("Do not try to derive this. Step through it and read the indices.", 0)],
-        lead="Two bars, four directions, one loop of wire")
+        lead="Two bars, four directions, one loop of wire",
+        speaker=[
+            "This is the hardest slide in the lesson. Have a real vehicle "
+            "out and point at LEDs while you talk.",
+            "The strip is ONE loop, so the two halves of each side run in "
+            "opposite directions. That is the whole reason the arithmetic "
+            "is asymmetric.",
+            "The bar grows outward from the centre towards the turning "
+            "corner, on both bars at once. Trace it with a finger before "
+            "showing the indices.",
+            "Take the advice on the slide seriously: do not derive it. Step "
+            "through it and read the numbers off a real vehicle. They do "
+            "exactly that in the activity.",
+        ])
 
     deck.code(
         "Two details that are easy to miss",
@@ -1182,9 +1732,24 @@ def lesson4(deck):
                 "for as long as you hold it and then finishes cleanly.", 0),
                ("This is a small thing that makes a machine feel considered "
                 "rather than twitchy.", 0)],
-        size=12, highlight={10, 11, 12})
+        size=12, highlight={10, 11, 12},
+        speaker=[
+            "Two details, both of which look like paranoia until you skip "
+            "them.",
+            "Repainting the base first means the previous frame is not left "
+            "underneath. Ask what a signal painted over a stale frame would "
+            "look like.",
+            "The D-pad only STARTS the animation. It does not hold it on "
+            "and it does not stop it.",
+            "That matches a real indicator, which finishes its blink after "
+            "you let go of the stalk. Small detail, and it is what makes it "
+            "feel right.",
+        ])
 
-    deck.progress(STAGES["lesson4"], 2)
+    deck.progress(STAGES["lesson4"], 2,
+        speaker=[
+            "Twenty seconds. Second activity.",
+        ])
 
     deck.activity(
         "Do it now  -  step through the geometry",
@@ -1203,7 +1768,20 @@ def lesson4(deck):
                     "up for a right one?", 0),
                    ("What would happen if the base lighting were not repainted "
                     "each frame?", 0)],
-        minutes=35)
+        minutes=35,
+        speaker=[
+            "Step 2 is the point of the whole activity: freeze it, step it, "
+            "and read the indices against a real vehicle.",
+            "Step 5 breaks the left branch on purpose. The bar grows the "
+            "wrong way, inward instead of outward, and they should be able "
+            "to say why.",
+            "Step 6 is open-ended. A fading trailing edge needs "
+            "scale_colour(), which they met two slides ago.",
+            "Answers: the front counts down for a left signal because the "
+            "left half of the front bar is indices 0 to 7 and the growth is "
+            "outward from 8; without the base repaint you would see the "
+            "previous frame left underneath.",
+        ])
 
     deck.code(
         "The state machine itself",
@@ -1242,7 +1820,18 @@ def lesson4(deck):
                 "passes through this function do almost nothing at all.", 0),
                ("Note that STANDBY is last and has no timer - it is the "
                 "fall-through, and it only acts when the dirty flag says so.", 0)],
-        size=12, highlight={8, 16, 23})
+        size=12, highlight={8, 16, 23},
+        speaker=[
+            "This is the whole state machine on one screen. Let them look "
+            "at it in silence for thirty seconds before you say anything.",
+            "Every branch does the same three things: is it my turn, is it "
+            "time yet, draw one frame. Get them to notice the repetition "
+            "themselves.",
+            "The early returns are what keeps it flat and readable. Ask "
+            "what this would look like as nested ifs.",
+            "Point out that STANDBY is last and is the only branch guarded "
+            "by a flag rather than a clock.",
+        ])
 
     deck.bullets(
         "Breathing, and an 8-bit sine",
@@ -1269,7 +1858,20 @@ def lesson4(deck):
         lead="Why the fade is a sine and not a ramp",
         note="Compute animation state FROM the clock rather than stepping a "
              "counter. It is self-correcting, and it survives a slow pass of "
-             "loop() without stuttering.")
+             "loop() without stuttering.",
+        speaker=[
+            "Start with why a linear fade looks wrong: it appears to hover "
+            "at the ends and rush through the middle.",
+            "A sine slows at the extremes, which is what your eye expects. "
+            "That is a perception point, like the colour lesson in the "
+            "beginner course.",
+            "The 0..255 in, 0..255 out convention keeps floating point out "
+            "of the caller entirely. Worth noticing as an interface design "
+            "choice.",
+            "Deriving the phase from millis() rather than a counter means "
+            "the animation keeps correct time even if a frame is missed. "
+            "That is the transferable idea.",
+        ])
 
     deck.bullets(
         "Add a mode  -  thirty minutes, in your groups",
@@ -1291,7 +1893,19 @@ def lesson4(deck):
          ("", 0),
          ("The point of the exercise is the first question. If a new mode costs "
           "you one enum value and one branch, the design is doing its job.", 0)],
-        lead="The real test of a design is what it costs to extend")
+        lead="The real test of a design is what it costs to extend",
+        speaker=[
+            "Thirty minutes, hands off. Circulate but do not solve.",
+            "The five steps are the architecture of the program, restated "
+            "as a recipe. Insist on step 2 - constants at the top, not "
+            "buried in the function.",
+            "The first question is the real assessment. Count the lines "
+            "they had to change in existing code.",
+            "HAZARD and TURN_LEFT can never both be on, because there is "
+            "one variable holding one value. Make sure somebody says that "
+            "out loud.",
+            "Leave five minutes to demonstrate. Every group shows theirs.",
+        ])
 
     deck.quiz(
         "Check yourself",
@@ -1306,7 +1920,24 @@ def lesson4(deck):
           "when the D-pad is released?", 0),
          ("8.  You want to add a hazard-lights mode. What exactly do you have "
           "to change?", 0)],
-        lead="Next lesson: a machine that tests its own hardware.")
+        lead="Next lesson: a machine that tests its own hardware.",
+        speaker=[
+            "Conversation, not a test.",
+            "Answers: 64 combinations against 6; the three-line pattern "
+            "should be written out; a dirty flag skips a redraw when "
+            "nothing changed, and they have their own measured numbers for "
+            "what it saved.",
+            "FastLED 3.10.5 auto-enables an ESP-DSP backend that will not "
+            "build against the bluepad32 SDK.",
+            "Each frame repaints the headlights so the previous frame is "
+            "not left underneath.",
+            "The front counts down for a left signal because the growth is "
+            "outward from the centre of the bar.",
+            "The signal finishes its cycles because that is what a real "
+            "indicator does.",
+            "For question 8: one enum value, one set of constants, one "
+            "update function, one branch, one console command.",
+        ])
 
     return deck
 
@@ -1320,7 +1951,16 @@ def lesson5(deck):
         "I2C, shunt resistors, current signatures, and a vehicle that can "
         "tell you which motor is unplugged.",
         BYLINE + ["", "Three hours.  Gen 3 vehicles for the sensor work."],
-        hero_image=img("vehicle-with-rangefinder.jpg"), logo=LOGO)
+        hero_image=img("vehicle-with-rangefinder.jpg"), logo=LOGO,
+        speaker=[
+            "You need at least one Gen 3 vehicle per two groups for the "
+            "sensor work. A Gen 2 is still useful - the second step of the "
+            "first activity needs one.",
+            "Blocks out again. The current measurements need a motor "
+            "spinning freely and then held.",
+            "This is the last lesson. Leave time at the end for the "
+            "capstone slide - it is what they take away.",
+        ])
 
     deck.objectives([
         "Test whether a device is present on an I2C bus, and diagnose "
@@ -1332,7 +1972,12 @@ def lesson5(deck):
          "jammed motor",
         "Say why self-test thresholds are measured against a baseline",
         "Add a subsystem to Op Program 12 without making it worse",
-    ])
+    ],
+        speaker=[
+            "Objective six is the real one. Everything before it is "
+            "groundwork for being able to extend the program without making "
+            "it worse.",
+        ])
 
     deck.table(
         "Today, in order",
@@ -1346,7 +1991,11 @@ def lesson5(deck):
          ["2:20", "BREAK  (10 minutes)"],
          ["2:30", "Current signatures, and the self-test state machine"],
          ["2:50", "Adding a subsystem of your own, properly"]],
-        col_widths=[1, 9])
+        col_widths=[1, 9],
+        speaker=[
+            "Two breaks. The capstone discussion at 2:50 will overrun if "
+            "you let the measurement activity run long.",
+        ])
 
     deck.bullets(
         "I2C in ten lines",
@@ -1369,9 +2018,24 @@ def lesson5(deck):
           "add your own sensor on the breadboard.", 0)],
         lead="Two wires, 120 possible devices",
         note="On this board I2C is on GPIO 32 and 33, not the ESP32 defaults. "
-             "GPIO 34-39 are input-only and cannot drive a bus at all.")
+             "GPIO 34-39 are input-only and cannot drive a bus at all.",
+        speaker=[
+            "Ten lines, and it covers what they need. Do not turn this into "
+            "a bus protocol lecture.",
+            "The acknowledge mechanism is the clever bit: address it, send "
+            "nothing, and see whether anything pulls SDA low.",
+            "The pull-up point is the one that will save them an afternoon. "
+            "Devices can only pull a line DOWN, so something has to pull it "
+            "back up.",
+            "Nothing on every address is the classic missing-pull-up "
+            "symptom. It matters the moment they wire their own sensor on "
+            "the breadboard.",
+        ])
 
-    deck.progress(STAGES["lesson5"], 1)
+    deck.progress(STAGES["lesson5"], 1,
+        speaker=[
+            "Twenty seconds. First activity.",
+        ])
 
     deck.activity(
         "Do it now  -  find the sensor",
@@ -1390,7 +2054,20 @@ def lesson5(deck):
                  "explanation of why that is fine.", 0)],
         questions=[("This is exactly what is_ina219_present() does in Op 12. "
                     "What decision does the program make from the answer?", 0)],
-        minutes=25)
+        minutes=25,
+        speaker=[
+            "Step 2 is the important one and it is counter-intuitive: "
+            "finding nothing on a Gen 2 is the CORRECT answer, not a "
+            "failure.",
+            "Step 4 uses the ESP32 default pins, which are not the ones "
+            "this board wires the sensor to. Nothing answers, and that is "
+            "the point.",
+            "Step 5 tries input-only pins. The sketch explains why that "
+            "cannot work.",
+            "The question ties it back: this is exactly what "
+            "is_ina219_present() does in Op 12, and the decision it drives "
+            "is which capability flags get set.",
+        ])
 
     deck.bullets(
         "Measuring current without getting in the way of it",
@@ -1410,7 +2087,18 @@ def lesson5(deck):
          ("Reading five millivolts accurately is the sensor's entire job. The "
           "shunt register reports in units of 10 microvolts, which is where the "
           "0.01 in the maths comes from.", 0)],
-        lead="A tiny resistor, and Ohm's law")
+        lead="A tiny resistor, and Ohm's law",
+        speaker=[
+            "You cannot measure current directly. Say that first - it is "
+            "the reason the whole shunt idea exists.",
+            "Do both power calculations on the board. 0.01 W against 0.4 W "
+            "is the whole argument for a tiny resistor.",
+            "Five millivolts at two amps. Reading that accurately is the "
+            "sensor's entire job, and it is why an INA219 exists rather "
+            "than an analog input.",
+            "This is Ohm's law from the beginner course doing real work. "
+            "Point back at it.",
+        ])
 
     diagrams.ohms_and_power_law(
         deck, title="The two relationships the whole lesson rests on")
@@ -1441,9 +2129,26 @@ def lesson5(deck):
                 "braking current becomes a huge positive number.", 0),
                ("Bus voltage sits in the top 13 bits, so it is shifted down.", 0),
                ("Forty lines of your own beats a library you cannot read.", 0)],
-        size=12, highlight={3, 9})
+        size=12, highlight={3, 9},
+        speaker=[
+            "No library. Two functions and a datasheet. That is the point "
+            "of the slide.",
+            "The repeated start matters: a full stop would let another "
+            "master grab the bus between writing the register number and "
+            "reading the answer.",
+            "The signed read is the trap. Read the shunt register unsigned "
+            "and every regenerative spike comes back as a huge positive "
+            "number.",
+            "The bus voltage register keeps flags in the bottom three bits, "
+            "which is why it shifts right by three. That is normal for "
+            "register maps, and reading a datasheet is a skill worth "
+            "naming.",
+        ])
 
-    deck.progress(STAGES["lesson5"], 2)
+    deck.progress(STAGES["lesson5"], 2,
+        speaker=[
+            "Twenty seconds. Second activity.",
+        ])
 
     deck.activity(
         "Do it now  -  what a motor costs",
@@ -1465,7 +2170,42 @@ def lesson5(deck):
         questions=[("What is your vehicle's resting current?", 0),
                    ("How long will your battery last at your measured average?", 0)],
         safety="Wheels off the ground. The test drives every motor at full power.",
-        minutes=35)
+        minutes=35,
+        speaker=[
+            "Step 2 needs care: hold the wheel firmly but keep fingers out "
+            "of the spokes, and do not hold a stalled motor for more than a "
+            "second or two.",
+            "Step 3 is the diagnostic payoff - an unplugged motor draws "
+            "almost nothing, and that is unmistakable in the numbers.",
+            "Steps 5 and 6 connect this to the beginner course. Get them to "
+            "compare the motor draw with the LED power budget and say which "
+            "dominates.",
+            "Collect resting currents from a few groups. They vary, and the "
+            "variation is itself interesting.",
+        ])
+
+    deck.image_pair(
+        "Where the current sensor actually is",
+        img("vehicle-gen3-top.jpg"),
+        "A Gen 3, looking down through the lexan top plate",
+        Placeholder(
+            "PHOTO: the INA219 on a Gen 3 board, close up",
+            "Close enough to read the part, with the shunt and the two I2C "
+            "wires to GPIO 32 and 33 visible."),
+        "The INA219, and the shunt it measures across",
+        lead="Everything in this lesson depends on one small part that only "
+             "Gen 3 vehicles carry. Find it before you write code that "
+             "assumes it.",
+        speaker=[
+            "Have a Gen 3 open on the desk and let people look at the actual "
+            "part before the theory starts.",
+            "The shunt is the small, low-value resistor next to it. That is "
+            "what the whole measurement happens across.",
+            "Two wires to GPIO 32 and 33 is the entire electrical interface. "
+            "Everything else is I2C protocol.",
+            "The close-up photograph is still outstanding for this deck. "
+            "Until it arrives, pass a board round.",
+        ])
 
     diagrams.current_signature(deck)
 
@@ -1489,7 +2229,19 @@ def lesson5(deck):
           "and you get whatever the room's electrical noise suggests.", 0)],
         lead="Five states, no blocking",
         note="A test that freezes the machine while it runs is a test nobody "
-             "will leave enabled.")
+             "will leave enabled.",
+        speaker=[
+            "Five states, and it is driven from loop() rather than "
+            "blocking. That is the same discipline as the lighting lesson.",
+            "So the LEDs keep animating and the console keeps responding "
+            "while the test runs. Ask why that matters - because a machine "
+            "that goes deaf during a self-test cannot be interrupted.",
+            "The GPIO 34 note is a real hardware trap. Input-only, no "
+            "internal pulls, so the board carries an external pull-down.",
+            "A floating input-only pin reads whatever the room's electrical "
+            "noise says. Worth saying, because somebody will try this on a "
+            "breadboard.",
+        ])
 
     deck.two_columns(
         "Diagnostics, and the battery maths you can now do",
@@ -1526,7 +2278,19 @@ def lesson5(deck):
         note="Never run a lithium pack flat. Below about 3.0 V per cell - 12 V "
              "for a 4S - you are damaging it. The vehicle knows its own voltage, "
              "so a low-battery warning is a short job and a good exercise.",
-        note_kind="safety")
+        note_kind="safety",
+        speaker=[
+            "The negative current is the interesting column. A spinning "
+            "motor with the throttle cut becomes a generator and pushes "
+            "current back.",
+            "That is why the shunt register is signed, and it links "
+            "straight back to the previous code slide.",
+            "The right column is arithmetic they can do for their own "
+            "vehicle. Get everybody to compute a runtime from their own "
+            "measured average.",
+            "Point out that the tracking resets after each report, so each "
+            "line describes the last five seconds, not the whole session.",
+        ])
 
     deck.bullets(
         "Adding a subsystem of your own",
@@ -1548,7 +2312,19 @@ def lesson5(deck):
          ("", 0),
          ("If you can do those seven things, you can extend this program "
           "without making it worse. That is the actual skill.", 0)],
-        lead="The seven things that keep a program from rotting")
+        lead="The seven things that keep a program from rotting",
+        speaker=[
+            "Seven rules, and they are the summary of the whole course. "
+            "Read them slowly.",
+            "Every one of them is something Op 12 already does, so they can "
+            "check each against the real program.",
+            "Rule seven is the one people skip: expose functions, not "
+            "variables. Ask what goes wrong when another tab writes your "
+            "state directly.",
+            "If they can do these seven things, they can extend this "
+            "program without making it worse. That is the whole point of "
+            "five lessons.",
+        ])
 
     deck.two_columns(
         "Where this goes",
@@ -1572,7 +2348,16 @@ def lesson5(deck):
           "bug first. That is also how it works in industry.", 0)],
         note="Read the change log at the top of Pathfinder_Op_Program12.ino "
              "again now. It should read very differently than it did in "
-             "Lesson 1.")
+             "Lesson 1.",
+        speaker=[
+            "The left column is concrete next steps. The right column is "
+            "why any of it mattered.",
+            "Say the last line plainly: six of the ideas in this course "
+            "exist because somebody shipped the bug first. That is also how "
+            "it works in industry, and it is not a shameful thing.",
+            "The same patterns run cars, medical devices, satellites and "
+            "industrial controllers. That is not hyperbole.",
+        ])
 
     deck.two_columns(
         "The same test, done twice: on the bench and in software",
@@ -1599,7 +2384,19 @@ def lesson5(deck):
           "multimeter.", 0)],
         note="That is usually the trade with built-in test: you give up "
              "precision to get a check that will actually be run. A test that "
-             "needs a bench is a test that happens once.")
+             "needs a bench is a test that happens once.",
+        speaker=[
+            "Two versions of the same test, and the comparison is the "
+            "lesson.",
+            "The bench test is more accurate and needs a meter, a bench and "
+            "a person. The self-test is less accurate and runs in ten "
+            "seconds, anywhere, on every vehicle.",
+            "Ask which one you would want in a classroom of thirty "
+            "vehicles. Then ask which one you would want before a board "
+            "ships.",
+            "The answer is both, for different reasons. That is a real "
+            "engineering judgement rather than a right answer.",
+        ])
 
     deck.bullets(
         "Capstone  -  choose one, and build it properly",
@@ -1624,7 +2421,17 @@ def lesson5(deck):
          ("You will be marked on whether somebody else can find your code, "
           "tune it without recompiling, and run the binary on a vehicle that "
           "does not have your hardware fitted.", 0)],
-        lead="One subsystem, done to the standard of the rest of the program")
+        lead="One subsystem, done to the standard of the rest of the program",
+        speaker=[
+            "This is the last teaching slide. Give it proper time.",
+            "Insist on the seven rules from the earlier slide. A capstone "
+            "built badly teaches the wrong thing.",
+            "The obstacle-stop option has the best hidden question in it: "
+            "what happens when the sensor gives one bad reading? Push "
+            "whoever picks it.",
+            "If anybody is continuing after the course, get them to commit "
+            "to one today while the enthusiasm is still there.",
+        ])
 
     deck.quiz(
         "Check yourself",
@@ -1640,7 +2447,26 @@ def lesson5(deck):
          ("8.  Why is the self-test a state machine rather than a blocking "
           "routine?", 0),
          ("9.  List the seven things you would do to add a range finder.", 0)],
-        lead="That is the course. Go and add something.")
+        lead="That is the course. Go and add something.",
+        speaker=[
+            "Conversation, not a test. This is the last thing they do.",
+            "Answers: address it and end the transmission with no data, "
+            "then check the acknowledgement; nothing on any address means a "
+            "missing pull-up; a small shunt wastes less power and steals "
+            "less voltage from the motors.",
+            "Signed, because a motor pushes current back when the throttle "
+            "is cut.",
+            "A repeated start keeps the bus so no other master can take it "
+            "mid-read.",
+            "Healthy: a spike then a settle. Disconnected: almost nothing. "
+            "Jammed: high and never settling.",
+            "Thresholds sit above a measured baseline because the resting "
+            "draw differs between vehicles and with battery charge.",
+            "The self-test is a state machine so the LEDs and console keep "
+            "working.",
+            "Question 9 is the seven rules. If they can list them, the "
+            "course did its job.",
+        ])
 
     return deck
 

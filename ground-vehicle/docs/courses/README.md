@@ -53,6 +53,11 @@ Every lesson ends with a short quiz slide. Every hands-on block is a
 distinctively formatted "Do it now" slide naming the sketch, the steps, what
 students should see, and the questions to answer.
 
+**Every slide has speaker notes.** They are the teacher's script, not a copy of
+the slide: what to say, what to ask before you explain, which mistake the room
+is about to make, and the answers to every question the slide poses. Open
+Presenter View, or print the notes pages. Students never see them.
+
 ---
 
 ## Editing the decks
@@ -91,11 +96,11 @@ It needs `python-pptx` (`pip install python-pptx`). Files in
 |---|---|
 | `build_decks.py` | Runs everything. Start here. |
 | `slidelib.py` | The slide types: bullets, tables, code, activities, quizzes |
-| `diagrams.py` | The fourteen drawn figures, as native shapes |
+| `diagrams.py` | The nineteen drawn figures, as native shapes |
 | `content_beginner.py` | The five beginner lessons, parameterised by track |
 | `content_advanced.py` | The five advanced lessons |
 | `srcfacts.py` | Reads constants out of the `.ino` files so slides cannot quote stale numbers |
-| `lint_decks.py` | Checks every deck for text overflow and off-slide shapes |
+| `lint_decks.py` | Checks every deck for text overflow, overlapping text and off-slide shapes |
 | `check_code.py` | Checks every code listing still matches the source it came from |
 | `render_decks.py` | Renders the decks to PDF, and optionally to contact sheets |
 
@@ -103,7 +108,12 @@ Three checks. Run all of them after any change, to the decks or to the code.
 
 `lint_decks.py` is fast and needs nothing installed. It estimates how tall each
 block of text will be once it wraps, and reports anything that will not fit its
-box or that runs off the slide. It should report zero issues.
+box, runs off the slide, or is drawn on top of another block of text. It should
+report zero issues.
+
+That last check earns its keep: a diagram whose caption sits under the note
+panel at the bottom of the slide fits its own box perfectly and is still
+invisible, which is exactly the failure the height estimate cannot see.
 
 ```bash
 python ground-vehicle/docs/courses/generator/lint_decks.py
@@ -153,7 +163,7 @@ code panel appears verbatim in a source file. A listing that has drifted is a
 build failure, not something you have to notice by eye.
 
 Neither can check prose. If you rewrite a paragraph describing what a program
-does, that is still on you.
+does, or a speaker note explaining it, that is still on you.
 
 ---
 
@@ -173,17 +183,45 @@ the versions in the old PDFs.
 
 Four images came from the **P3 Gen 3 decks**: the Porpoise Robotics logo, the
 labelled Switch controller, a second Switch controller shot, and the vehicle
-with a robotic arm fitted.
+with a robotic arm fitted. Two of Kevin's own labelled figures were carried
+over as crops rather than redrawn, because he drew them and they are ours: the
+board layout seen from above, and the annotated top plate.
+
+### Pictures we have not taken yet
+
+Where a photograph is wanted and does not exist, the slide carries a **dashed,
+labelled placeholder box** in the space the picture will occupy, saying what
+belongs there. Flip through a deck and every outstanding photograph is visible
+in one pass; they show on the printed handout too.
+
+Three are outstanding:
+
+| Deck | What is wanted |
+|---|---|
+| Beginner L1 | Our own breadboard wired to GPIO 2 and GND, LED lit. The photographs we have use a 9 V battery. |
+| Beginner L1 | A Gen 3 driving upside down, taken from floor level. |
+| Advanced L5 | The INA219 on a Gen 3 board, close enough to read the part. |
+
+To fill one in, drop the photograph in `images/` and swap the `Placeholder(...)`
+in the content module for `img("your-file.jpg")`. Anything else that resolves
+to a missing file also draws a placeholder rather than silently leaving a hole,
+so a mistyped filename is visible instead of invisible.
 
 ---
 
 ## Still to do
 
-- Photographs of a **Gen 3 vehicle**, ideally showing the INA219 current
-  sensor. Every vehicle photograph here is Gen 2, so the advanced course has no
-  picture of the sensor it spends a whole lesson on. The P3 decks did not have
-  one either.
+- The three **photographs listed above**. Each one has a labelled placeholder
+  sitting on the slide until it arrives.
 - The two **controller images** are vendor product shots rather than Porpoise
   photography. They were already in the P2 and P3 decks, but this repository is
   public — worth a decision.
-- Nobody has taught from these yet. Timings on the agenda slides are estimates.
+- Kevin's P3 L1 carries a full **ESP32-WROOM-32E pinout** picture. It is a
+  third-party figure, so this course draws its own page of just the pins this
+  vehicle uses instead. If we ever want the complete pinout, it needs redrawing
+  or licensing.
+- Kevin's P3 L5 carries the **Gen 3 kit parts list and assembly procedure**.
+  That is build documentation rather than course material, so it was left out
+  of the decks — but it should live somewhere, probably in `hardware/`.
+- Nobody has taught from these yet. Timings on the agenda slides are estimates,
+  and so is every "about N minutes" in the speaker notes.

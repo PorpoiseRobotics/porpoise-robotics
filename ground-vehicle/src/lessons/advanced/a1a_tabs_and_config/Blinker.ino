@@ -1,5 +1,6 @@
 /*
   Blinker.ino - one subsystem, in its own tab.
+  Porpoise Robotics - Pathfinder advanced course, Lesson 1
 
   Everything that touches the LED lives here and nowhere else. The main sketch
   calls setup_blinker() once and update_blinker() every pass, and never has to

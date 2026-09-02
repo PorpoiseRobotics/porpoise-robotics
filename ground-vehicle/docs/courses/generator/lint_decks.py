@@ -65,6 +65,51 @@ def estimate_height_pt(frame, width_pt):
     return total
 
 
+def overlapping_text(shapes, slide_h):
+    """
+    Pairs of text-bearing shapes that sit on top of each other.
+
+    The height estimate above catches text that will not fit its own box. It
+    says nothing about two boxes that each fit and are drawn in the same
+    place - a note panel over a code panel, a heading over a row of labels -
+    which is the other way a slide goes wrong. Only substantial overlaps are
+    reported, so a caption tucked under a picture edge stays quiet.
+    """
+    boxes = []
+    for shape in shapes:
+        if not getattr(shape, "has_text_frame", False):
+            continue
+        text = shape.text_frame.text.strip()
+        if not text:
+            continue
+        try:
+            left, top = shape.left, shape.top
+            width, height = shape.width, shape.height
+        except (AttributeError, TypeError):
+            continue
+        if None in (left, top, width, height) or width <= 0 or height <= 0:
+            continue
+        # A footer strip runs the width of the slide by design.
+        if top > slide_h - Emu(500000):
+            continue
+        boxes.append((left, top, width, height, text))
+
+    found = []
+    for i in range(len(boxes)):
+        for j in range(i + 1, len(boxes)):
+            ax, ay, aw, ah, atext = boxes[i]
+            bx, by, bw, bh, btext = boxes[j]
+            over_w = min(ax + aw, bx + bw) - max(ax, bx)
+            over_h = min(ay + ah, by + bh) - max(ay, by)
+            if over_w <= 0 or over_h <= 0:
+                continue
+            area = over_w * over_h
+            smaller = min(aw * ah, bw * bh)
+            if smaller and area / smaller > 0.45:
+                found.append("{!r} over {!r}".format(atext[:26], btext[:26]))
+    return found
+
+
 def check_deck(path):
     prs = Presentation(path)
     issues = []
@@ -72,6 +117,9 @@ def check_deck(path):
     slide_h = prs.slide_height
 
     for index, slide in enumerate(prs.slides, 1):
+        for clash in overlapping_text(slide.shapes, slide_h):
+            issues.append((index, "text shapes overlap", clash))
+
         for shape in slide.shapes:
             name = shape.shape_type
 

@@ -29,6 +29,7 @@ import os
 
 from pptx import Presentation
 from pptx.dml.color import RGBColor
+from pptx.enum.dml import MSO_LINE_DASH_STYLE
 from pptx.enum.shapes import MSO_SHAPE
 from pptx.enum.text import MSO_ANCHOR, PP_ALIGN
 from pptx.util import Emu, Inches, Pt
@@ -238,7 +239,100 @@ def _split_runs(runs, width_pt, height_pt, size, *, space_after=6):
         if part:
             final.append(part)
 
-    return final
+    return _rebalance(final, runs, width_pt, height_pt, size, space_after)
+
+
+def _rebalance(chunks, runs, width_pt, height_pt, size, space_after):
+    """
+    Uses as few slides as the content really needs, and fills them evenly.
+
+    The greedy pass above fills each slide to the brim and spills the rest,
+    which has two failure modes. It leaves a "(continued)" slide holding one
+    bullet; and because it will not break inside a block of sub-points, a run
+    that overflows by a line has to be hard-broken afterwards, sometimes into
+    one slide more than the content needs.
+
+    So: work out the smallest number of slides the content fits on at all,
+    then aim for that many EQUAL slides. Every candidate is checked against
+    the real height before it is accepted, so this can only ever produce a
+    split that fits.
+    """
+    if len(chunks) < 2:
+        return chunks
+
+    def height_of(block):
+        return measure_pt(block, width_pt, size, space_after=space_after)
+
+    def trimmed(block):
+        block = list(block)
+        while block and not block[-1][0].strip():
+            block.pop()
+        return block
+
+    def pack(target):
+        """
+        Fill to `target`, preferring to break between top-level points and
+        falling back to breaking mid-block when a block is too tall on its own.
+        """
+        out, current = [], []
+        for item in runs:
+            candidate = current + [item]
+            if current and height_of(candidate) > target:
+                if item[1] == 0 or height_of(current) > height_pt:
+                    out.append(trimmed(current))
+                    current = [item]
+                    continue
+            current = candidate
+        if current:
+            out.append(trimmed(current))
+        return [block for block in out if block]
+
+    def usable(packed, want):
+        return (len(packed) == want
+                and all(height_of(block) <= height_pt for block in packed))
+
+    total = height_of(runs)
+    best = None
+    for count in range(2, len(chunks) + 1):
+        # Walk the target from "perfectly even" up to a full slide, and keep
+        # the evenest packing that still lands on exactly `count` slides.
+        steps = 14
+        for step in range(steps + 1):
+            target = total / count
+            target += (height_pt - target) * step / steps
+            if target > height_pt:
+                break
+            packed = pack(target)
+            if not usable(packed, count):
+                continue
+            heights = [height_of(block) for block in packed]
+            spread = max(heights) - min(heights)
+            if best is None or spread < best[0]:
+                best = (spread, packed)
+        if best is not None:
+            return best[1]
+
+    return chunks
+
+
+class Placeholder:
+    """
+    A picture we have not taken yet.
+
+    Anywhere a slide kind takes an image path it will also take one of these,
+    and it will also take the path of a photograph that does not exist. Either
+    way you get a labelled dashed box on the slide, in the space the picture
+    will occupy, saying what belongs there - so a gap in the artwork is
+    visible on the slide rather than silently missing from it.
+
+        deck.image_slide("The circuit", Placeholder(
+            "PHOTO: our breadboard, LED and 220 ohm resistor, wired to GPIO 2",
+            "Kevin's photographs of this use a 9 V battery instead."))
+    """
+
+    def __init__(self, label, hint=None):
+        self.label = label
+        self.hint = hint
 
 
 def set_notes(slide, notes):
@@ -261,6 +355,28 @@ def set_notes(slide, notes):
             run.font.size = Pt(12)
             run.font.name = BODY_FONT
     return slide
+
+
+def set_notes_all(slides, notes):
+    """
+    The same script on every slide of a group.
+
+    bullets(), code(), two_columns() and activity() all spill onto
+    "(continued)" slides when the content is too tall. A teacher who advances
+    onto one of those should not find the notes pane empty, so each carries
+    the same script with a line at the top saying it is a continuation.
+    """
+    if not notes:
+        return slides[0] if slides else None
+    if isinstance(notes, str):
+        notes = [notes]
+    for index, slide in enumerate(slides):
+        if index == 0:
+            set_notes(slide, notes)
+        else:
+            set_notes(slide, ["(Continued from the previous slide - the same "
+                              "notes apply.)", ""] + list(notes))
+    return slides[0]
 
 
 class Deck:
@@ -354,6 +470,79 @@ class Deck:
         box.text_frame.paragraphs[0].alignment = PP_ALIGN.LEFT
         return box
 
+    def _place_image(self, slide, image, left, top, width, height):
+        """
+        A picture if we have one, a labelled dashed box if we do not.
+
+        Returns the shape that was placed, or None if `image` was None. A
+        picture keeps its aspect ratio inside the (width, height) box given
+        and is centred in it; a placeholder fills the box exactly, so the
+        caption below it lands where the caption of the real photograph will.
+        """
+        if image is None:
+            return None
+
+        if isinstance(image, Placeholder):
+            return self._placeholder_box(slide, left, top, width, height,
+                                         image.label, image.hint)
+
+        if not os.path.exists(image):
+            # A path that does not resolve is a picture somebody meant to
+            # supply. Say so on the slide rather than leaving a hole.
+            return self._placeholder_box(
+                slide, left, top, width, height,
+                "IMAGE TO COME",
+                "Expected file: " + os.path.basename(str(image)))
+
+        pic = slide.shapes.add_picture(image, left, top, width=width)
+        if pic.height > height:
+            scale = height / pic.height
+            pic.height = int(pic.height * scale)
+            pic.width = int(pic.width * scale)
+        pic.left = left + Emu(int((width - pic.width) / 2))
+        pic.top = top + Emu(int((height - pic.height) / 2))
+        return pic
+
+    def _placeholder_box(self, slide, left, top, width, height, label,
+                         hint=None):
+        """
+        The dashed box that stands in for a picture we have not got yet.
+
+        Deliberately plain and deliberately obvious: a teacher flipping
+        through the deck should be able to spot every outstanding photograph
+        in one pass, and a printed copy should show them too.
+        """
+        box = slide.shapes.add_shape(MSO_SHAPE.RECTANGLE, left, top,
+                                     width, height)
+        box.fill.solid()
+        box.fill.fore_color.rgb = PANEL
+        box.line.color.rgb = TEAL
+        box.line.width = Pt(1.5)
+        box.line.dash_style = MSO_LINE_DASH_STYLE.DASH
+        box.shadow.inherit = False
+
+        rows = [("PLACEHOLDER", 0), (label, 0)]
+        if hint:
+            rows.append((hint, 0))
+
+        frame = box.text_frame
+        frame.word_wrap = True
+        frame.margin_left = Inches(0.18)
+        frame.margin_right = Inches(0.18)
+        frame.margin_top = Inches(0.12)
+        frame.margin_bottom = Inches(0.12)
+        frame.vertical_anchor = MSO_ANCHOR.MIDDLE
+        _set_fitted(frame, rows, width=width, height=height, size=16,
+                    floor=11, color=TEAL, align=PP_ALIGN.CENTER,
+                    space_after=7)
+        # "PLACEHOLDER" reads as a label, so set it apart from the sentence
+        # underneath it that says what the picture will be.
+        head = frame.paragraphs[0]
+        for run in head.runs:
+            run.font.bold = True
+            run.font.color.rgb = GREY
+        return box
+
     def _textbox(self, slide, left, top, width, height):
         box = slide.shapes.add_textbox(left, top, width, height)
         frame = box.text_frame
@@ -368,7 +557,8 @@ class Deck:
     # slide kinds
     # ---------------------------------------------------------------
 
-    def title_slide(self, subtitle, byline_lines, hero_image=None, logo=None):
+    def title_slide(self, subtitle, byline_lines, hero_image=None, logo=None,
+                    speaker=None):
         slide = self._new(layout=LAYOUT_BLANK, title=None, numbered=False)
 
         band = slide.shapes.add_shape(MSO_SHAPE.RECTANGLE, 0, 0,
@@ -407,17 +597,14 @@ class Deck:
                     height=Inches(2.35), size=13, floor=10, color=GREY,
                     space_after=1)
 
-        if hero_image and os.path.exists(hero_image):
-            pic = slide.shapes.add_picture(hero_image, Inches(7.9), Inches(1.5),
-                                           width=Inches(4.9))
-            if pic.top + pic.height > Inches(6.6):
-                scale = (Inches(6.6) - pic.top) / pic.height
-                pic.height = int(pic.height * scale)
-                pic.width = int(pic.width * scale)
+        if hero_image is not None:
+            self._place_image(slide, hero_image, Inches(7.9), Inches(1.5),
+                              Inches(4.9), Inches(5.1))
 
         box = self._textbox(slide, MARGIN_L, Inches(6.72), CONTENT_W, Inches(0.55))
         _set_text(box.text_frame, [self.footer_note], size=9, color=GREY,
                   space_after=0)
+        set_notes(slide, speaker)
         return slide
 
     def section(self, title, subtitle=None, minutes=None, speaker=None):
@@ -474,7 +661,7 @@ class Deck:
         set_notes(slide, speaker)
         return slide
 
-    def progress(self, stages, done, title="Where we are"):
+    def progress(self, stages, done, title="Where we are", speaker=None):
         """
         A strip of the lesson's stages with the finished ones ticked and the
         current one highlighted. Shown between sections so the class can see
@@ -523,6 +710,7 @@ class Deck:
                             height=Inches(0.38), size=13, floor=11, bold=True,
                             color=TEAL, align=PP_ALIGN.CENTER)
 
+        set_notes(slide, speaker)
         return slide
 
     def bullets(self, title, items, lead=None, note=None, note_kind="info",
@@ -585,7 +773,7 @@ class Deck:
             if note and is_last:
                 self._note(slide, note, note_kind)
 
-        set_notes(slides[0], speaker)
+        set_notes_all(slides, speaker)
         return slides[0]
 
     def _note(self, slide, text, kind="info", top=None, left=None, width=None):
@@ -644,23 +832,23 @@ class Deck:
         _set_fitted(box.text_frame, items, width=txt_w, height=body_h,
                     size=size, space_after=9)
 
-        if image and os.path.exists(image):
-            pic = slide.shapes.add_picture(image, MARGIN_L + txt_w + Inches(0.4),
-                                           BODY_TOP, width=img_w)
-            max_h = Inches(4.2)
-            if pic.height > max_h:
-                scale = max_h / pic.height
-                pic.height = int(pic.height * scale)
-                pic.width = int(pic.width * scale)
-                pic.left = MARGIN_L + txt_w + Inches(0.4) + \
-                    Emu(int((img_w - pic.width) / 2))
-            if caption:
-                cap = self._textbox(slide, pic.left,
-                                    pic.top + pic.height + Inches(0.08),
-                                    pic.width, Inches(0.95))
-                _set_fitted(cap.text_frame, [caption], width=pic.width,
-                            height=Inches(0.95), size=MIN_SMALL_PT,
-                            floor=MIN_SMALL_PT, color=GREY)
+        # A photograph is usually shorter than the box it is given, so its
+        # caption floats up with it. A placeholder fills the box exactly, so
+        # the space for the caption - and for the note panel below it - has
+        # to be taken out of the box first rather than borrowed afterwards.
+        cap_h = Inches(0.62) if caption else Inches(0)
+        img_bottom = Inches(5.52) if note else Inches(6.85)
+        img_h = min(Inches(4.2), img_bottom - BODY_TOP - cap_h)
+
+        pic = self._place_image(slide, image, MARGIN_L + txt_w + Inches(0.4),
+                                BODY_TOP, img_w, img_h)
+        if pic is not None and caption:
+            cap = self._textbox(slide, pic.left,
+                                pic.top + pic.height + Inches(0.06),
+                                pic.width, cap_h)
+            _set_fitted(cap.text_frame, [caption], width=pic.width,
+                        height=cap_h, size=MIN_SMALL_PT,
+                        floor=MIN_SMALL_PT, color=GREY)
 
         if note:
             self._note(slide, note, note_kind)
@@ -681,15 +869,11 @@ class Deck:
         bottom_limit = Inches(5.55) if note else Inches(6.85)
         available_h = bottom_limit - top - (Inches(0.80) if caption else Inches(0))
 
-        if image and os.path.exists(image) and available_h > Inches(0.6):
-            pic = slide.shapes.add_picture(image, MARGIN_L, top, height=available_h)
-            if pic.width > CONTENT_W:
-                scale = CONTENT_W / pic.width
-                pic.width = int(pic.width * scale)
-                pic.height = int(pic.height * scale)
-            pic.left = MARGIN_L + Emu(int((CONTENT_W - pic.width) / 2))
+        if available_h > Inches(0.6):
+            pic = self._place_image(slide, image, MARGIN_L, top,
+                                    CONTENT_W, available_h)
 
-            if caption:
+            if pic is not None and caption:
                 cap = self._textbox(slide, MARGIN_L,
                                     pic.top + pic.height + Inches(0.06),
                                     CONTENT_W, Inches(0.74))
@@ -720,19 +904,38 @@ class Deck:
         bottom = Inches(5.55) if note else Inches(6.85)
         pic_h = bottom - top - Inches(0.85)
 
-        for index, (path, caption) in enumerate(
-                ((left_image, left_caption), (right_image, right_caption))):
-            left = MARGIN_L + (col_w + gap) * index
-            if not (path and os.path.exists(path)):
-                continue
-            pic = slide.shapes.add_picture(path, left, top, height=pic_h)
-            if pic.width > col_w:
-                scale = col_w / pic.width
-                pic.width = int(pic.width * scale)
-                pic.height = int(pic.height * scale)
-            pic.left = left + Emu(int((col_w - pic.width) / 2))
+        pairs = ((left_image, left_caption), (right_image, right_caption))
 
-            cap = self._textbox(slide, left, top + pic.height + Inches(0.08),
+        # Photographs go down first. A photograph keeps its aspect ratio and
+        # is usually shorter than the box; a placeholder fills whatever box it
+        # is given. Sizing the placeholders to the tallest real picture keeps
+        # a mixed pair looking like a pair rather than a picture next to a
+        # much bigger empty rectangle.
+        placed = {}
+        for index, (path, _) in enumerate(pairs):
+            if path is None or isinstance(path, Placeholder):
+                continue
+            left = MARGIN_L + (col_w + gap) * index
+            placed[index] = self._place_image(slide, path, left, top,
+                                              col_w, pic_h)
+
+        real = [pic for pic in placed.values() if pic is not None]
+        box_h = max((pic.height for pic in real), default=pic_h)
+
+        for index, (path, caption) in enumerate(pairs):
+            if index not in placed:
+                if path is None:
+                    continue
+                left = MARGIN_L + (col_w + gap) * index
+                placed[index] = self._place_image(slide, path, left, top,
+                                                  col_w, box_h)
+
+            pic = placed[index]
+            if pic is None:
+                continue
+
+            left = MARGIN_L + (col_w + gap) * index
+            cap = self._textbox(slide, left, top + box_h + Inches(0.08),
                                 col_w, Inches(0.72))
             _set_fitted(cap.text_frame, [caption], width=col_w,
                         height=Inches(0.72), size=MIN_SMALL_PT,
@@ -777,10 +980,12 @@ class Deck:
         right_chunks += [[]] * (pages - len(right_chunks))
 
         first = None
+        made = []
         for index in range(pages):
             slide_title = title if index == 0 else title + "  (continued)"
             slide = self._new(title=slide_title)
             first = first or slide
+            made.append(slide)
             is_last = index == pages - 1
 
             this_h = BODY_H - (Inches(1.25) if (note and is_last) else Inches(0))
@@ -807,7 +1012,7 @@ class Deck:
             if note and is_last:
                 self._note(slide, note, note_kind)
 
-        set_notes(first, speaker)
+        set_notes_all(made, speaker)
         return first
 
     def code(self, title, lines, filename=None, notes=None, size=13,
@@ -842,10 +1047,12 @@ class Deck:
         pages = [lines[i:i + per_page] for i in range(0, len(lines), per_page)]             or [lines]
 
         first = None
+        made = []
         for index, chunk in enumerate(pages):
             slide = self._new(title=title if index == 0
                               else title + "  (continued)")
             first = first or slide
+            made.append(slide)
             top = BODY_TOP
 
             if filename:
@@ -895,7 +1102,7 @@ class Deck:
                 _set_fitted(box.text_frame, notes, width=note_w, height=this_h,
                             size=16, space_after=10)
 
-        set_notes(first, speaker)
+        set_notes_all(made, speaker)
         return first
 
     def table(self, title, headers, rows, lead=None, note=None,
@@ -1001,10 +1208,12 @@ class Deck:
             steps, width_pt, height_pt, MIN_BODY_PT, space_after=8)
 
         first = None
+        made = []
         for index, chunk in enumerate(chunks):
             slide = self._new(title=title if index == 0
                               else title + "  (continued)")
             first = first or slide
+            made.append(slide)
             is_last = index == len(chunks) - 1
 
             header = self._panel(slide, MARGIN_L, BODY_TOP, CONTENT_W,
@@ -1069,7 +1278,7 @@ class Deck:
             if safety and is_last:
                 self._note(slide, safety, "safety")
 
-        set_notes(first, speaker)
+        set_notes_all(made, speaker)
         return first
 
     def quiz(self, title, questions, lead=None, speaker=None):
@@ -1088,8 +1297,10 @@ class Deck:
         set_notes(slide, speaker)
         return slide
 
-    def blank(self, title):
-        return self._new(title=title)
+    def blank(self, title, speaker=None):
+        slide = self._new(title=title)
+        set_notes(slide, speaker)
+        return slide
 
     # ---------------------------------------------------------------
     # output
