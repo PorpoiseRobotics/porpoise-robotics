@@ -55,6 +55,11 @@ the project README.
 A STEM mission activity built from an ESP32-CAM, a pair of ESP-NOW radios, and a laptop base
 station, with the slides and setup guide students follow.
 
+### [`shared/`](shared/README.md)
+Code used by more than one project, so the projects cannot drift apart. Right now this holds
+**PorpoiseNet**, one ESP-NOW radio layer that the find-the-target rovers and the security
+camera both talk over.
+
 Every project folder has the same starter layout:
 
 ```
