@@ -437,6 +437,83 @@ def led_map(deck, title="Where every LED number is on the vehicle", speaker=None
 # 6. deadzone and map
 # ===================================================================
 
+def motor_signal_path(deck, title="How the ESP32 controls the motors",
+                      motor_pins=None, speaker=None):
+    """
+    The path from a GPIO pin to a wheel, one row per motor.
+
+    This is Kevin's P2/P3 Lesson 2 slide 5 redrawn as native shapes. His
+    version listed the pin numbers by hand; these come out of the sketch
+    through srcfacts, so the slide cannot disagree with the code.
+    """
+    slide = deck.blank(title, speaker=speaker or [
+        "Read one row left to right and the whole thing is obvious: two "
+        "pins, a driver chip, a motor.",
+        "The driver is the part worth naming. The ESP32 pin can supply "
+        "about 20 milliamps at 3.3 volts. A motor wants amps at battery "
+        "voltage. The DRV8871 is what stands between them.",
+        "Two pins per motor, not one. Which of the two you drive is what "
+        "decides the direction - that is the H-bridge from Lesson 2.",
+        "Point out that the pin numbers on this slide are read out of "
+        "the sketch when the deck is built, so if they look at the file "
+        "they will find the same ones.",
+        "Worth pausing on the fact that all four rows are identical. Four "
+        "motors is not four times the thinking - it is the same thinking, "
+        "four times.",
+    ])
+
+    motor_pins = [(label, str(a), str(b)) for label, a, b in (motor_pins or [])]
+    motor_pins = motor_pins or [("Front left", "12", "13"),
+                                ("Rear left", "18", "19"),
+                                ("Front right", "22", "23"),
+                                ("Rear right", "16", "17")]
+
+    head_top = BODY_TOP + Inches(0.08)
+    top = BODY_TOP + Inches(0.70)
+    bottom = Inches(5.50)
+
+    cols = [(MARGIN_L, Inches(3.30), "YOUR PROGRAM", LIGHT_TEAL, TEAL),
+            (MARGIN_L + Inches(4.20), Inches(3.10), "H-BRIDGE DRIVER",
+             LIGHT_AMBER, AMBER),
+            (MARGIN_L + Inches(8.20), Inches(4.03), "MOTOR",
+             LIGHT_GREY, GREY)]
+
+    for left, width, heading, _fill, edge in cols:
+        _label(slide, left, head_top, width, heading, size=15, bold=True,
+               color=edge, align=PP_ALIGN.CENTER)
+
+    rows = len(motor_pins)
+    pitch = Emu(int((bottom - top) / rows))
+    box_h = Emu(int(pitch * 0.72))
+
+    for index, (label, pin_a, pin_b) in enumerate(motor_pins):
+        row = top + Emu(int(pitch * index))
+        mid = row + Emu(int(box_h / 2))
+
+        _box(slide, cols[0][0], row, cols[0][1], box_h,
+             "ledcWrite  ->  GPIO {} / {}".format(pin_a, pin_b),
+             fill=LIGHT_TEAL, edge=TEAL, size=15, bold=True, color=NAVY)
+        _arrow(slide, cols[0][0] + cols[0][1] + Inches(0.10), mid,
+               cols[1][0] - Inches(0.10), mid)
+
+        _box(slide, cols[1][0], row, cols[1][1], box_h, "DRV8871",
+             fill=LIGHT_AMBER, edge=AMBER, size=15, bold=True, color=NAVY)
+        _arrow(slide, cols[1][0] + cols[1][1] + Inches(0.10), mid,
+               cols[2][0] - Inches(0.10), mid, color=AMBER)
+
+        _box(slide, cols[2][0], row, cols[2][1], box_h,
+             "{} wheel".format(label), fill=LIGHT_GREY, edge=GREY,
+             size=15, bold=True, color=NAVY)
+
+    deck._note(slide,
+               "TWO pins per motor, and the driver is what makes it "
+               "possible. An ESP32 pin gives you 3.3 volts and about 20 "
+               "milliamps; a motor wants battery voltage and amps. The "
+               "DRV8871 takes the small signal and switches the big one.",
+               "info")
+    return slide
+
+
 def deadzone_map(deck, title="From thumbstick to motor speed", stick_max=127,
                  deadzone=20, speaker=None):
     slide = deck.blank(title, speaker=speaker or [

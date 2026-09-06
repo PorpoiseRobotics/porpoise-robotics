@@ -74,6 +74,24 @@ def number(rel, name):
                          % (name, rel, value))
 
 
+def line_of(rel, needle):
+    """
+    The 1-based line number of the first line containing `needle`.
+
+    Kevin asked for line numbers in the activity steps. A line number
+    typed onto a slide is wrong the moment somebody adds a comment to the
+    sketch, and the two beginner tracks do not even agree - the mixing
+    lines are at 150 on the PS3 track and 223 on the Switch one. So the
+    slide asks for them here, and they are right by construction.
+    """
+    text = _read(rel)
+    for number, line in enumerate(text.splitlines(), 1):
+        if needle in line:
+            return number
+    raise SystemExit("srcfacts: %s has no line containing %r"
+                     % (rel, needle))
+
+
 def pins(rel, *names):
     """
     Several pin constants from one file, as strings, in the order asked for.

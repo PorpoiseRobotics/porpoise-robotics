@@ -2247,22 +2247,24 @@ def lesson3(deck, T):
 
     _pad_map_slide(deck, T)
 
+    diagrams.motor_signal_path(deck, motor_pins=T["motor_pins"])
+
     deck.two_columns(
         "Two kinds of control, and the axes they move",
-        "Digital: buttons",
-        [("A button is either pressed or it is not. true or false.", 0),
-         ("Face buttons, D-pad, shoulders, triggers, and clicking the sticks "
-          "in.", 0),
+        "Digital: pressed or not",
+        [("A digital reading is true or false, with nothing in between.", 0),
+         ("The D-pad, Select, Start and the PS button, and clicking "
+          "either stick in.", 0),
          ("Good for: on/off, mode changes, one-shot actions.", 0),
-         ("", 0),
          ("On this track:", 0),
          (T["read_button"], 1)],
-        "Analog: thumbsticks",
-        [("A stick reports HOW FAR it is pushed, on two axes.", 0),
-         ("On this track each axis reads {}.".format(T["stick_range"]), 0),
+        "Analog: how far",
+        [("An analog reading says HOW FAR, not just whether.", 0),
+         ("Both thumbsticks, on two axes each, reading {}.".format(
+             T["stick_range"]), 0),
+         ("On a PS3 pad the TRIGGERS are analog too, and so are the "
+          "shoulder and face buttons.", 0),
          ("Good for: speed, steering, aiming a servo.", 0),
-         ("", 0),
-         ("On this track:", 0),
          (T["read_x"] + "     // left/right", 1),
          (T["read_y"] + "     // up/down", 1)],
         note="Push a stick UP and the number goes NEGATIVE. That catches "
@@ -2272,6 +2274,16 @@ def lesson3(deck, T):
         speaker=[
             "Digital and analog is a distinction they will use for the rest "
             "of their lives. Two minutes, properly.",
+            "Kevin caught this in the 2026-09-05 review: the PS3 triggers "
+            "are ANALOG, not digital. So are the shoulder buttons and the "
+            "face buttons - a Sixaxis reports pressure on all of them. "
+            "Almost every program reads them as digital anyway, which is "
+            "why it is easy to get wrong.",
+            "A hard press on a trigger reads differently from a light one. "
+            "You can still read any of them as a plain yes or no, and mostly "
+            "we do, which is why it is easy to get wrong.",
+            "If you have five spare minutes, have them squeeze a trigger "
+            "slowly in l3a_controller_check and watch the number climb.",
             "The warning panel is the one to read out. Push a stick up and "
             "the number goes negative - it catches everybody, and it is why "
             "there is a minus sign in the driving code.",
@@ -2525,18 +2537,21 @@ def lesson3(deck, T):
             "Twenty seconds, then clear the floor.",
         ])
 
+    mix_left_line = srcfacts.line_of(T["drive_sketch"], "int leftSpeed  =")
+    mix_right_line = srcfacts.line_of(T["drive_sketch"], "int rightSpeed =")
+
     deck.activity(
         "Do it now  -  drive it",
         "l3c_tank_drive",
         [("1.  Wheels off the ground. Upload. Check that up is forward and "
           "right is right BEFORE you put it down.", 0),
-         ("2.  Now put it on the floor in a clear space and drive.", 0),
-         ("3.  While driving, switch the controller off. What happens?", 0),
-         ("4.  Set turnMax to MOTOR_MAX and drive again. Which is easier?", 0),
-         ("5.  Swap the + and the - in the mixing lines and drive. What is "
-          "wrong now?", 0),
-         ("6.  Try  right = forward  with no turn term at all. Why is that a "
-          "worse way to steer?", 0)],
+         ("2.  Put it on the floor in a clear space and drive.", 0),
+         ("3.  While driving, switch the pad off. What happens?", 0),
+         ("4.  Set turnMax to MOTOR_MAX. Which is easier to aim?", 0),
+         ("5.  Lines {} and {}: swap the + and the - and drive. What is "
+          "wrong now?".format(mix_left_line, mix_right_line), 0),
+         ("6.  Line {}: make it  rightSpeed = forward;  with no turn "
+          "term. Why is that worse steering?".format(mix_right_line), 0)],
         expect=[("A vehicle that goes where you point it.", 0)],
         questions=[("What happened when the controller switched off, and which "
                     "four lines made that happen?", 0)],
@@ -2548,10 +2563,15 @@ def lesson3(deck, T):
             "forward and right is right, every single upload.",
             "Step 3 is the failsafe demonstration. Have them do it "
             "deliberately, somewhere safe, and watch the vehicle stop dead.",
-            "Steps 5 and 6 are deliberate breakages. Swapped signs give you "
-            "a vehicle that steers backwards; dropping the turn term "
-            "entirely gives you something that can only go straight or "
-            "spin.",
+            "Steps 5 and 6 are deliberate breakages, and the line numbers "
+            "on the slide are read out of the sketch when the deck is "
+            "built, so they are right for the track in front of you.",
+            "Swapped signs give a vehicle that steers backwards. Dropping "
+            "the turn term from the right side only gives something that "
+            "swings wide one way and barely turns the other - the left "
+            "wheels still get forward + turn while the right ones get "
+            "forward alone.",
+            "Make them put both back before they leave.",
             "Give this the full thirty minutes. It is the payoff for three "
             "lessons of groundwork.",
         ])
@@ -2656,40 +2676,46 @@ def lesson3(deck, T):
 def _pairing_slide(deck, T):
     if T["key"].endswith("ps3"):
         deck.bullets(
-            "One vehicle, one controller  -  the PS3 way",
-            [("A PS3 controller has no discovery mode. It only ever talks to ONE "
-              "address, and that address has to be written into the controller "
-              "over a USB cable.", 0),
+            "One vehicle, one controller  -  read the sticker",
+            [("A PS3 controller has no discovery mode. It talks to ONE "
+              "vehicle and no other, and that is decided before you get "
+              "it - we program and label every pad and every vehicle "
+              "before the lesson.", 0),
              ("", 0),
-             ("So on this track, {}.".format(T["lock_story"]), 0),
+             ("So all you have to do is match the stickers.", 0),
+             ("The sticker on the pad and the sticker on the vehicle "
+              "carry the same number.", 1),
+             ("Same number, they work together. Different numbers, "
+              "nothing happens at all.", 1),
+             ("If your pad will not connect, check the stickers before "
+              "you check anything else.", 1),
              ("", 0),
-             ("The tool is {}.".format(T["lock_tool"]), 0),
-             ("1.  Plug the controller into a Windows PC with a USB cable.", 1),
-             ("2.  Open SixaxisPairTool. It shows the current master address.", 1),
-             ("3.  Type in the address you want and click Update.", 1),
-             ("4.  Put that same address into PS3_MAC_ADDRESS in the sketch.", 1),
-             ("", 0),
-             ("Give every vehicle in the room a different one. If two vehicles "
-              "share an address, one controller drives both of them.", 0),
-             ("", 0),
-             ("Suggested scheme:  02:02:03:04:05:NN, where NN is the vehicle "
-              "number. Write it on a sticker on the vehicle AND the controller.", 0)],
-            note="The first pair of digits must be an EVEN number. An odd one "
-                 "silently fails to connect, which is a very confusing way to "
-                 "spend an afternoon.",
+             ("The number is really a Bluetooth address written into "
+              "both the pad and the sketch. You do not have to set it, "
+              "but it is worth knowing that is what the sticker stands "
+              "for.", 0)],
+            note="Do not swap pads between vehicles. A pad only ever "
+                 "drives the vehicle with the same number on it.",
             note_kind="warn",
             speaker=[
-                "The PS3 pairing story is genuinely odd, so say the odd "
-                "part plainly: the controller is told which vehicle to talk "
-                "to, not the other way round.",
-                "SixaxisPairTool needs a Windows PC and a USB cable. If you "
-                "have one machine for the room, do this as a queue during "
-                "the break.",
-                "The address goes in TWO places and they must match: the "
-                "controller, and PS3_MAC_ADDRESS in the sketch.",
-                "Stickers on both the vehicle and the pad. Every term "
-                "somebody loses a morning to two vehicles sharing an "
-                "address.",
+                "Kevin's instruction, 2026-09-05: we program and label "
+                "the controllers, so do not make students worry about "
+                "how. Tell them what the sticker means and move on.",
+                "Say the odd part plainly all the same: on a PS3 pad it "
+                "is the CONTROLLER that is told which vehicle to talk "
+                "to, not the vehicle that chooses a controller.",
+                "FOR YOU, NOT FOR THE SLIDE - how the labelling is done. "
+                "Plug the pad into a Windows PC over USB, open "
+                "SixaxisPairTool, type the address in and click Update, "
+                "then put the same address into PS3_MAC_ADDRESS in the "
+                "sketch. The scheme is 02:02:03:04:05:NN, where NN is "
+                "the vehicle number.",
+                "Also for you: the first pair of digits must be EVEN. An "
+                "odd one silently fails to connect, which is a very "
+                "confusing way to spend an afternoon.",
+                "Check the stickers around the room now, before anybody "
+                "uploads. Every term somebody loses a morning to a pad "
+                "that was picked up off the wrong table.",
             ])
     else:
         deck.image_slide(
@@ -2777,17 +2803,19 @@ def _pairing_slide(deck, T):
 def _pad_map_slide(deck, T):
     if T["key"].endswith("ps3"):
         deck.image_slide(
-            "The PS3 controller",
+            "The PS3 controller  -  every name you will need",
             T["pad_image"],
-            caption="Two analog sticks, a D-pad, four face buttons, four "
-                    "shoulder buttons and triggers, and three in the middle",
-            items=[("Every one of those has a name in the program. Today you "
-                    "will press all of them and see what each is called.", 0)],
             speaker=[
-                "Hold a real controller up alongside the picture and name "
-                "the parts.",
-                "Tell them they are about to press every single one of "
-                "these and see what the program calls it.",
+                "This is a reference page and it is deliberately nothing "
+                "but the picture. Leave it up while they work.",
+                "Hold a real controller alongside it and name the parts. "
+                "Two analog sticks, a D-pad, four face buttons, four "
+                "shoulder buttons, two triggers, and three in the middle.",
+                "Every one of those has a name in the program, and they "
+                "are about to press all of them and see what each is "
+                "called.",
+                "Tell them to photograph this slide. They will want it "
+                "again in Lessons 4 and 5.",
             ])
     else:
         deck.image_slide(
