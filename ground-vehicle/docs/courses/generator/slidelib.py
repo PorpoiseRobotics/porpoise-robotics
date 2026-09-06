@@ -145,17 +145,33 @@ def measure_pt(runs, width_pt, size, *, font=BODY_FONT, space_after=6,
     return total
 
 
+def longest_word_pt(runs, size, font=BODY_FONT):
+    """How wide the longest single word is, in points, at this size."""
+    char_w = CHAR_W.get(font, 0.50)
+    worst = 0
+    for text, _level in _norm(runs):
+        for word in text.split():
+            worst = max(worst, len(word))
+    return worst * char_w * size
+
+
 def fit_size(runs, width_pt, height_pt, start_size, *, font=BODY_FONT,
              space_after=6, line_spacing=1.0, floor=MIN_BODY_PT):
     """
     Largest size from start_size down to floor at which these paragraphs fit
     the given box. Returns (size, space_after, fits).
+
+    "Fit" means across as well as down. A word wider than the box is not
+    wrapped, it is CUT - PowerPoint breaks it mid-word rather than
+    hyphenating - so a size that leaves the longest word too wide is not a
+    size we can use, however much vertical room it saves.
     """
     size = float(start_size)
     while size >= floor:
         gap = space_after if size >= start_size - 2 else max(space_after - 3, 1)
-        if measure_pt(runs, width_pt, size, font=font, space_after=gap,
-                      line_spacing=line_spacing) <= height_pt:
+        if (measure_pt(runs, width_pt, size, font=font, space_after=gap,
+                       line_spacing=line_spacing) <= height_pt
+                and longest_word_pt(runs, size, font) <= width_pt):
             return size, gap, True
         size -= 1.0
     return floor, max(space_after - 4, 0), False
@@ -213,6 +229,39 @@ def _set_fitted(frame, runs, *, width, height, size=18, floor=MIN_BODY_PT,
     _set_text(frame, runs, size=used, space_after=gap, font=font,
               line_spacing=line_spacing, **kwargs)
     return used
+
+
+def _share_columns(want, need, total):
+    """
+    Column widths in points: the proportions asked for, raised to what each
+    column NEEDS so its longest word is not broken in half, with the extra
+    taken from the columns that have slack above their own need.
+
+    Returns None if the needs alone do not fit, which tells the caller to
+    try a smaller font.
+    """
+    if sum(need) > total:
+        return None
+
+    out = [max(w, n) for w, n in zip(want, need)]
+    excess = sum(out) - total
+    if excess <= 0:
+        # Hand the remainder back in the requested proportions.
+        spare = -excess
+        weight = float(sum(want)) or 1.0
+        return [o + spare * w / weight for o, w in zip(out, want)]
+
+    # Take it back from whoever is above their need, proportionally.
+    for _ in range(8):
+        slack = [o - n for o, n in zip(out, need)]
+        pool = sum(s for s in slack if s > 0)
+        if pool <= 0 or excess <= 0.01:
+            break
+        take = min(excess, pool)
+        out = [o - take * (s / pool if s > 0 else 0.0)
+               for o, s in zip(out, slack)]
+        excess = sum(out) - total
+    return out if abs(sum(out) - total) < 1.0 else None
 
 
 def _top_level_blocks(runs):
@@ -530,8 +579,11 @@ class Deck:
                         size=28, floor=17, bold=True, color=NAVY, space_after=0)
             self._rule(slide, TITLE_TOP + TITLE_H + Inches(0.05))
 
+        # Count EVERY slide, and only suppress the drawing. The title slide
+        # carries no footer, but it is still slide 1 - counting it out left
+        # every footer one behind the number PowerPoint shows.
+        self.slide_number += 1
         if numbered:
-            self.slide_number += 1
             self._footer(slide)
         return slide
 
@@ -1329,18 +1381,48 @@ class Deck:
         # Estimate how tall each row wants to be, so the table does not spill.
         widths = col_widths or [1] * len(headers)
         total_weight = float(sum(widths))
-        col_pt = [(CONTENT_W / EMU_PER_PT) * w / total_weight - 10
-                  for w in widths]
+        table_pt = CONTENT_W / EMU_PER_PT
+        body = [list(map(str, headers))] + [list(map(str, r)) for r in rows]
+
+        # The widest single word in each column, measured in units of font
+        # size. A column narrower than its longest word gets that word broken
+        # in half - "Lesso / n" - which is the one thing a table must never
+        # do. Column 0 renders in Consolas when it holds an identifier, and
+        # Consolas is the wider font, so the cell's own font has to be used
+        # or a filename comes up about a tenth short.
+        longest = []
+        for column in range(len(headers)):
+            worst = 0.0
+            for number, row in enumerate(body):
+                if column >= len(row):
+                    continue
+                text = row[column]
+                mono = (number > 0 and column == 0
+                        and any(ch in text for ch in "_("))
+                char_w = CHAR_W[CODE_FONT if mono else BODY_FONT]
+                for word in text.split():
+                    worst = max(worst, len(word) * char_w)
+            longest.append(worst)
 
         # Grow to fill: start at the body ceiling and shrink until the rows
-        # fit the space between the lead and the note.
+        # fit the space between the lead and the note - and until every
+        # column is wide enough for its longest word.
         cell_size = float(max(size, MAX_BODY_PT))
         while cell_size >= 9.0:
+            col_pt = _share_columns(
+                [table_pt * w / total_weight for w in widths],
+                [w * cell_size + 14.0 for w in longest],
+                table_pt)
+            if col_pt is None:
+                cell_size -= 0.5
+                continue
+
             needed = 0.0
-            for row in [headers] + [list(map(str, r)) for r in rows]:
+            for row in body:
                 tallest = 0.0
                 for text, width_pt in zip(row, col_pt):
-                    per_line = max(int(width_pt / (CHAR_W[BODY_FONT] * cell_size)), 1)
+                    usable = width_pt - 10
+                    per_line = max(int(usable / (CHAR_W[BODY_FONT] * cell_size)), 1)
                     lines = max(math.ceil(len(text) / per_line), 1)
                     tallest = max(tallest, lines * cell_size * 1.25 + 6)
                 needed += tallest
@@ -1354,9 +1436,10 @@ class Deck:
         table = shape.table
         table.first_row = True
 
-        if col_widths:
-            for index, weight in enumerate(col_widths):
-                table.columns[index].width = Emu(int(CONTENT_W * weight / total_weight))
+        # Whatever the caller asked for, the widths that actually get used
+        # are the ones that kept every word whole.
+        for index, width_pt in enumerate(col_pt):
+            table.columns[index].width = Emu(int(width_pt * EMU_PER_PT))
 
         for col, text in enumerate(headers):
             cell = table.cell(0, col)
