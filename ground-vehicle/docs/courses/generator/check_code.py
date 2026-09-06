@@ -52,6 +52,7 @@ ALLOWED = {
     "strip.setPixelColor(0, white);",
     "strip.setPixelColor(1, white);",
     "strip.setPixelColor(2, white);",
+    "strip.fill(white);",
     "while (!Ps3.isConnected()) {",
     "showWaitingLights();",
     "do {",

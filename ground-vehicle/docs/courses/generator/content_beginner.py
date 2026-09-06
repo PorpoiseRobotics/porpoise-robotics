@@ -2941,27 +2941,27 @@ def lesson4(deck, T):
             "ten minutes of extra effort from everybody.",
         ])
 
-    deck.bullets(
+    deck.bullets_image(
         "What makes a NeoPixel different",
-        [("An ordinary LED has two legs. It is on or off, and if you want ten of "
-          "them you need ten pins.", 0),
-         ("", 0),
-         ("A NeoPixel - the part is a WS2812B - has four connections: 5 volts, "
-          "ground, DATA IN and DATA OUT. Inside it there is a tiny controller "
-          "chip and three LEDs: one red, one green, one blue.", 0),
-         ("", 0),
-         ("Send a stream of color messages into the first pixel. It keeps the "
-          "FIRST message for itself and passes the rest out of its data-out pin "
-          "to the next one, which does the same.", 0),
-         ("", 0),
-         ("So one wire drives the whole chain. Our vehicle has 32 of them on "
-          "GPIO 5 - and they are numbered in the order the data flows, which is "
-          "why the numbering does what it does.", 0),
-         ("", 0),
-         ("In theory a chain can be any length. In practice the whole chain has "
-          "to be refreshed every frame, so about 350 pixels is the limit before "
-          "the refresh rate drops below 40 Hz.", 0)],
-        lead="One wire, 32 addressable devices",
+        [("An ordinary LED has two legs, is on or off, and needs a pin of "
+          "its own.", 0),
+         ("A NeoPixel - the part is a WS2812B - has FOUR connections: 5 "
+          "volts, ground, DATA IN and DATA OUT. Inside are a tiny "
+          "controller chip and three LEDs, one red, one green, one blue.", 0),
+         ("Send a stream of color messages into the first pixel. It "
+          "keeps the FIRST message and passes the rest out to the next "
+          "one, which does the same.", 0),
+         ("So ONE WIRE drives the whole chain. Our vehicle has 32 on "
+          "GPIO 5, numbered in the order the data flows.", 0)],
+        Placeholder(
+            "PHOTO: a single NeoPixel, close up",
+            "One WS2812B on its own, big enough to see the four pads and "
+            "the three dies inside the package."),
+        caption="One WS2812B: 5 V, ground, data in, data out",
+        image_ratio=0.34,
+        note="In theory a chain can be any length. In practice the whole "
+             "chain is refreshed every frame, so about 350 pixels is the "
+             "limit before the refresh rate drops below 40 Hz.",
         speaker=[
             "The chain idea is the whole lesson. Draw it on the board: data "
             "in, keep the first message, pass the rest out.",
@@ -3002,7 +3002,60 @@ def lesson4(deck, T):
             "makes fades look even to your eye - and move on.",
         ])
 
-    diagrams.rgb_mixing(deck)
+    deck.image_slide(
+        "One pixel is three LEDs, and color is a mixture",
+        Placeholder(
+            "FIGURE: additive RGB mixing",
+            "Three overlapping circles - red, green, blue - with yellow, "
+            "cyan and magenta where two meet and white where all three "
+            "do. Kevin is supplying this one."),
+        caption="Red + green = yellow. All three at full = white. This is "
+                "ADDITIVE mixing, and it is not how paint behaves.",
+        speaker=[
+            "Additive mixing, not the subtractive kind they learned with "
+            "paint. Red and green light make yellow; red and green paint "
+            "make mud. Say it, because it genuinely surprises people.",
+            "strip.Color(r, g, b) is this picture in three numbers. Point "
+            "at the overlaps and give the call for each one.",
+            "Ask for the numbers that make yellow before you show them. "
+            "255, 255, 0 - and somebody will guess it.",
+            "White costs three channels, which is the whole of the power "
+            "budget slide two on from here.",
+        ])
+
+    deck.two_columns(
+        "How your eye turns wavelengths into color",
+        "The physics",
+        [("Visible light runs from about 380 nanometers, which you see "
+          "as violet, to about 750, which you see as deep red.", 0),
+         ("Red      625 - 740 nm", 1),
+         ("Yellow   565 - 590 nm", 1),
+         ("Green    500 - 565 nm", 1),
+         ("Blue     440 - 485 nm", 1),
+         ("Violet   380 - 440 nm", 1),
+         ("A single LED emits one narrow band.", 0)],
+        "The biology",
+        [("Your retina has three kinds of cone cell, each most sensitive "
+          "to a different wavelength: long, medium and short - or red, "
+          "green and blue.", 0),
+         ("Your brain compares them, which is called OPPONENCY.", 0),
+         ("So three LEDs can fake every color you can see. They do not "
+          "make yellow light - they make red and green light in the "
+          "ratio that makes your cones report yellow.", 0),
+         ("Dogs have two cone types. Some birds have four.", 0)],
+        note="Magenta and pink are not on the spectrum at all. There is no single "
+             "wavelength for them - they exist only as mixtures, which means they "
+             "are made by your brain rather than by the light.",
+        speaker=[
+            "This is the science half of the lesson and it is genuinely "
+            "interesting. Do not rush it because it is not code.",
+            "The key idea: three LEDs can fake every color because your "
+            "eye only has three kinds of sensor to fool.",
+            "Yellow light and red-plus-green light are physically different "
+            "and look identical. That surprises people, and it should.",
+            "If somebody asks why a rainbow on the strip does not look "
+            "even: that is gamma, and it is the last row of the API table.",
+        ])
 
     deck.bullets(
         "setBrightness is not the same as a smaller color value",
@@ -3039,61 +3092,25 @@ def lesson4(deck, T):
             "then work in color values.",
         ])
 
-    deck.two_columns(
-        "How your eye turns wavelengths into color",
-        "The physics",
-        [("Visible light runs from about 380 nanometers, which you see as "
-          "violet, to about 750, which you see as deep red.", 0),
-         ("Red      625 - 740 nm", 1),
-         ("Yellow   565 - 590 nm", 1),
-         ("Green    500 - 565 nm", 1),
-         ("Blue     440 - 485 nm", 1),
-         ("Violet   380 - 440 nm", 1),
-         ("", 0),
-         ("A single LED emits one narrow band of wavelengths.", 0)],
-        "The biology",
-        [("Your retina has three kinds of cone cell, each most sensitive to a "
-          "different wavelength. They are called long, medium and short - or, "
-          "more usefully, red, green and blue.", 0),
-         ("Your brain compares them: red minus green, and blue minus red plus "
-          "green. That comparison is called OPPONENCY.", 0),
-         ("", 0),
-         ("This is why three LEDs can fake every color you can see. They are "
-          "not producing yellow light - they are producing red and green light "
-          "in the ratio that makes your cones report yellow.", 0),
-         ("Dogs have two cone types. Some birds have four.", 0)],
-        note="Magenta and pink are not on the spectrum at all. There is no single "
-             "wavelength for them - they exist only as mixtures, which means they "
-             "are made by your brain rather than by the light.",
-        speaker=[
-            "This is the science half of the lesson and it is genuinely "
-            "interesting. Do not rush it because it is not code.",
-            "The key idea: three LEDs can fake every color because your "
-            "eye only has three kinds of sensor to fool.",
-            "Yellow light and red-plus-green light are physically different "
-            "and look identical. That surprises people, and it should.",
-            "If somebody asks why a rainbow on the strip does not look "
-            "even: that is gamma, and it is the last row of the API table.",
-        ])
 
-    deck.bullets(
+    deck.two_columns(
         "The power budget  -  read this before turning the brightness up",
-        [("Each of the three LEDs inside a pixel draws about 20 mA at full "
-          "brightness.", 0),
-         ("One pixel showing full white:  3 x 20 = 60 mA", 1),
-         ("32 pixels of full white:  32 x 60 = 1920 mA, nearly 2 amps", 1),
-         ("At 5 volts:  1920 mA x 5 V = 9600 mW = 9.6 watts", 1),
-         ("", 0),
-         ("That is a lot of power through a small board, and it makes real "
-          "heat. Two things keep it sane:", 0),
-         ("setBrightness() scales EVERY pixel before it is sent. At 60 out of "
-          "255 you draw roughly a quarter of the worst case.", 1),
-         ("Colored light is cheaper than white. Pure red only lights one of "
-          "the three, so it costs about a third of what white costs.", 1),
-         ("", 0),
-         ("That is why the vehicle programs run at about 120 rather than 255, "
-          "and why full white across all 32 is used for a moment and not held.", 0)],
-        lead="Ohm's law, applied to something you can see",
+        "The arithmetic",
+        [("Each of the three LEDs inside a pixel draws about 20 mA at "
+          "full brightness.", 0),
+         ("One pixel, full white:  3 x 20 = 60 mA", 1),
+         ("All 32, full white:  32 x 60 = 1920 mA", 1),
+         ("Nearly two amps.", 1),
+         ("At 5 volts:  1920 mA x 5 V = 9.6 watts", 1),
+         ("That is real heat through a small board.", 0)],
+        "What keeps it sane",
+        [("setBrightness() scales EVERY pixel before it is sent. At 60 "
+          "out of 255 you draw about a quarter of the worst case.", 0),
+         ("Colored light is cheaper than white. Pure red lights one "
+          "channel of the three, so it costs about a third.", 0),
+         ("Which is why the vehicle programs run at about 120 rather "
+          "than 255, and why full white across all 32 is used for a "
+          "moment and never held.", 0)],
         note="Power = voltage x current. Energy from the battery becomes light "
              "and heat, and the ratio is not as favourable as you would hope.",
         note_kind="warn",
@@ -3126,7 +3143,8 @@ def lesson4(deck, T):
           "put your hand near the LED bars - carefully.", 0),
          ("4.  Put it back to 60.", 0),
          ("5.  Change the for loop to  i = i + 2. What happens, and why?", 0),
-         ("6.  Look up strip.fill(). Can you replace the loop with one line?", 0)],
+         ("6.  Replace the whole loop with ONE line:  strip.fill(c);  "
+          "then strip.show(). Same result, six lines shorter.", 0)],
         expect=[("All 32 LEDs cycling through seven colors and off, with the "
                  "estimated current printed for each.", 0)],
         questions=[("Yellow costs about twice what red costs. Why?", 0),
@@ -3138,8 +3156,14 @@ def lesson4(deck, T):
             "hand against the bars.",
             "Yellow costs about twice red because it lights two channels "
             "rather than one. Get that answer from the room.",
-            "Step 5 lighting every other LED is a nice cheap surprise. Step "
-            "6 gets them to replace their own loop with strip.fill().",
+            "Step 6 is the one to make a point of. They have just written "
+            "a for loop, and strip.fill() does the same job in one line. "
+            "The lesson is not that loops are bad - it is that when every "
+            "pixel gets the SAME color, the library already has a call "
+            "for it, and reaching for the loop first is a habit worth "
+            "noticing.",
+            "Have somebody read both versions out. Six lines against one, "
+            "identical on the vehicle.",
             "At brightness 60 the worst case is roughly a quarter of two "
             "amps, so about 450 mA.",
         ])
@@ -3194,7 +3218,10 @@ def lesson4(deck, T):
          "  strip.setPixelColor(i, white);",
          "}",
          "",
-         "// Just the front:",
+         "// ALL of them the same color? Do not write a loop at all.",
+         "strip.fill(white);",
+         "",
+         "// Just the front. Here you do need the loop:",
          "for (int i = FRONT_FIRST; i <= FRONT_LAST; i++) {",
          "  strip.setPixelColor(i, headlight);",
          "}"],
@@ -3203,14 +3230,20 @@ def lesson4(deck, T):
                ("i < 32        keep going while this is true", 0),
                ("i++           add one each time round", 0),
                ("", 0),
-               ("Watch the difference between  <  and  <=. With FRONT_LAST = 15, "
-                "you want <= or you will miss LED 15.", 0),
-               ("Off-by-one errors are the most common bug in the whole of "
-                "programming, and this is where you meet them.", 0)],
-        size=14, highlight={6, 7, 8},
+               ("EVERY pixel the same? strip.fill() already does it. Save "
+                "the loop for when the pixels differ.", 0),
+               ("", 0),
+               ("Watch  <  against  <=. With FRONT_LAST = 15 you want <= "
+                "or you will miss LED 15. Off-by-one is the most common "
+                "bug in programming, and this is where you meet it.", 0)],
+        size=14, highlight={6, 7, 8, 11},
         speaker=[
             "Show the long way first and let somebody groan. That is the "
             "motivation for the loop.",
+            "Then land strip.fill(): if every pixel gets the same color, "
+            "the loop is not needed either. The rule is that the loop "
+            "earns its place when the pixels DIFFER, which is exactly "
+            "what the last example shows.",
             "Read the three parts of the for header out loud as a sentence: "
             "start here, keep going while this is true, add one each time.",
             "The < versus <= point is worth a full minute. With FRONT_LAST "
@@ -3223,26 +3256,21 @@ def lesson4(deck, T):
     deck.two_columns(
         "Four patterns, four ideas",
         "colorWipe  and  theaterChase",
-        [("colorWipe fills the strip one LED at a time, in order, so the color "
-          "appears to sweep along it.", 0),
+        [("colorWipe fills the strip one LED at a time, in order, so the "
+          "color sweeps along it.", 0),
          ("One loop, one delay per LED.", 1),
-         ("", 0),
-         ("theaterChase lights every third LED and shuffles the pattern along by "
-          "one each frame, so the lights appear to chase each other.", 0),
-         ("Three loops nested inside each other: how many times to repeat, "
-          "which of the three positions is lit, and stepping along the strip "
-          "in threes.", 1)],
+         ("theaterChase lights every third LED and shuffles the pattern "
+          "along by one each frame, so they chase each other.", 0),
+         ("Three nested loops: how many repeats, which of the three "
+          "positions is lit, and stepping along in threes.", 1)],
         "rainbow  and  scanner",
-        [("rainbow uses HUE instead of red, green and blue - one number that "
-          "goes all the way round the color wheel, 0 to 65535.", 0),
-         ("Each LED gets a hue slightly further round, which spreads a "
-          "rainbow along the strip. Then the start point creeps forward so "
-          "it appears to flow.", 1),
-         ("", 0),
-         ("scanner is the KITT effect. One bright dot with a fading tail, and "
-          "the matching rear LED at 31 - p so front and rear stay lined up.", 0),
-         ("The tail uses  >> tail  to halve the brightness each step: 255, "
-          "127, 63, 31.", 1)],
+        [("rainbow uses HUE instead of red, green and blue - one number "
+          "all the way round the color wheel, 0 to 65535.", 0),
+         ("Each LED gets a hue further round, and the start point "
+          "creeps forward so it flows.", 1),
+         ("scanner is the KITT effect: one bright dot with a fading "
+          "tail, and the rear LED at 31 - p to stay lined up.", 0),
+         ("The tail uses  >> tail  to halve each step: 255, 127, 63.", 1)],
         size=14,
         note="gamma32() corrects for the fact that your eye does not see "
              "brightness in a straight line. Without it, the middle of a fade "
@@ -3296,24 +3324,19 @@ def lesson4(deck, T):
 
     deck.bullets(
         "Design a pattern of your own",
-        [("Twenty minutes. Working in your group, invent a lighting pattern for "
-          "your vehicle and write it as a function.", 0),
-         ("", 0),
-         ("Some starting points:", 0),
-         ("Police lights - left side red, right side blue, alternating", 1),
-         ("A countdown - all 32 red, then fewer and fewer, then green", 1),
-         ("A battery gauge - green through amber to red across the front bar", 1),
+        [("Invent a lighting pattern for your vehicle and write it as a "
+          "function. Some starting points:", 0),
+         ("Police lights - left red, right blue, alternating", 1),
+         ("A countdown - all 32 red, then fewer, then green", 1),
+         ("A battery gauge - green to amber to red across the front", 1),
          ("Breathing - all 32 fading smoothly up and down", 1),
-         ("A collision warning that flashes faster as something gets closer", 1),
-         ("A stoplight - the front bar red, then amber, then green, on a "
-          "timer, with the rear bar showing the same thing", 1),
-         ("D-pad quadrants - press up, right, down or left and light only "
-          "that quarter of the vehicle", 1),
-         ("", 0),
-         ("Rules: it must be a function you call from loop(), and it must use "
-          "at least one for loop.", 0),
-         ("", 0),
-         ("Then show the class. Best one gets used in the race next lesson.", 0)],
+         ("A collision warning that flashes faster as you close in", 1),
+         ("A stoplight - front bar red, amber, green, on a timer, with "
+          "the rear bar matching", 1),
+         ("D-pad quadrants - light only the quarter you press", 1),
+         ("Rules: a function you call from loop(), using at least one "
+          "for loop. Then show the class - the best one gets used in "
+          "the race next lesson.", 0)],
         lead="Twenty minutes, in your groups",
         speaker=[
             "Twenty minutes, hands off, let them build. Circulate but do "
