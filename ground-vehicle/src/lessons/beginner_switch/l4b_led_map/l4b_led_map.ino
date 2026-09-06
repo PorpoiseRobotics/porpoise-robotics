@@ -82,10 +82,10 @@ void setup() {
   Lights one run of LEDs, from "first" to "last" inclusive, and says what it
   is doing on the Serial Monitor.
 */
-void showSide(const char *name, int first, int last, uint32_t colour) {
+void showSide(const char *name, int first, int last, uint32_t color) {
   strip.clear();
   for (int i = first; i <= last; i++) {
-    strip.setPixelColor(i, colour);
+    strip.setPixelColor(i, color);
   }
   strip.show();
 

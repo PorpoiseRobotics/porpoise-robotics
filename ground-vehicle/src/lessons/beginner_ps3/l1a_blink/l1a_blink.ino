@@ -57,7 +57,7 @@
     File > Preferences > "Additional boards manager URLs", add this line:
       https://raw.githubusercontent.com/espressif/arduino-esp32/gh-pages/package_esp32_index.json
     Then Tools > Board > Boards Manager, search "esp32", choose version 3.0.7.
-    Finally pick Tools > Board > ESP32 Arduino > "ESP32 Dev Module".
+    Finally pick Tools > Board > esp32 > "ESP32 Dev Module".
   Libraries: none.
 
   These are the same settings pathfinder_ps3.ino uses, so once you have set

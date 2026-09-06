@@ -133,7 +133,7 @@ const int MOTOR_PWM_FREQ = 20000;  // 20 kHz is above human hearing, so no motor
 const int MOTOR_PWM_BITS = 8;      // 8 bits of resolution means speed values 0..255
 const int MOTOR_MAX      = 255;    // Full speed. This is as fast as the motors go.
 // The slowest speed a motor is ever given, just outside the deadzone. At 0 the
-// speed climbs smoothly from nothing, which is the simplest behaviour. A real
+// speed climbs smoothly from nothing, which is the simplest behavior. A real
 // motor needs a certain amount of power before it will turn at all, so if the
 // first part of the stick travel feels dead, raise this until the wheels start
 // moving as soon as you leave the deadzone.
@@ -166,7 +166,7 @@ const int STICK_DEADZONE = 60;   // Ignore small values so a worn stick cannot c
 // --- KITT scanner ----------------------------------------------------
 const int SCANNER_STEP_MS = 40;  // Time between moves. Smaller number = faster scanner.
 const int SCANNER_TAIL    = 3;   // How many fading LEDs trail behind the bright one
-const int SCANNER_RED     = 255; // Scanner colour. Try 0, 0, 255 for Cylon blue.
+const int SCANNER_RED     = 255; // Scanner color. Try 0, 0, 255 for Cylon blue.
 const int SCANNER_GREEN   = 0;
 const int SCANNER_BLUE    = 0;
 
@@ -298,7 +298,7 @@ int stickToSpeed(int stickValue, int maxSpeed) {
 
 /*
   Turns a thumbstick reading into a servo pulse length in microseconds.
-  A centred stick gives a centred servo.
+  A centerd stick gives a centerd servo.
 */
 int stickToServoMicroseconds(int stickValue) {
   if (abs(stickValue) < STICK_DEADZONE) {
@@ -357,7 +357,7 @@ void drive(int leftSpeed, int rightSpeed) {
   The ESP32 does not think in microseconds, it thinks in "duty" counts. With 16
   bits, one whole 20 ms cycle is 65536 counts, so:
         counts = microseconds * 65536 / 20000
-  We use "long" for the maths because 1500 * 65536 is far too big to fit in an int.
+  We use "long" for the math because 1500 * 65536 is far too big to fit in an int.
 */
 void writeServo(int channel, int microseconds) {
   microseconds = constrain(microseconds, SERVO_MIN_US, SERVO_MAX_US);
@@ -371,7 +371,7 @@ void writeServo(int channel, int microseconds) {
 
 /*
   Draws the normal driving lights: white at the front, red at the back, amber
-  on whichever side we are turning towards, and bright white at the back when
+  on whichever side we are turning toward, and bright white at the back when
   reversing.
 */
 void showDrivingLights() {
@@ -390,11 +390,11 @@ void showDrivingLights() {
     }
 
     // Rear lights: brighter red when stopped (brake lights), white in reverse
-    uint32_t rearColour = tailLight;
-    if (lightPattern == LIGHTS_STOPPED) rearColour = brakeLight;
-    if (lightPattern == LIGHTS_REVERSE) rearColour = reverseLight;
+    uint32_t rearColor = tailLight;
+    if (lightPattern == LIGHTS_STOPPED) rearColor = brakeLight;
+    if (lightPattern == LIGHTS_REVERSE) rearColor = reverseLight;
     for (int i = REAR_FIRST; i <= REAR_LAST; i++) {
-      strip.setPixelColor(i, rearColour);
+      strip.setPixelColor(i, rearColor);
     }
 
     // Turn signals. Remember the loop: LEDs 0-7 and 24-31 are the LEFT side,
@@ -427,11 +427,11 @@ void showWaitingLights() {
     lastBlink = millis();
     blinkOn = !blinkOn;
 
-    uint32_t colour = strip.Color(0, 0, 0);
+    uint32_t color = strip.Color(0, 0, 0);
     if (blinkOn) {
-      colour = addressIsSet ? strip.Color(0, 60, 0) : strip.Color(80, 0, 0);
+      color = addressIsSet ? strip.Color(0, 60, 0) : strip.Color(80, 0, 0);
     }
-    strip.fill(colour);
+    strip.fill(color);
     strip.show();
   }
 }
@@ -463,12 +463,12 @@ void updateScanner() {
     }
 
     // ">> tail" halves the brightness for each step back: 255, 127, 63, 31
-    uint32_t colour = strip.Color(SCANNER_RED   >> tail,
+    uint32_t color = strip.Color(SCANNER_RED   >> tail,
                                   SCANNER_GREEN >> tail,
                                   SCANNER_BLUE  >> tail);
 
-    strip.setPixelColor(position, colour);              // Front of the vehicle
-    strip.setPixelColor(REAR_LAST - position, colour);  // Matching LED at the rear
+    strip.setPixelColor(position, color);              // Front of the vehicle
+    strip.setPixelColor(REAR_LAST - position, color);  // Matching LED at the rear
   }
 
   strip.show();

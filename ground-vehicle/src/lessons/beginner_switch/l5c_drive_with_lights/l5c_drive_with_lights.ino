@@ -6,7 +6,7 @@
   ----------------------
   Drives the vehicle AND runs the lights at the same time: headlights at the
   front, tail lights at the back, brake lights when you stop, white reversing
-  lights, and amber turn signals on whichever side you are steering towards.
+  lights, and amber turn signals on whichever side you are steering toward.
 
   This is the last step before pathfinder_nintendoswitch.ino. Everything in
   here you have already met in a smaller program:
@@ -186,7 +186,7 @@ void drive(int leftSpeed, int rightSpeed) {
 /*
   Draws the driving lights: white at the front, red at the back, brighter red
   when stopped, white at the back in reverse, and amber down whichever side we
-  are turning towards.
+  are turning toward.
 */
 void showDrivingLights() {
   strip.clear();
@@ -202,11 +202,11 @@ void showDrivingLights() {
       strip.setPixelColor(i, headlight);
     }
 
-    uint32_t rearColour = tailLight;
-    if (lightPattern == LIGHTS_STOPPED) rearColour = brakeLight;
-    if (lightPattern == LIGHTS_REVERSE) rearColour = reverseLight;
+    uint32_t rearColor = tailLight;
+    if (lightPattern == LIGHTS_STOPPED) rearColor = brakeLight;
+    if (lightPattern == LIGHTS_REVERSE) rearColor = reverseLight;
     for (int i = REAR_FIRST; i <= REAR_LAST; i++) {
-      strip.setPixelColor(i, rearColour);
+      strip.setPixelColor(i, rearColor);
     }
 
     // Remember the loop: 0-7 and 24-31 are LEFT, 8-15 and 16-23 are RIGHT.

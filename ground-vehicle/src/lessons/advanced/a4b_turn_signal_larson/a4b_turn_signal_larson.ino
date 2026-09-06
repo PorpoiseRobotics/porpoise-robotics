@@ -6,7 +6,7 @@
   ----------------------
   The turn signal animation from Pathfinder_Op_Program12, isolated so you can
   step through it one frame at a time. A bar of amber grows outward from the
-  centre of the vehicle towards whichever corner is turning, front and rear
+  center of the vehicle toward whichever corner is turning, front and rear
   together. Nothing moves.
 
   BEFORE YOU CAN COMPILE THIS
@@ -18,7 +18,7 @@
   COMMANDS (115200 baud)
   ----------------------
     left | right     start a signal. Three cycles, then back to standby.
-    hold left|right  keep signalling until you type 'release'
+    hold left|right  keep signaling until you type 'release'
     release          stop holding
     step             advance exactly one frame, and print the indices
     speed <ms>       frame time, default 50
@@ -33,17 +33,17 @@
         front, left to right :   0 .. 15      left half 0-7,   right half 8-15
         rear,  right to left :  16 .. 31      right half 16-23, left half 24-31
 
-  For a LEFT signal, the bar has to grow from the centre outward on both bars.
-  At the front the centre is index 8, and going left means counting DOWN, so
+  For a LEFT signal, the bar has to grow from the center outward on both bars.
+  At the front the center is index 8, and going left means counting DOWN, so
   the i-th LED is (8 - 1 - i). At the rear the left half starts at 24 and runs
   outward as the index rises, so the i-th LED is (24 + i).
 
-        RIGHT_FRONT_START - 1 - i     front, growing left from centre
+        RIGHT_FRONT_START - 1 - i     front, growing left from center
         LEFT_REAR_START + i           rear, mirroring it
 
   For a RIGHT signal it is the other way round:
 
-        RIGHT_FRONT_START + i         front, growing right from centre
+        RIGHT_FRONT_START + i         front, growing right from center
         LEFT_REAR_START - 1 - i       rear, mirroring it
 
   Use "step" and read the indices as they print. It is much easier to see than
@@ -52,7 +52,7 @@
   WHY IT REPAINTS THE BASE LIGHTING FIRST
   ---------------------------------------
   Each frame clears the whole strip, paints the headlights and tail lights back
-  on, blanks the side that is signalling, and then draws the amber bar over the
+  on, blanks the side that is signaling, and then draws the amber bar over the
   top. Painting only the amber would leave the previous frame underneath.
 
   WHY IT FINISHES ITS CYCLES
@@ -111,9 +111,9 @@ uint32_t rgb(uint8_t r, uint8_t g, uint8_t b) {
   return strip.Color(r, g, b);
 }
 
-void fillRange(int first, int count, uint32_t colour) {
+void fillRange(int first, int count, uint32_t color) {
   for (int i = first; i < first + count && i < NUM_LEDS; i++) {
-    strip.setPixelColor(i, colour);
+    strip.setPixelColor(i, color);
   }
 }
 
@@ -128,8 +128,8 @@ void setStandbyLighting() {
 }
 
 /*
-  Draws one frame of the turn signal: base lighting, the signalling side
-  blanked, then the amber bar grown out from the centre.
+  Draws one frame of the turn signal: base lighting, the signaling side
+  blanked, then the amber bar grown out from the center.
 */
 void drawLarsonFrame() {
   uint32_t amber = rgb(255, 100, 0);
@@ -274,12 +274,12 @@ void runCommand(String line) {
   } else if (line == "left") {
     holding_left = holding_right = false;
     startSignal(TURN_LEFT);
-    Serial.println(F("signalling LEFT"));
+    Serial.println(F("signaling LEFT"));
 
   } else if (line == "right") {
     holding_left = holding_right = false;
     startSignal(TURN_RIGHT);
-    Serial.println(F("signalling RIGHT"));
+    Serial.println(F("signaling RIGHT"));
 
   } else if (line == "hold left") {
     holding_left = true;

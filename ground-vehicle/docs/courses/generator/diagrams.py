@@ -195,22 +195,22 @@ def system_block(deck, title="How a command gets from your thumb to a wheel",
     ]
 
     left = MARGIN_L
-    centres = []
+    centers = []
     for name, blurb, fill, width in stages:
         _box(slide, left, top, width, box_h, name, fill=fill, size=15, bold=True,
              color=NAVY)
         _label(slide, left, top + box_h + Inches(0.06), width, blurb, size=11,
                color=GREY, align=PP_ALIGN.CENTER)
-        centres.append((left, width))
+        centers.append((left, width))
         left += width + Inches(0.45)
 
     for index in range(len(stages) - 1):
-        box_left, box_w = centres[index]
+        box_left, box_w = centers[index]
         _arrow(slide, box_left + box_w, top + Emu(int(box_h / 2)),
                box_left + box_w + Inches(0.45), top + Emu(int(box_h / 2)))
 
     # The ESP32 fans out to three kinds of output.
-    esp_left, esp_w = centres[2]
+    esp_left, esp_w = centers[2]
     fan_left = esp_left + esp_w + Inches(0.45)
     outputs = [
         ("DRV8871 drivers", "4 motors", "12 13 16 17 18 19 22 23", LIGHT_AMBER),
@@ -248,7 +248,7 @@ def pwm_duty(deck, title="Pulse width modulation: how a pin makes a half speed",
         "Draw the square wave on the board first, then reveal the slide. It lands better if they have watched it being built.",
         "The idea to land: the pin is only ever fully on or fully off. Half speed is half the TIME on, not half the voltage.",
         "Analogy that works: a light switch flicked very fast. Too fast to see flicker, so the room looks half lit.",
-        "Duty cycle is a percentage, which is why the maths lesson and the motor lesson are the same lesson.",
+        "Duty cycle is a percentage, which is why the math lesson and the motor lesson are the same lesson.",
     ])
 
     left = MARGIN_L + Inches(1.55)
@@ -440,7 +440,7 @@ def deadzone_map(deck, title="From thumbstick to motor speed", stick_max=127,
                  deadzone=20, speaker=None):
     slide = deck.blank(title, speaker=speaker or [
         "The two numbers that matter are the deadzone and the top of the stick range. Everything else on the slide follows from those.",
-        "Ask why the line does not start at zero. The answer - a stick at rest is never exactly centred - is worth getting from the room rather than telling them.",
+        "Ask why the line does not start at zero. The answer - a stick at rest is never exactly centerd - is worth getting from the room rather than telling them.",
         "The jump at the deadzone edge is deliberate: below the minimum duty the motor buzzes instead of turning, so the map skips straight past it.",
         "Come back to this diagram when somebody's vehicle creeps on its own.",
     ])
@@ -544,7 +544,7 @@ def tank_mixing(deck, title="Mixing: one stick, two sides", speaker=None):
          "curves right\nwhile moving", LIGHT_TEAL),
         ("hard right only", "forward 0\nturn 127", "left 127\nright -127",
          "spins on the spot", LIGHT_AMBER),
-        ("stick centred", "forward 0\nturn 0", "left 0\nright 0",
+        ("stick centerd", "forward 0\nturn 0", "left 0\nright 0",
          "both sides coast", LIGHT_GREY),
     ]
 
@@ -630,10 +630,10 @@ def millis_timeline(deck, title="Why the vehicle programs never call delay()", s
         ("battery check", 0.5, GREY),
     ]
     row_h = Inches(0.40)
-    for row, (name, spacing, colour) in enumerate(jobs):
+    for row, (name, spacing, color) in enumerate(jobs):
         ry = y + row_h * row
         _label(slide, left - Inches(1.85), ry + Inches(0.04), Inches(1.75), name,
-               size=11, color=colour, align=PP_ALIGN.RIGHT)
+               size=11, color=color, align=PP_ALIGN.RIGHT)
         _plain_line(slide, left, ry + Inches(0.18), left + width, ry + Inches(0.18),
                     color=RULE, width=0.75)
         step = max(spacing, 0.02)
@@ -643,7 +643,7 @@ def millis_timeline(deck, title="Why the vehicle programs never call delay()", s
             if tx > left + width:
                 break
             _plain_line(slide, tx, ry + Inches(0.06), tx, ry + Inches(0.30),
-                        color=colour, width=2.0)
+                        color=color, width=2.0)
 
     _label(slide, left, y + row_h * 4 + Inches(0.12), width,
            "each job fires on its own schedule, and loop() never stops running",
@@ -714,7 +714,7 @@ def square_path(deck, title="Dead reckoning: the vehicle has no idea where it is
     _label(slide, ox - Inches(1.95), oy + Inches(0.42), Inches(1.85),
            "90 degree turn", size=13, color=AMBER, align=PP_ALIGN.RIGHT)
 
-    # The maths, well clear of the figure.
+    # The math, well clear of the figure.
     right = MARGIN_L + Inches(6.6)
     col = Inches(5.6)
 
@@ -748,12 +748,12 @@ def square_path(deck, title="Dead reckoning: the vehicle has no idea where it is
 # 10. RGB additive mixing
 # ===================================================================
 
-def rgb_mixing(deck, title="One pixel is three LEDs, and colour is a mixture", speaker=None):
+def rgb_mixing(deck, title="One pixel is three LEDs, and color is a mixture", speaker=None):
     slide = deck.blank(title, speaker=speaker or [
         "One pixel is three tiny LEDs behind one lens. Hold a vehicle close enough that somebody in the front row can see them.",
-        "Three numbers, 0 to 255 each, is 16.7 million colours. Worth doing the multiplication on the board.",
+        "Three numbers, 0 to 255 each, is 16.7 million colors. Worth doing the multiplication on the board.",
         "Warn them now: 255, 255, 255 is every LED at full, and it is both blinding and expensive in current. The power budget slide follows for a reason.",
-        "If time allows, get them to predict a colour before they type it, then check. Predicting is what makes it stick.",
+        "If time allows, get them to predict a color before they type it, then check. Predicting is what makes it stick.",
     ])
 
     cx = MARGIN_L + Inches(3.0)
@@ -766,12 +766,12 @@ def rgb_mixing(deck, title="One pixel is three LEDs, and colour is a mixture", s
         ("B", RGBColor(0x2C, 0x5A, 0xE8), cx + Inches(0.85), cy + Inches(0.6)),
     ]
 
-    for name, colour, x, y in circles:
+    for name, color, x, y in circles:
         circle = slide.shapes.add_shape(MSO_SHAPE.OVAL, x - r, y - r, r * 2, r * 2)
         circle.fill.solid()
-        circle.fill.fore_color.rgb = colour
+        circle.fill.fore_color.rgb = color
         circle.fill.transparency = 0.45
-        circle.line.color.rgb = colour
+        circle.line.color.rgb = color
         circle.line.width = Pt(1.5)
         circle.shadow.inherit = False
         _set_text(circle.text_frame, [""], size=8)
@@ -801,12 +801,12 @@ def rgb_mixing(deck, title="One pixel is three LEDs, and colour is a mixture", s
     ]
 
     row_h = Inches(0.52)
-    for index, (code, name, colour) in enumerate(swatches):
+    for index, (code, name, color) in enumerate(swatches):
         y = BODY_TOP + Inches(1.05) + row_h * index
         chip = slide.shapes.add_shape(MSO_SHAPE.RECTANGLE, right, y,
                                       Inches(0.55), Inches(0.34))
         chip.fill.solid()
-        chip.fill.fore_color.rgb = colour
+        chip.fill.fore_color.rgb = color
         chip.line.color.rgb = GREY
         chip.line.width = Pt(0.75)
         chip.shadow.inherit = False
@@ -830,7 +830,7 @@ def rgb_mixing(deck, title="One pixel is three LEDs, and colour is a mixture", s
 def servo_pulse(deck, title="A servo listens to the LENGTH of a pulse", speaker=None):
     slide = deck.blank(title, speaker=speaker or [
         "A servo does not listen to voltage, or to duty in the way a motor does. It listens to how LONG the pulse is, and it wants one every 20 ms.",
-        "1.0 ms is one end, 1.5 ms is centre, 2.0 ms is the other end. Those three numbers are the whole protocol.",
+        "1.0 ms is one end, 1.5 ms is center, 2.0 ms is the other end. Those three numbers are the whole protocol.",
         "The ESP32 counts duty, not microseconds, so the program has to convert. Walk the arithmetic once, slowly.",
         "Continuous-rotation servos read the same pulse as a SPEED rather than a position. Worth flagging before somebody buys the wrong one.",
     ])
@@ -841,25 +841,25 @@ def servo_pulse(deck, title="A servo listens to the LENGTH of a pulse", speaker=
 
     rows = [
         ("1.0 ms", 0.05, "one end of the travel", TEAL),
-        ("1.5 ms", 0.075, "centred", NAVY),
+        ("1.5 ms", 0.075, "centerd", NAVY),
         ("2.0 ms", 0.10, "the other end", AMBER),
     ]
 
-    for index, (name, frac, meaning, colour) in enumerate(rows):
+    for index, (name, frac, meaning, color) in enumerate(rows):
         y = top + Inches(1.12) * index
         base = y + Inches(0.68)
 
         _label(slide, MARGIN_L, y + Inches(0.2), Inches(1.6), name, size=15,
-               bold=True, color=colour, font=CODE_FONT)
+               bold=True, color=color, font=CODE_FONT)
 
         _plain_line(slide, left, base, left + width, base, color=RULE, width=1.0)
 
         pulse_w = Emu(int(width * frac))
-        _plain_line(slide, left, base, left, y + Inches(0.1), color=colour, width=2.5)
+        _plain_line(slide, left, base, left, y + Inches(0.1), color=color, width=2.5)
         _plain_line(slide, left, y + Inches(0.1), left + pulse_w, y + Inches(0.1),
-                    color=colour, width=2.5)
+                    color=color, width=2.5)
         _plain_line(slide, left + pulse_w, y + Inches(0.1), left + pulse_w, base,
-                    color=colour, width=2.5)
+                    color=color, width=2.5)
 
         _label(slide, left + pulse_w + Inches(0.15), y + Inches(0.16), Inches(4.5),
                meaning, size=13, color=INK)
@@ -911,22 +911,22 @@ def state_machine(deck, title="The lighting state machine", speaker=None):
                size=11, color=GREY, align=PP_ALIGN.CENTER)
         placed[name] = (x, y)
 
-    def centre_right(name):
+    def center_right(name):
         x, y = placed[name]
         return x + node_w, y + Emu(int(node_h / 2))
 
-    def centre_left(name):
+    def center_left(name):
         x, y = placed[name]
         return x, y + Emu(int(node_h / 2))
 
     for source in ("DISCONNECTED", "PAIRING"):
-        x1, y1 = centre_right(source)
-        x2, y2 = centre_left("STANDBY")
+        x1, y1 = center_right(source)
+        x2, y2 = center_left("STANDBY")
         _arrow(slide, x1, y1, x2, y2, color=TEAL)
 
     for target in ("TURN_LEFT", "TURN_RIGHT", "KITT_SCANNER"):
-        x1, y1 = centre_right("STANDBY")
-        x2, y2 = centre_left(target)
+        x1, y1 = center_right("STANDBY")
+        x2, y2 = center_left(target)
         _arrow(slide, x1, y1, x2, y2, color=AMBER)
 
     _label(slide, MARGIN_L + Inches(3.5), top + Inches(0.55), Inches(1.4),
@@ -971,7 +971,7 @@ def current_signature(deck, title="What a healthy motor looks like to a current 
          "draws a lot and never settles", RED, LIGHT_RED),
     ]
 
-    for index, (name, points, meaning, colour, fill) in enumerate(traces):
+    for index, (name, points, meaning, color, fill) in enumerate(traces):
         x0 = left + (width + gap) * index
         base = top + height
 
@@ -992,10 +992,10 @@ def current_signature(deck, title="What a healthy motor looks like to a current 
             y1 = base - Emu(int(height * points[i] * 0.92))
             y2 = base - Emu(int(height * points[i + 1] * 0.92))
             _plain_line(slide, x0 + step * i, y1, x0 + step * (i + 1), y2,
-                        color=colour, width=2.5)
+                        color=color, width=2.5)
 
         _label(slide, x0, top - Inches(0.38), width, name, size=15, bold=True,
-               color=colour, align=PP_ALIGN.CENTER)
+               color=color, align=PP_ALIGN.CENTER)
         _label(slide, x0, base + Inches(0.1), width, meaning.split("\n"), size=12,
                color=INK, align=PP_ALIGN.CENTER)
 
@@ -1121,7 +1121,7 @@ def led_circuit(deck, title="The circuit you are about to build", speaker=None):
     slide = deck.blank(title, speaker=speaker or [
         "Trace the loop with a finger: out of the pin, through the resistor, through the LED, back to ground. A circuit that is not a loop does nothing.",
         "Ask what the resistor is for BEFORE you say. The answer is that the LED will take as much current as you let it, and then stop being an LED.",
-        "The long leg is the anode and goes towards the pin. Backwards means no light and no damage, so let them find out.",
+        "The long leg is the anode and goes toward the pin. Backwards means no light and no damage, so let them find out.",
         "Ground is not optional. Half the circuits that do not work are missing the return path.",
     ])
 
@@ -1201,7 +1201,7 @@ def series_parallel(deck, title="Series and parallel: two ways to wire two loads
     PDF in a browser window.
     """
     slide = deck.blank(title, speaker=speaker or [
-        "Same two parts, two different wirings, completely different behaviour. That is the whole slide.",
+        "Same two parts, two different wirings, completely different behavior. That is the whole slide.",
         "Series: one path, so the same current everywhere and the voltage shared out. Parallel: two paths, so the same voltage across each and the currents add.",
         "Ask which one the 32 LEDs must be, and why. The answer - parallel, because each needs the full supply voltage - leads straight into the current budget.",
         "Christmas lights are the story everyone already knows: one bulb out and the whole string dies means series.",
@@ -1369,7 +1369,7 @@ def bearing_plot(deck, title="Plotting where a maneuver ends up", speaker=None):
     The trigonometry that turns a list of (time, speed, bearing) legs into a
     position on the floor.
 
-    Redrawn from Kevin's "Running the Bases" spreadsheet. The maths is his;
+    Redrawn from Kevin's "Running the Bases" spreadsheet. The math is his;
     the figure is native so it prints sharp and stays editable. This is the
     slide that pays off the "trigonometry" line on the Lesson 1 STEM list.
     """

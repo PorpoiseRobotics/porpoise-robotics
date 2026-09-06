@@ -45,7 +45,7 @@
   accurately is the sensor's whole job.
 
   The shunt register reports in units of 10 microvolts, which is where the
-  0.01 in the maths below comes from.
+  0.01 in the math below comes from.
 
   DRIVING A CHIP WITHOUT A LIBRARY
   --------------------------------
@@ -86,7 +86,7 @@
      the peak and the average.
   3. Unplug one motor and run "test". Which numbers give it away?
   4. Work out how long a 3300 mAh pack lasts at the average you measured.
-  5. Compare your maths with the LED power budget from the beginner course.
+  5. Compare your math with the LED power budget from the beginner course.
 */
 
 #include <Wire.h>

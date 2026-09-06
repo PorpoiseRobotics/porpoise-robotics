@@ -4,7 +4,7 @@
   11.2 used FastLED, which gave us CRGB, fill_solid, nscale8 and sin8 for free.
   This program uses Adafruit NeoPixel instead, so the handful of helpers we
   actually relied on are written out here. They are short, and having them in
-  the open makes the colour maths visible rather than magic.
+  the open makes the color math visible rather than magic.
 */
 
 // ===================================================================
@@ -15,18 +15,18 @@ uint32_t rgb(uint8_t r, uint8_t g, uint8_t b) {
   return strip.Color(r, g, b);
 }
 
-// Scales a packed colour towards black. 255 leaves it alone, 0 turns it off.
-uint32_t scale_colour(uint32_t colour, uint8_t scale) {
-  uint8_t r = (uint8_t)(colour >> 16);
-  uint8_t g = (uint8_t)(colour >> 8);
-  uint8_t b = (uint8_t)colour;
+// Scales a packed color toward black. 255 leaves it alone, 0 turns it off.
+uint32_t scale_color(uint32_t color, uint8_t scale) {
+  uint8_t r = (uint8_t)(color >> 16);
+  uint8_t g = (uint8_t)(color >> 8);
+  uint8_t b = (uint8_t)color;
   return strip.Color((r * scale) / 255, (g * scale) / 255, (b * scale) / 255);
 }
 
-// Fills a run of LEDs with one colour. The NeoPixel equivalent of fill_solid.
-void fill_range(int first, int count, uint32_t colour) {
+// Fills a run of LEDs with one color. The NeoPixel equivalent of fill_solid.
+void fill_range(int first, int count, uint32_t color) {
   for (int i = first; i < first + count && i < NUM_LEDS; i++) {
-    strip.setPixelColor(i, colour);
+    strip.setPixelColor(i, color);
   }
 }
 
@@ -91,13 +91,13 @@ void update_pairing_breathing(unsigned long now) {
   uint8_t phase = (uint8_t)((now % BREATHE_PERIOD_MS) * 255 / BREATHE_PERIOD_MS);
   uint8_t level = map(sine8(phase), 0, 255, 0, BREATHE_MAX);
 
-  fill_range(0, NUM_LEDS, scale_colour(rgb(0, 50, 255), level));
+  fill_range(0, NUM_LEDS, scale_color(rgb(0, 50, 255), level));
   strip.show();
 }
 
 /*
-  Turn signals, as a bar of amber that grows outward from the centre of the
-  vehicle towards the corner that is turning. Front and rear animate together.
+  Turn signals, as a bar of amber that grows outward from the center of the
+  vehicle toward the corner that is turning. Front and rear animate together.
 */
 void update_larson_scanner() {
   uint32_t amber = rgb(255, 100, 0);
@@ -116,7 +116,7 @@ void update_larson_scanner() {
     fill_range(LEFT_FRONT_START, CORNER_LEN, 0);
     fill_range(LEFT_REAR_START, CORNER_LEN, 0);
     for (int i = 0; i < num_lit; i++) {
-      strip.setPixelColor(RIGHT_FRONT_START - 1 - i, amber);   // Front, centre outward
+      strip.setPixelColor(RIGHT_FRONT_START - 1 - i, amber);   // Front, center outward
       strip.setPixelColor(LEFT_REAR_START + i, amber);         // Rear, mirrored
     }
   } else if (led_mode == TURN_RIGHT) {
@@ -139,15 +139,15 @@ void update_larson_scanner() {
 void update_kitt_scanner() {
   strip.clear();
 
-  uint32_t base = scale_colour(rgb(KITT_R, KITT_G, KITT_B), KITT_BRIGHTNESS);
+  uint32_t base = scale_color(rgb(KITT_R, KITT_G, KITT_B), KITT_BRIGHTNESS);
 
   for (int tail = 0; tail <= KITT_TAIL; tail++) {
     int pos = kitt_pos - (kitt_dir * tail);
     if (pos < 0 || pos > FRONT_LAST) continue;
 
-    uint32_t colour = scale_colour(base, 255 >> tail);
-    strip.setPixelColor(pos, colour);
-    strip.setPixelColor(REAR_LAST - pos, colour);
+    uint32_t color = scale_color(base, 255 >> tail);
+    strip.setPixelColor(pos, color);
+    strip.setPixelColor(REAR_LAST - pos, color);
   }
 
   strip.show();

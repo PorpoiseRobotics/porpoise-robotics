@@ -26,7 +26,7 @@ sets their board package up once in Lesson 1 and never touches it again.
 
 | Track | Board package | Board menu | Extra libraries |
 |---|---|---|---|
-| `beginner_ps3` | esp32 by Espressif Systems, **3.0.7** | Tools > Board > ESP32 Arduino > ESP32 Dev Module | PS3 Controller Host, Adafruit NeoPixel |
+| `beginner_ps3` | esp32 by Espressif Systems, **3.0.7** | Tools > Board > esp32 > ESP32 Dev Module | PS3 Controller Host, Adafruit NeoPixel |
 | `beginner_switch` | esp32_bluepad32 by Ricardo Quesada, **4.1.0** | Tools > Board > esp32_bluepad32 > ESP32 Dev Module | Adafruit NeoPixel |
 | `advanced` | esp32_bluepad32 by Ricardo Quesada, **4.1.0** | Tools > Board > esp32_bluepad32 > ESP32 Dev Module | Adafruit NeoPixel |
 
@@ -60,14 +60,14 @@ Same fifteen names in both tracks.
 | `l3a_controller_check` | 3 | What the controller actually sends |
 | `l3b_deadzone_and_map` | 3 | Deadzone and `map()`, printed, nothing moving |
 | `l3c_tank_drive` | 3 | Mixing forward with turn, and the failsafe |
-| `l4a_all_one_colour` | 4 | `for` loops over the strip, and the power budget |
+| `l4a_all_one_color` | 4 | `for` loops over the strip, and the power budget |
 | `l4b_led_map` | 4 | Where each of the 32 LED numbers physically is |
-| `l4c_patterns` | 4 | Functions: colour wipe, chase, rainbow, scanner |
+| `l4c_patterns` | 4 | Functions: color wipe, chase, rainbow, scanner |
 | `l5a_millis_not_delay` | 5 | Two jobs at two rates without blocking |
 | `l5b_button_toggle` | 5 | Edge detection, and the bug you get without it |
 | `l5c_drive_with_lights` | 5 | Everything together, one step short of the full program |
 
-`l5b_button_toggle` contains a **deliberate bug**, clearly labelled. One button
+`l5b_button_toggle` contains a **deliberate bug**, clearly labeled. One button
 is written correctly and one is not, so students can watch a single press
 register hundreds of times. Do not "fix" it.
 

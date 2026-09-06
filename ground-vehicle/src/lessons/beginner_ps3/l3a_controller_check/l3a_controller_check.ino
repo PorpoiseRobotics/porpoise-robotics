@@ -15,7 +15,7 @@
   BEFORE YOU CAN COMPILE THIS
   ---------------------------
   1. Board package: "esp32" by Espressif Systems, VERSION 3.0.7
-       Tools > Board > ESP32 Arduino > "ESP32 Dev Module".
+       Tools > Board > esp32 > "ESP32 Dev Module".
   2. Library: "PS3 Controller Host" by Jeffrey van Pernis
        Tools > Manage Libraries. Searching for "Ps3Controller" finds nothing -
        the display name is the longer one above.

@@ -37,7 +37,7 @@ PANEL_NAME = "CODE_PANEL"
 ALLOWED = {
     # generic C and Arduino, taught as language rather than as our code
     "for (int i = 0; i < 32; i++) {",
-    "strip.setPixelColor(i, colour);",
+    "strip.setPixelColor(i, color);",
     "strip.setPixelColor(0, white);",
     "strip.setPixelColor(1, white);",
     "strip.setPixelColor(2, white);",

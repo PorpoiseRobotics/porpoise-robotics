@@ -14,7 +14,7 @@
   BEFORE YOU CAN COMPILE THIS
   ---------------------------
   1. Board package: "esp32" by Espressif Systems, VERSION 3.0.7
-       Tools > Board > ESP32 Arduino > "ESP32 Dev Module".
+       Tools > Board > esp32 > "ESP32 Dev Module".
   2. Library: "Adafruit NeoPixel" by Adafruit
 
   HOW THE 32 LEDS ARE ARRANGED
@@ -82,10 +82,10 @@ void setup() {
   Lights one run of LEDs, from "first" to "last" inclusive, and says what it
   is doing on the Serial Monitor.
 */
-void showSide(const char *name, int first, int last, uint32_t colour) {
+void showSide(const char *name, int first, int last, uint32_t color) {
   strip.clear();
   for (int i = first; i <= last; i++) {
-    strip.setPixelColor(i, colour);
+    strip.setPixelColor(i, color);
   }
   strip.show();
 

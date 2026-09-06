@@ -8,7 +8,7 @@ image, so every word on every slide can be edited in PowerPoint afterwards.
 Design constraints, in priority order:
 
   1. PRINTABLE. White background, dark text, no full-bleed dark fills, nothing
-     that depends on colour alone to make sense in greyscale.
+     that depends on color alone to make sense in greyscale.
   2. EDITABLE. Titles live in the layout's title placeholder so the outline
      view works. Body text is in plain text frames.
   3. READABLE FROM THE BACK OF A ROOM. A hard floor on font size, and a slide
@@ -19,7 +19,7 @@ Porpoise Robotics decks.
 
 FITTING
 Text is measured before it is placed. If a block does not fit its box, the
-font steps down towards a floor; if it still does not fit, bullets() spills
+font steps down toward a floor; if it still does not fit, bullets() spills
 onto a continuation slide. That is why the deck builders can write as much as
 the lesson needs without counting lines.
 """
@@ -396,7 +396,7 @@ class Placeholder:
 
     Anywhere a slide kind takes an image path it will also take one of these,
     and it will also take the path of a photograph that does not exist. Either
-    way you get a labelled dashed box on the slide, in the space the picture
+    way you get a labeled dashed box on the slide, in the space the picture
     will occupy, saying what belongs there - so a gap in the artwork is
     visible on the slide rather than silently missing from it.
 
@@ -541,17 +541,17 @@ class Deck:
         box.text_frame.word_wrap = True
         # python-pptx builds an autoshape with algn="ctr" on its first
         # paragraph. Left is what we want everywhere unless a caller says
-        # otherwise, and a centred line of code looks broken.
+        # otherwise, and a centerd line of code looks broken.
         box.text_frame.paragraphs[0].alignment = PP_ALIGN.LEFT
         return box
 
     def _place_image(self, slide, image, left, top, width, height):
         """
-        A picture if we have one, a labelled dashed box if we do not.
+        A picture if we have one, a labeled dashed box if we do not.
 
         Returns the shape that was placed, or None if `image` was None. A
         picture keeps its aspect ratio inside the (width, height) box given
-        and is centred in it; a placeholder fills the box exactly, so the
+        and is centerd in it; a placeholder fills the box exactly, so the
         caption below it lands where the caption of the real photograph will.
         """
         if image is None:
@@ -1152,7 +1152,7 @@ class Deck:
         """
         A code slide. `lines` is the listing. `notes` is an optional list of
         short explanations shown down the right-hand side. `highlight` is a
-        set of zero-based line numbers to draw in the accent colour.
+        set of zero-based line numbers to draw in the accent color.
 
         A listing too long for one panel even at the code floor is split over
         continuation slides; the explanations stay with the first.

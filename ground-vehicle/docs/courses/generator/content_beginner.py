@@ -47,7 +47,7 @@ PS3 = {
     "pad_short": "PS3 controller",
     "full_program": "pathfinder_ps3",
     "board_pkg": "esp32  by Espressif Systems,  version 3.0.7",
-    "board_menu": "Tools > Board > ESP32 Arduino > \"ESP32 Dev Module\"",
+    "board_menu": "Tools > Board > esp32 > \"ESP32 Dev Module\"",
     "boards_url": None,
     "extra_lib": "\"PS3 Controller Host\" by Jeffrey van Pernis",
     "extra_lib_note": "Searching Library Manager for \"Ps3Controller\" finds nothing. "
@@ -55,7 +55,7 @@ PS3 = {
     "lib_short": "PS3 Controller Host",
     "lib_and": " + PS3 Controller Host",
     "drive_sketch": "lessons/beginner_ps3/l3c_tank_drive/l3c_tank_drive.ino",
-    "led_sketch": "lessons/beginner_ps3/l4a_all_one_colour/l4a_all_one_colour.ino",
+    "led_sketch": "lessons/beginner_ps3/l4a_all_one_color/l4a_all_one_color.ino",
     "pin_style": "pin",
     "stick_range": "-128 to +127",
     "deadzone_pct": "about 16%",
@@ -94,7 +94,7 @@ SWITCH = {
     "lib_short": "none (Bluepad32 ships with the board package)",
     "lib_and": "",
     "drive_sketch": "lessons/beginner_switch/l3c_tank_drive/l3c_tank_drive.ino",
-    "led_sketch": "lessons/beginner_switch/l4a_all_one_colour/l4a_all_one_colour.ino",
+    "led_sketch": "lessons/beginner_switch/l4a_all_one_color/l4a_all_one_color.ino",
     "pin_style": "channel",
     "stick_range": "-512 to +511",
     "deadzone_pct": "about 12%",
@@ -103,7 +103,7 @@ SWITCH = {
     "pwm_story": "This board package is built on an older ESP32 core, so you "
                  "work through numbered PWM channels.",
     "hero": img("vehicle-front-blue-leds.jpg"),
-    "pad_image": img("switch-controller-labelled.jpg"),
+    "pad_image": img("switch-controller-labeled.jpg"),
     "lock_story": "the VEHICLE is told which controller address it will accept",
     "lock_tool": "l3a_controller_check, which prints the address for you",
     "btn_scanner": "the TOP face button (marked X on most Switch pads)",
@@ -187,7 +187,7 @@ def lesson1(deck, T):
          "resistor is there",
         "Upload a program to the vehicle and change it",
         "Read what the vehicle prints back on the Serial Monitor",
-        "Light any one of the 32 LEDs, in any colour",
+        "Light any one of the 32 LEDs, in any color",
     ],
         speaker=[
             "Read these out. It takes forty seconds and it tells the room "
@@ -297,13 +297,13 @@ def lesson1(deck, T):
 
     deck.two_columns(
         "STEM, and where it shows up in this course",
-        "Maths and science you will actually use",
+        "Math and science you will actually use",
         [("Circumference and pi, to work out how far one wheel turn takes you", 0),
          ("Distance = speed x time, for every pre-programmed maneuver", 0),
          ("Ratios and percentages, for duty cycle", 0),
          ("Linear mapping, to turn a stick reading into a motor speed", 0),
          ("Ohm's law and power, for the LED current budget", 0),
-         ("Wavelength and colour perception, for the lighting", 0),
+         ("Wavelength and color perception, for the lighting", 0),
          ("Trigonometry, when you plot where a maneuver ends up", 0)],
         "Engineering practice",
         [("Reading somebody else's program before changing it", 0),
@@ -312,11 +312,11 @@ def lesson1(deck, T):
          ("Writing down what you measured", 0),
          ("Working out whether a fault is mechanical, electrical or software", 0),
          ("Version control, so a working program is never lost", 0)],
-        note="STEM is not four subjects. It is using maths and science to build "
+        note="STEM is not four subjects. It is using math and science to build "
              "something that has to actually work.",
         speaker=[
             "This is the slide to point at when somebody asks why they are "
-            "doing maths in a robotics class.",
+            "doing math in a robotics class.",
             "Every item on the left is used in a specific lesson, not in "
             "general. Say which: circumference and trigonometry in Lesson "
             "2, mapping in Lesson 3, Ohm's law in Lessons 2 and 4.",
@@ -355,7 +355,7 @@ def lesson1(deck, T):
         note="No steering rack. It turns by driving one side faster than the "
              "other, like a tank. That matters from Lesson 2 onwards.",
         speaker=[
-            "Name each part while holding a vehicle, then put the labelled "
+            "Name each part while holding a vehicle, then put the labeled "
             "picture up on the next slide and let them match the two.",
             "The tank-steering point is the one to land. Everything in Lesson 2 "
             "follows from it.",
@@ -363,7 +363,7 @@ def lesson1(deck, T):
 
     deck.image_slide(
         "Every part, called out",
-        img("vehicle-parts-labelled.jpg"),
+        img("vehicle-parts-labeled.jpg"),
         caption="Keep this page open for the rest of the lesson",
         speaker=[
             "Give them a minute to find each part on a real vehicle.",
@@ -393,7 +393,7 @@ def lesson1(deck, T):
 
     deck.image_slide(
         "The top plate is where your own work goes",
-        img("vehicle-dev-system-labelled.jpg"),
+        img("vehicle-dev-system-labeled.jpg"),
         caption="A cutout for the ESP32 pins, and clear space for a "
                 "breadboard, sensors and servos",
         speaker=[
@@ -447,7 +447,7 @@ def lesson1(deck, T):
         "four motors inside the frame",
         Placeholder(
             "PHOTO: a Gen 3 driving upside down",
-            "Wheels are at the vehicle's vertical centre, so it runs either "
+            "Wheels are at the vehicle's vertical center, so it runs either "
             "way up. Taken from floor level, mid-drive."),
         "Flip it over and it keeps going",
         lead="The two things that make a Gen 3 different are easiest to "
@@ -527,7 +527,7 @@ def lesson1(deck, T):
             "The next thirty-five minutes are the least fun part of the "
             "whole course. Say so, and promise them something blinking at "
             "the end of it.",
-            "Get the fast finishers helping their neighbours rather than "
+            "Get the fast finishers helping their neighbors rather than "
             "sitting idle.",
             "Have a spare laptop set up and working, so a machine that will "
             "not cooperate never blocks a whole group.",
@@ -547,7 +547,7 @@ def lesson1(deck, T):
           "vehicle, and read what the vehicle prints back.", 0),
          ("\"Compile\" means turn your C++ into the machine language the ESP32 "
           "runs. \"Upload\" means send that down the USB cable.", 0)],
-        note="If the install will not go through, pair up with a neighbour and "
+        note="If the install will not go through, pair up with a neighbor and "
              "carry on - you lose nothing today. Note down the error and we "
              "will sort the machine out afterwards.",
         speaker=[
@@ -729,8 +729,8 @@ def lesson1(deck, T):
         "Lit. These photographs use a 9 V battery; yours runs from GPIO 2.",
         lead="Bend the resistor legs, push everything into the board, and "
              "connect GPIO 2 and GND with the two jumper wires.",
-        note="Long leg of the LED towards the resistor and GPIO 2. Short leg "
-             "towards ground. Backwards means no light, no damage - just turn "
+        note="Long leg of the LED toward the resistor and GPIO 2. Short leg "
+             "toward ground. Backwards means no light, no damage - just turn "
              "it round.",
         note_kind="warn",
         speaker=[
@@ -950,7 +950,7 @@ def lesson1(deck, T):
          ("2.  Open the Serial Monitor and set the baud rate to 115200.", 0),
          ("3.  Press the EN (reset) button on the ESP32. Watch it start again.", 0),
          ("4.  Change the greeting to your group's name and upload.", 0),
-         ("5.  Change the two numbers in the maths section. PREDICT the answers "
+         ("5.  Change the two numbers in the math section. PREDICT the answers "
           "before you upload, then check.", 0),
          ("6.  Add a line of your own that prints every time round the loop.", 0)],
         expect=[("A greeting, some arithmetic, then one line per second "
@@ -981,14 +981,14 @@ def lesson1(deck, T):
         [("An ordinary LED has two wires and is either on or off.", 0),
          ("A NeoPixel has FOUR connections - power, ground, data in, data out - "
           "and a tiny controller chip inside it.", 0),
-         ("Send a colour message into the first one and it keeps the first "
+         ("Send a color message into the first one and it keeps the first "
           "message, then passes everything after it down the chain to the next.", 0),
          ("That is why all 32 LEDs on the vehicle need only ONE signal wire, "
           "on GPIO 5.", 0),
          ("It is also why they are NUMBERED, 0 to 31, in the order the data "
           "flows. You will map that out properly in Lesson 4.", 0),
          ("", 0),
-         ("Each one holds three LEDs: red, green and blue. Every colour you can "
+         ("Each one holds three LEDs: red, green and blue. Every color you can "
           "make is a mixture of those three, each from 0 to 255.", 0)],
         note="setPixelColor() only changes the ESP32's memory. Nothing happens "
              "on the vehicle until you call show(). This is the most common "
@@ -1031,7 +1031,7 @@ def lesson1(deck, T):
          "}"],
         filename="l1c_first_pixel.ino",
         notes=[("#include pulls in the library.", 0),
-               ("NEO_GRB says these LEDs want their colour data green first. "
+               ("NEO_GRB says these LEDs want their color data green first. "
                 "NEO_KHZ800 is the speed it is clocked out at. Both are correct "
                 "for the WS2812B parts we use.", 0),
                ("strip.begin() wakes the strip up. Always needed.", 0),
@@ -1062,7 +1062,7 @@ def lesson1(deck, T):
          ("2.  Change WHICH_LED to 15, then 16, then 31, uploading each time.", 0),
          ("3.  Draw the vehicle on paper and mark where LEDs 0, 8, 15, 16, 24 "
           "and 31 are. Keep that drawing - you need it in Lesson 4.", 0),
-         ("4.  Invent a colour with strip.Color(r, g, b). What do you get from "
+         ("4.  Invent a color with strip.Color(r, g, b). What do you get from "
           "(255, 255, 0)? From (128, 0, 128)?", 0),
          ("5.  Delete the strip.show() line and upload. What happens?", 0)],
         expect=[("One LED cycling red, green, blue, white, off.", 0)],
@@ -1179,7 +1179,7 @@ def _board_setup_slide(deck, T):
              ("3.  Find \"esp32 by Espressif Systems\".", 0),
              ("4.  In the version box choose 3.0.7 - NOT the latest.", 0),
              ("5.  Click Install and wait. It is a large download.", 0),
-             ("6.  Tools > Board > ESP32 Arduino > \"ESP32 Dev Module\".", 0),
+             ("6.  Tools > Board > esp32 > \"ESP32 Dev Module\".", 0),
              ("", 0),
              ("Package:  {}".format(T["board_pkg"]), 0)],
             note="Version 3.0.7 specifically. Newer versions changed the way PWM "
@@ -1228,8 +1228,8 @@ def lesson2(deck, T):
         "Explain why dead reckoning drifts",
     ],
         speaker=[
-            "Two of these are maths objectives and nobody minds, because by "
-            "the end they will have used the maths to predict where a "
+            "Two of these are math objectives and nobody minds, because by "
+            "the end they will have used the math to predict where a "
             "vehicle stops.",
             "The last one - explaining why dead reckoning drifts - is the "
             "one that matters most and takes the whole lesson to earn.",
@@ -1248,7 +1248,7 @@ def lesson2(deck, T):
         note_kind="safety",
         speaker=[
             "Sixty seconds. If anybody missed Lesson 1, this plus a "
-            "neighbour is enough to keep them with the class.",
+            "neighbor is enough to keep them with the class.",
             "Read the safety panel out loud rather than pointing at it.",
         ])
 
@@ -1262,7 +1262,7 @@ def lesson2(deck, T):
          ["1:25", "Upload l2b_speed_ramp. Duty against actual speed"],
          ["1:45", "STEM break: Ohm's law, and a circuit on a breadboard"],
          ["2:10", "BREAK  (10 minutes)"],
-         ["2:20", "Tank drive, mixing, and the maths that predicts the square"],
+         ["2:20", "Tank drive, mixing, and the math that predicts the square"],
          ["2:40", "Clear the floor. Upload l2c_maneuver_square and tune it"],
          ["2:57", "Sources of error, and what dead reckoning cannot do"]],
         col_widths=[1, 9],
@@ -1387,7 +1387,7 @@ def lesson2(deck, T):
             "with the point that the motor is too heavy to follow the "
             "switching, so it feels the average.",
             "Duty cycle is a percentage. Say the word percentage - it "
-            "connects this to maths they already have.",
+            "connects this to math they already have.",
             "The hardware does the switching, not their program. That is "
             "why they only ever write one number.",
         ])
@@ -1592,7 +1592,7 @@ def lesson2(deck, T):
         deck, title="Ohm's law, and the power law that goes with it")
 
     deck.bullets(
-        "Practise it",
+        "Practice it",
         [("Work these in your engineering notebook. Cover the unknown on the "
           "triangle with your thumb and the triangle tells you the sum.", 0),
          ("", 0),
@@ -1612,7 +1612,7 @@ def lesson2(deck, T):
         speaker=[
             "Give them four minutes, then take answers from the room rather "
             "than reading them out.",
-            "Question 4 is the one worth dwelling on - it connects the maths "
+            "Question 4 is the one worth dwelling on - it connects the math "
             "back to the vehicle they are about to drive.",
         ])
 
@@ -1682,7 +1682,7 @@ def lesson2(deck, T):
     diagrams.tank_mixing(deck)
 
     deck.bullets(
-        "The maths you need to predict where it ends up",
+        "The math you need to predict where it ends up",
         [("Wheel diameter is 3.0 inches.", 0),
          ("Circumference = pi x diameter = 3.1416 x 3.0 = 9.42 inches", 1),
          ("Distance per wheel turn = 9.42 / 12 = 0.79 feet", 1),
@@ -1782,7 +1782,7 @@ def lesson2(deck, T):
         "The same job, written three ways",
         ["// for  -  a known number of passes",
          "for (int i = 0; i < 32; i++) {",
-         "  strip.setPixelColor(i, colour);",
+         "  strip.setPixelColor(i, color);",
          "}",
          "",
          "// while  -  keep going until something changes",
@@ -1839,7 +1839,7 @@ def lesson2(deck, T):
                 "how far round each corner goes.", 0),
                ("Note the twenty second stop at the end. That is so the program "
                 "does not immediately start a second square while you are "
-                "walking towards it.", 0)],
+                "walking toward it.", 0)],
         size=14, highlight={4, 7},
         speaker=[
             "Read the for loop out loud as a sentence: four times, drive "
@@ -1860,7 +1860,7 @@ def lesson2(deck, T):
     deck.activity(
         "Do it now  -  drive a square",
         "l2c_maneuver_square",
-        [("1.  Clear a space about three metres square. Bags and feet out.", 0),
+        [("1.  Clear a space about three meters square. Bags and feet out.", 0),
          ("2.  Mark the starting point with a piece of tape.", 0),
          ("3.  Upload. It waits five seconds, then goes.", 0),
          ("4.  MEASURE one side of the square it actually drove.", 0),
@@ -2116,7 +2116,7 @@ def lesson3(deck, T):
          ("It hops between 79 narrow channels many times a second, so a busy "
           "band does not stop it. That is why twenty vehicles in one room "
           "actually works.", 0),
-         ("Range is tens of metres, and it goes down sharply if somebody stands "
+         ("Range is tens of meters, and it goes down sharply if somebody stands "
           "between the pad and the vehicle.", 0),
          ("", 0),
          ("Every Bluetooth device has an ADDRESS - six bytes, written as six "
@@ -2250,7 +2250,7 @@ def lesson3(deck, T):
         [("A thumbstick that has been thumbed by a hundred students does not "
           "come back to exactly zero.", 0),
          ("You just measured it. Yours probably reads a few counts either side "
-          "of centre when nobody is touching it.", 0),
+          "of center when nobody is touching it.", 0),
          ("", 0),
          ("If we fed that straight to the motors, the vehicle would creep across "
           "the room on its own while the controller sat on the desk. In a "
@@ -2324,7 +2324,7 @@ def lesson3(deck, T):
         "Do it now  -  watch the arithmetic",
         "l3b_deadzone_and_map",
         [("1.  Upload it. Nothing moves - this is print only.", 0),
-         ("2.  Push the stick VERY slowly from centre to full forward. Watch "
+         ("2.  Push the stick VERY slowly from center to full forward. Watch "
           "both columns. Where does the speed stop being 0?", 0),
          ("3.  Set STICK_DEADZONE to 0. Upload. Put the controller down and do "
           "not touch it. Does the speed stay at 0?", 0),
@@ -2458,7 +2458,7 @@ def lesson3(deck, T):
         [("A radio link is not reliable. Batteries go flat, people walk between "
           "the pad and the vehicle, controllers get switched off.", 0),
          ("", 0),
-         ("The only safe behaviour is to STOP. Not carry on with the last "
+         ("The only safe behavior is to STOP. Not carry on with the last "
           "command, and not do something clever.", 0),
          ("", 0),
          ("Three lines at the top of loop() do it:", 0),
@@ -2476,7 +2476,7 @@ def lesson3(deck, T):
         speaker=[
             "Slow down. This is the most transferable idea in the whole "
             "course.",
-            "The only safe behaviour is to stop. Not to carry on with the "
+            "The only safe behavior is to stop. Not to carry on with the "
             "last command, and not to be clever.",
             "Go round the examples: a drone hovers or returns home, a "
             "submersible surfaces, a ground vehicle stops. Ask why each is "
@@ -2500,7 +2500,7 @@ def lesson3(deck, T):
          ["Wheels spin the wrong way",
           "Motor pins swapped",
           "Swap that motor's two pin numbers in the sketch"],
-         ["It creeps with the stick centred",
+         ["It creeps with the stick centerd",
           "Deadzone too small",
           "Raise STICK_DEADZONE"],
          ["Nothing at all, no serial output",
@@ -2531,7 +2531,7 @@ def lesson3(deck, T):
          ("6.  Why is steering limited to half power by default?", 0),
          ("7.  Write the three lines that stop the vehicle when the controller "
           "disconnects.", 0)],
-        lead="Next lesson: the 32 LEDs, and what colour actually is.",
+        lead="Next lesson: the 32 LEDs, and what color actually is.",
         speaker=[
             "Conversation, not a test.",
             "Answers, in order: an address is the device's phone number and "
@@ -2742,7 +2742,7 @@ def _pad_map_slide(deck, T):
 
 def lesson4(deck, T):
     deck.title_slide(
-        "Addressable LEDs, colour, power budgets, and making 32 lights do "
+        "Addressable LEDs, color, power budgets, and making 32 lights do "
         "what you tell them.",
         BYLINE + ["", "Three hours.  Nothing moves today."],
         hero_image=img("vehicle-green-leds.jpg"), logo=LOGO,
@@ -2757,7 +2757,7 @@ def lesson4(deck, T):
 
     deck.objectives([
         "Explain how 32 LEDs are controlled independently over one wire",
-        "Mix any colour from red, green and blue values",
+        "Mix any color from red, green and blue values",
         "Work out the current a lighting pattern will draw, and say "
          "whether the battery can afford it",
         "Find any LED on the vehicle from its number, and the LED "
@@ -2795,8 +2795,8 @@ def lesson4(deck, T):
         "Today, in order",
         ["Time", "What we do"],
         [["0:00", "Recap. What an addressable LED is"],
-         ["0:25", "Colour: RGB, wavelength, and how your eye works"],
-         ["0:50", "The power budget. Upload l4a_all_one_colour"],
+         ["0:25", "Color: RGB, wavelength, and how your eye works"],
+         ["0:50", "The power budget. Upload l4a_all_one_color"],
          ["1:15", "BREAK  (10 minutes)"],
          ["1:25", "Mapping the loop. Upload l4b_led_map"],
          ["1:55", "for loops, and four patterns. Upload l4c_patterns"],
@@ -2819,7 +2819,7 @@ def lesson4(deck, T):
           "ground, DATA IN and DATA OUT. Inside it there is a tiny controller "
           "chip and three LEDs: one red, one green, one blue.", 0),
          ("", 0),
-         ("Send a stream of colour messages into the first pixel. It keeps the "
+         ("Send a stream of color messages into the first pixel. It keeps the "
           "FIRST message for itself and passes the rest out of its data-out pin "
           "to the next one, which does the same.", 0),
          ("", 0),
@@ -2848,13 +2848,13 @@ def lesson4(deck, T):
         ["Call", "What it does"],
         [["strip.begin()", "Wakes the strip up. Once, in setup(). Always required."],
          ["strip.setBrightness(n)", "Master scale, 0 to 255, applied to every pixel"],
-         ["strip.Color(r, g, b)", "Packs three 0-255 numbers into one colour value"],
+         ["strip.Color(r, g, b)", "Packs three 0-255 numbers into one color value"],
          ["strip.setPixelColor(i, c)", "Sets pixel i - IN MEMORY ONLY"],
-         ["strip.fill(c)", "Sets every pixel to the same colour, in memory"],
+         ["strip.fill(c)", "Sets every pixel to the same color, in memory"],
          ["strip.clear()", "Sets every pixel to off, in memory"],
          ["strip.show()", "Sends the memory to the hardware. Nothing happens without it."],
          ["strip.numPixels()", "How many there are - 32 here"],
-         ["strip.gamma32(c)", "Corrects a colour so fades look even to your eye"]],
+         ["strip.gamma32(c)", "Corrects a color so fades look even to your eye"]],
         lead="Nine calls. Everything in Lesson 4 and everything in the vehicle "
              "program is built from these.",
         col_widths=[3.4, 7.6],
@@ -2874,7 +2874,7 @@ def lesson4(deck, T):
     diagrams.rgb_mixing(deck)
 
     deck.bullets(
-        "setBrightness is not the same as a smaller colour value",
+        "setBrightness is not the same as a smaller color value",
         [("There are two ways to make an LED dimmer, and they are not "
           "interchangeable.", 0),
          ("", 0),
@@ -2884,34 +2884,34 @@ def lesson4(deck, T):
          ("", 0),
          ("strip.setBrightness(60) scales EVERY channel of EVERY pixel on the "
           "way out. It changes how bright the whole strip is without changing "
-          "any of the colours you set.", 0),
+          "any of the colors you set.", 0),
          ("", 0),
          ("Two things worth knowing about setBrightness:", 0),
          ("It is applied when show() is called, so changing it does nothing "
           "until the next show().", 1),
          ("It is LOSSY. Set a pixel to 4, scale by 60/255, and it rounds to 0. "
-          "Very dim colours disappear rather than getting dimmer, which is why "
+          "Very dim colors disappear rather than getting dimmer, which is why "
           "a fade can end abruptly.", 1),
          ("", 0),
          ("Rule of thumb: use setBrightness once, in setup(), to fix the "
-          "overall level for the room and the power budget. Use the colour "
+          "overall level for the room and the power budget. Use the color "
           "values for everything else.", 0)],
         lead="Two different dimmers",
         speaker=[
             "This distinction confuses people for years. Ten minutes here "
             "saves hours later.",
-            "Colour value changes WHAT you asked for. Brightness scales "
+            "Color value changes WHAT you asked for. Brightness scales "
             "EVERYTHING on the way out.",
             "The lossy point explains a real bug they will hit: a fade that "
             "ends abruptly instead of going smoothly to black.",
             "Rule of thumb worth repeating: set brightness once in setup, "
-            "then work in colour values.",
+            "then work in color values.",
         ])
 
     deck.two_columns(
-        "How your eye turns wavelengths into colour",
+        "How your eye turns wavelengths into color",
         "The physics",
-        [("Visible light runs from about 380 nanometres, which you see as "
+        [("Visible light runs from about 380 nanometers, which you see as "
           "violet, to about 750, which you see as deep red.", 0),
          ("Red      625 - 740 nm", 1),
          ("Yellow   565 - 590 nm", 1),
@@ -2927,7 +2927,7 @@ def lesson4(deck, T):
          ("Your brain compares them: red minus green, and blue minus red plus "
           "green. That comparison is called OPPONENCY.", 0),
          ("", 0),
-         ("This is why three LEDs can fake every colour you can see. They are "
+         ("This is why three LEDs can fake every color you can see. They are "
           "not producing yellow light - they are producing red and green light "
           "in the ratio that makes your cones report yellow.", 0),
          ("Dogs have two cone types. Some birds have four.", 0)],
@@ -2937,7 +2937,7 @@ def lesson4(deck, T):
         speaker=[
             "This is the science half of the lesson and it is genuinely "
             "interesting. Do not rush it because it is not code.",
-            "The key idea: three LEDs can fake every colour because your "
+            "The key idea: three LEDs can fake every color because your "
             "eye only has three kinds of sensor to fool.",
             "Yellow light and red-plus-green light are physically different "
             "and look identical. That surprises people, and it should.",
@@ -2957,7 +2957,7 @@ def lesson4(deck, T):
           "heat. Two things keep it sane:", 0),
          ("setBrightness() scales EVERY pixel before it is sent. At 60 out of "
           "255 you draw roughly a quarter of the worst case.", 1),
-         ("Coloured light is cheaper than white. Pure red only lights one of "
+         ("Colored light is cheaper than white. Pure red only lights one of "
           "the three, so it costs about a third of what white costs.", 1),
          ("", 0),
          ("That is why the vehicle programs run at about 120 rather than 255, "
@@ -2971,7 +2971,7 @@ def lesson4(deck, T):
             "multiplications and it makes the constraint real.",
             "Nearly two amps and nearly ten watts through a small board. "
             "That is why the number in the program is 120 and not 255.",
-            "Coloured light is cheaper than white - pure red lights one of "
+            "Colored light is cheaper than white - pure red lights one of "
             "the three channels instead of all three. Ask them to work out "
             "yellow before you tell them.",
             "This is Ohm's law from Lesson 2, used for something real. "
@@ -2986,17 +2986,17 @@ def lesson4(deck, T):
         ])
 
     deck.activity(
-        "Do it now  -  all 32, one colour at a time",
-        "l4a_all_one_colour",
+        "Do it now  -  all 32, one color at a time",
+        "l4a_all_one_color",
         [("1.  Upload it. Watch both the vehicle and the Serial Monitor.", 0),
-         ("2.  Note the estimated current for each colour. Which is cheapest? "
+         ("2.  Note the estimated current for each color. Which is cheapest? "
           "Which is most expensive? Why?", 0),
          ("3.  Change BRIGHTNESS to 255 and upload. After a minute of white, "
           "put your hand near the LED bars - carefully.", 0),
          ("4.  Put it back to 60.", 0),
          ("5.  Change the for loop to  i = i + 2. What happens, and why?", 0),
          ("6.  Look up strip.fill(). Can you replace the loop with one line?", 0)],
-        expect=[("All 32 LEDs cycling through seven colours and off, with the "
+        expect=[("All 32 LEDs cycling through seven colors and off, with the "
                  "estimated current printed for each.", 0)],
         questions=[("Yellow costs about twice what red costs. Why?", 0),
                    ("At brightness 60, what is the worst-case current?", 0)],
@@ -3040,7 +3040,7 @@ def lesson4(deck, T):
         minutes=25,
         speaker=[
             "This is the activity that pays off for the rest of the course. "
-            "Make sure every group finishes with a labelled drawing they "
+            "Make sure every group finishes with a labeled drawing they "
             "keep.",
             "Vehicles all facing the same way, or the left-and-right "
             "conversation gets confusing fast.",
@@ -3092,7 +3092,7 @@ def lesson4(deck, T):
     deck.two_columns(
         "Four patterns, four ideas",
         "colorWipe  and  theaterChase",
-        [("colorWipe fills the strip one LED at a time, in order, so the colour "
+        [("colorWipe fills the strip one LED at a time, in order, so the color "
           "appears to sweep along it.", 0),
          ("One loop, one delay per LED.", 1),
          ("", 0),
@@ -3103,7 +3103,7 @@ def lesson4(deck, T):
           "in threes.", 1)],
         "rainbow  and  scanner",
         [("rainbow uses HUE instead of red, green and blue - one number that "
-          "goes all the way round the colour wheel, 0 to 65535.", 0),
+          "goes all the way round the color wheel, 0 to 65535.", 0),
          ("Each LED gets a hue slightly further round, which spreads a "
           "rainbow along the strip. Then the start point creeps forward so "
           "it appears to flow.", 1),
@@ -3123,7 +3123,7 @@ def lesson4(deck, T):
             "theaterChase is the one with three nested loops. If anybody is "
             "going to get lost today it is here, so slow down.",
             "Hue is the interesting one: a single number that goes all the "
-            "way round the colour wheel, instead of three separate "
+            "way round the color wheel, instead of three separate "
             "channels.",
             "The scanner is the one they will remember. Mention that it "
             "comes back in Lesson 5, done properly without delay().",
@@ -3141,11 +3141,11 @@ def lesson4(deck, T):
          ("2.  In colorWipe, change the wait from 30 to 5, then to 150.", 0),
          ("3.  In theaterChase, change BOTH 3s to 4s. What changes?", 0),
          ("4.  Change SCANNER_TAIL from 3 to 0, then to 8.", 0),
-         ("5.  Change the scanner colour to blue. You now have a Cylon instead "
+         ("5.  Change the scanner color to blue. You now have a Cylon instead "
           "of KITT.", 0),
          ("6.  Copy colorWipe, rename it, and make it run BACKWARDS. Call it "
           "from loop().", 0)],
-        expect=[("Colour wipe, theatre chase, a flowing rainbow, then the "
+        expect=[("Color wipe, theatre chase, a flowing rainbow, then the "
                  "scanner sweeping front and rear together.", 0)],
         questions=[("In theaterChase, why does the inner loop step in threes?", 0),
                    ("What does >> 1 do to a number? Why does that dim an LED?", 0)],
@@ -3159,7 +3159,7 @@ def lesson4(deck, T):
             "The inner loop steps in threes because only every third LED is "
             "lit at once. Get that from the room.",
             ">> 1 halves a number by shifting its bits right, which is a "
-            "cheap way to dim a colour. Show it on the board if they have "
+            "cheap way to dim a color. Show it on the board if they have "
             "not met bit shifts.",
         ])
 
@@ -3196,7 +3196,7 @@ def lesson4(deck, T):
             "lesson.",
             "The stoplight and the D-pad quadrants are the two easiest "
             "starting points if a group is stuck - both are for loops over a "
-            "known range, which is exactly what they just practised.",
+            "known range, which is exactly what they just practiced.",
         ])
 
     deck.table(
@@ -3208,8 +3208,8 @@ def lesson4(deck, T):
          ["Only the first few light",
           "LED_COUNT too small",
           "It must be 32, not 12 or 16"],
-         ["Colours are wrong - red shows green",
-          "Wrong colour order",
+         ["Colors are wrong - red shows green",
+          "Wrong color order",
           "Check NEO_GRB in the constructor"],
          ["The last few flicker",
           "Not enough power, or a long data run",
@@ -3241,7 +3241,7 @@ def lesson4(deck, T):
          ("2.  What are the four connections on a NeoPixel?", 0),
          ("3.  You call setPixelColor for LEDs 0 to 15 but nothing lights up. "
           "What did you forget?", 0),
-         ("4.  What colour is strip.Color(255, 255, 0)? Why?", 0),
+         ("4.  What color is strip.Color(255, 255, 0)? Why?", 0),
          ("5.  32 pixels of full white draw about how much current?", 0),
          ("6.  Which LEDs are on the LEFT side of the vehicle?", 0),
          ("7.  Which LED is directly opposite front LED 6?", 0),
@@ -3289,7 +3289,7 @@ def lesson5(deck, T):
         "Detect the edge of a button press, and say what happens "
          "without it",
         "Explain what a dirty flag saves",
-        "Drive the vehicle with its full lighting behaviour running",
+        "Drive the vehicle with its full lighting behavior running",
         "Calibrate your vehicle's speed and race it",
     ],
         speaker=[
@@ -3305,10 +3305,10 @@ def lesson5(deck, T):
         [("Lesson 1  -  the toolchain, the three parts of a program, digital "
           "output, the Serial Monitor.", 0),
          ("Lesson 2  -  H-bridges, PWM and duty cycle, tank drive, dead "
-          "reckoning, and the maths that predicts where the vehicle ends up.", 0),
+          "reckoning, and the math that predicts where the vehicle ends up.", 0),
          ("Lesson 3  -  Bluetooth, one vehicle per controller, deadzones, map(), "
           "mixing, and the failsafe.", 0),
-         ("Lesson 4  -  addressable LEDs, colour and perception, the power "
+         ("Lesson 4  -  addressable LEDs, color and perception, the power "
           "budget, the LED map, and four patterns.", 0),
          ("", 0),
          ("Today: two more ideas, and then all of it at once.", 0)],
@@ -3611,7 +3611,7 @@ def lesson5(deck, T):
         [("1.  Wheels off the ground. Upload. Check the controls.", 0),
          ("2.  Put it down and drive. Watch the lights follow the stick: "
           "headlights, tail lights, brake lights when you stop, white in "
-          "reverse, amber on the side you are turning towards.", 0),
+          "reverse, amber on the side you are turning toward.", 0),
          ("3.  Press {} to toggle the lights.".format(T["btn_lights"]), 0),
          ("4.  D-pad up and down for bright and dim headlights.", 0),
          ("5.  Make the turn signals BLINK rather than stay on. Use millis(), "
@@ -3673,7 +3673,7 @@ def lesson5(deck, T):
           "program drives them from the RIGHT stick.", 0),
          ("", 0),
          ("Each servo owns one direction of the stick, so one stick aims "
-          "four independent things and each sits centred when the stick is "
+          "four independent things and each sits centerd when the stick is "
           "not pushed its way.", 0),
          ("", 0),
          ("A pan and tilt mount is the obvious first use: two servos, one "
@@ -3789,9 +3789,9 @@ def lesson5(deck, T):
             "Answers: the NeoPixel protocol is fussy enough to be worth a "
             "library, whereas a motor is two pins and a duty value - "
             "ledcWrite is already in the core.",
-            "The four arguments are how many pixels, which pin, the colour "
+            "The four arguments are how many pixels, which pin, the color "
             "order these parts want, and the speed they are clocked at.",
-            "The deadzone stops a stick that never quite centres from "
+            "The deadzone stops a stick that never quite centers from "
             "driving the vehicle. At 0 it creeps across the room on its own.",
             "An enum because the compiler can check it and a person can read "
             "it. LIGHTS_REVERSE says what it means; 3 does not.",
@@ -3969,7 +3969,7 @@ def lesson5(deck, T):
           "whether you become a doctor, a lawyer or a scientist, STEM will help "
           "you.", 0),
          ("", 0),
-         ("What you have actually practised this term: reading somebody else's "
+         ("What you have actually practiced this term: reading somebody else's "
           "code, changing one thing at a time, measuring instead of guessing, "
           "and working out whether a fault is mechanical, electrical or "
           "software.", 0),
@@ -3995,7 +3995,7 @@ def lesson5(deck, T):
          ("3.  Why does unsigned long matter for millis()?", 0),
          ("4.  What is edge detection, and what goes wrong without it?", 0),
          ("5.  What is a dirty flag, and what does it save?", 0),
-         ("6.  A servo is centred by a pulse of what length? How often is it "
+         ("6.  A servo is centerd by a pulse of what length? How often is it "
           "sent?", 0),
          ("7.  Name three things the full program does that l5c does not.", 0),
          ("8.  Your vehicle drifts left on the drag strip. Give one mechanical "
@@ -4011,7 +4011,7 @@ def lesson5(deck, T):
             "Edge detection catches the moment a button goes down; without "
             "it one press registers thousands of times. A dirty flag saves "
             "redrawing the strip when nothing changed.",
-            "A servo centres on a 1.5 ms pulse, sent every 20 ms.",
+            "A servo centers on a 1.5 ms pulse, sent every 20 ms.",
             "For question 8: mechanically, one motor weaker or a wheel "
             "dragging; in software, a small turn correction added to the "
             "straight-line command.",

@@ -8,7 +8,7 @@ once anybody has edited them in PowerPoint, they are the source of truth.
 Re-running this script OVERWRITES them and any hand edits go with them.
 
 This script exists so the first version of the decks is reproducible and so a
-change that affects all fifteen - a new house colour, a corrected pin number -
+change that affects all fifteen - a new house color, a corrected pin number -
 can be made in one place. If you have edited a deck by hand, edit it by hand
 from then on.
 """

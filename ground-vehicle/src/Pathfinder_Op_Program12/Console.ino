@@ -215,8 +215,8 @@ void handleSerialCommands() {
 
 /*
   Prints button codes the moment they change, and raw stick values at 4 Hz
-  while any axis is off centre. Useful for working out what a third-party
-  controller actually sends, and for spotting a stick that no longer centres.
+  while any axis is off center. Useful for working out what a third-party
+  controller actually sends, and for spotting a stick that no longer centers.
 */
 void report_controller_state(ControllerPtr gp, unsigned long now) {
   uint32_t buttons = gp->buttons();

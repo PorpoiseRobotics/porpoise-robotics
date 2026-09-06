@@ -134,7 +134,7 @@ def lesson1(deck):
         "Where this course goes",
         ["Lesson", "Subject", "The idea underneath it"],
         [["1", "Architecture and the toolchain", "Separate subsystems, and a way to talk to them"],
-         ["2", "Motors, resolution and ramping", "Control quality, and integer maths that lies"],
+         ["2", "Motors, resolution and ramping", "Control quality, and integer math that lies"],
          ["3", "Bluetooth and persistent storage", "Identity that survives a power cycle"],
          ["4", "The lighting state machine", "Never block, and never redraw for nothing"],
          ["5", "Sensors, self-test, diagnostics", "A machine that can check itself"]],
@@ -210,7 +210,7 @@ def lesson1(deck):
          ("Two separate builds means two things to keep in step, and somebody "
           "eventually flashes the wrong one.", 0),
          ("", 0),
-         ("The answer: DETECT the hardware at boot and switch behaviour on what "
+         ("The answer: DETECT the hardware at boot and switch behavior on what "
           "is actually there.", 0)],
         "How Op 12 does it",
         [("Wire.begin(SDA, SCL);", 1),
@@ -279,7 +279,7 @@ def lesson1(deck):
         [["Pathfinder_Op_Program12.ino", "setup(), loop(), the hardware objects, the shared state"],
          ["Config.h", "Every tunable number and every custom type"],
          ["Motors.ino", "PWM setup, drive modes, ramping, servos, throttle modes"],
-         ["Lighting.ino", "Colour helpers, every animation, the lighting state machine"],
+         ["Lighting.ino", "Color helpers, every animation, the lighting state machine"],
          ["Bluetooth.ino", "Connection callbacks, the allowlist, the pairing workflow"],
          ["Console.ino", "The serial command interface, EEPROM settings, diagnostics"],
          ["Sensors.ino", "The INA219 driver"],
@@ -348,7 +348,7 @@ def lesson1(deck):
          ("A serial console turns it into something you can interrogate:", 0),
          ("help      what can this thing do", 1),
          ("diag      what does it think is happening right now", 1),
-         ("pair      change its behaviour without a laptop full of toolchains", 1),
+         ("pair      change its behavior without a laptop full of toolchains", 1),
          ("dynamics  retune the deadzones between races", 1),
          ("", 0),
          ("The practical difference: at a track event, tuning a vehicle stops "
@@ -492,7 +492,7 @@ def lesson1(deck):
             "The order is the lesson, not the code. Walk down it and ask "
             "why each step is where it is.",
             "Settings first, because everything after may depend on them. "
-            "Then detect the hardware, because behaviour branches on it.",
+            "Then detect the hardware, because behavior branches on it.",
             "Motors before lights, because getting the outputs into a safe "
             "state matters more than anything pretty.",
             "Radio last, because a controller connecting to a "
@@ -575,7 +575,7 @@ def lesson1(deck):
          ("6.  Why does setup() initialise the motors before the LEDs?", 0),
          ("7.  Every tab can see every global. Why is that both the convenience "
           "and the danger?", 0)],
-        lead="Next lesson: motors, and integer maths that quietly lies to you.",
+        lead="Next lesson: motors, and integer math that quietly lies to you.",
         speaker=[
             "Conversation, not a test.",
             "Answers: Config.h is a header because generated prototypes sit "
@@ -856,7 +856,7 @@ def lesson2(deck):
     deck.activity(
         "Do it now  -  decay modes and ramping",
         "a2b_coast_brake_hybrid",
-        [("1.  sign, then  go 100. Now pinch the tyre gently.", 0),
+        [("1.  sign, then  go 100. Now pinch the tire gently.", 0),
          ("2.  hybrid, then  go 100. Pinch it again. Which holds its speed?", 0),
          ("3.  Find the lowest  go  value that turns the wheel in each mode.", 0),
          ("4.  ramp off, then  go 1023  from a standstill. Then  ramp on  and "
@@ -871,7 +871,7 @@ def lesson2(deck):
         safety="Wheels off the ground. One motor, up to full power.",
         minutes=35,
         speaker=[
-            "Steps 1 and 2 are a feel test. Pinching the tyre gently is the "
+            "Steps 1 and 2 are a feel test. Pinching the tire gently is the "
             "load - warn them to be gentle and to keep fingers clear of the "
             "spokes.",
             "Step 6 recreates the bug deliberately. Watching the printout "
@@ -917,7 +917,7 @@ def lesson2(deck):
             "constrain() before map(), because map() does not clamp. Ask "
             "what happens if you do it the other way round.",
             "Sign comes off at the start and goes back on at the end, so "
-            "the maths in the middle only ever deals with positive numbers.",
+            "the math in the middle only ever deals with positive numbers.",
         ])
 
     deck.two_columns(
@@ -939,7 +939,7 @@ def lesson2(deck):
          ("servo 2  -  stick left", 1),
          ("servo 4  -  stick right", 1),
          ("", 0),
-         ("Each sits centred whenever the stick is not pushed its way, so one "
+         ("Each sits centerd whenever the stick is not pushed its way, so one "
           "stick aims four independent things.", 0),
          ("", 0),
          ("Travel is 1.0 to 2.0 ms. 11.2 used 0.5 to 2.5, which can drive a "
@@ -952,7 +952,7 @@ def lesson2(deck):
             "vehicle feel broken, a steering cap makes it feel "
             "controllable. Ask whether they agree.",
             "The four-servo scheme surprises people. One stick, four "
-            "servos, each owning one direction and centred otherwise.",
+            "servos, each owning one direction and centerd otherwise.",
             "1.0 to 2.0 ms is the corrected travel. Point back to the "
             "change log in Lesson 1 - the old range could drive a servo "
             "into its stops.",
@@ -1475,7 +1475,7 @@ def lesson4(deck):
          ["0:50", "Non-blocking animation as a discipline"],
          ["1:10", "Upload a4a_led_state_machine. Measure a redraw"],
          ["1:40", "BREAK  (10 minutes)"],
-         ["1:50", "Colour helpers, and why they are written out longhand"],
+         ["1:50", "Color helpers, and why they are written out longhand"],
          ["2:10", "Turn signal geometry. Upload a4b_turn_signal_larson"],
          ["2:35", "BREAK  (10 minutes)"],
          ["2:45", "Add a mode of your own"]],
@@ -1636,7 +1636,7 @@ def lesson4(deck):
         ])
 
     deck.two_columns(
-        "Colour helpers, written out longhand",
+        "Color helpers, written out longhand",
         "What 11.2 got from FastLED",
         [("CRGB, fill_solid(), nscale8(), sin8() - all free.", 0),
          ("", 0),
@@ -1647,7 +1647,7 @@ def lesson4(deck):
          ("So the handful of helpers we actually relied on are written out in "
           "Lighting.ino.", 0)],
         "Why that turned out to be a good thing",
-        [("scale_colour() unpacks a 32-bit colour into three bytes, scales "
+        [("scale_color() unpacks a 32-bit color into three bytes, scales "
           "each, and repacks it. Four lines, and now the bit-shifting is "
           "visible instead of magic.", 0),
          ("", 0),
@@ -1678,7 +1678,7 @@ def lesson4(deck):
          ("front, left to right :   0 .. 15    left half 0-7,  right half 8-15", 1),
          ("rear,  right to left :  16 .. 31    right half 16-23, left half 24-31", 1),
          ("", 0),
-         ("The bar has to grow OUTWARD from the centre of the vehicle towards "
+         ("The bar has to grow OUTWARD from the center of the vehicle toward "
           "the corner that is turning, on both bars at once.", 0),
          ("", 0),
          ("LEFT signal:", 0),
@@ -1697,7 +1697,7 @@ def lesson4(deck):
             "The strip is ONE loop, so the two halves of each side run in "
             "opposite directions. That is the whole reason the arithmetic "
             "is asymmetric.",
-            "The bar grows outward from the centre towards the turning "
+            "The bar grows outward from the center toward the turning "
             "corner, on both bars at once. Trace it with a finger before "
             "showing the indices.",
             "Take the advice on the slide seriously: do not derive it. Step "
@@ -1713,7 +1713,7 @@ def lesson4(deck):
          "  fill_range(LEFT_FRONT_START, CORNER_LEN * 2, headlights);",
          "  fill_range(RIGHT_REAR_START, CORNER_LEN * 2, taillights);",
          "}",
-         "// ...then blank the signalling side, then draw the amber over it.",
+         "// ...then blank the signaling side, then draw the amber over it.",
          "// Painting only the amber would leave the last frame underneath.",
          "",
          "// 2. The animation finishes its own cycles.",
@@ -1762,7 +1762,7 @@ def lesson4(deck):
          ("5.  Change the LEFT branch to use LEFT_FRONT_START + i and see "
           "what breaks. Explain it.", 0),
          ("6.  Make the trailing edge FADE rather than switch off abruptly.", 0)],
-        expect=[("Amber growing outward from the centre towards the turning "
+        expect=[("Amber growing outward from the center toward the turning "
                  "corner, front and rear mirrored.", 0)],
         questions=[("Why does the front index count down for a left signal but "
                     "up for a right one?", 0),
@@ -1776,7 +1776,7 @@ def lesson4(deck):
             "wrong way, inward instead of outward, and they should be able "
             "to say why.",
             "Step 6 is open-ended. A fading trailing edge needs "
-            "scale_colour(), which they met two slides ago.",
+            "scale_color(), which they met two slides ago.",
             "Answers: the front counts down for a left signal because the "
             "left half of the front bar is indices 0 to 7 and the growth is "
             "outward from 8; without the base repaint you would see the "
@@ -1863,7 +1863,7 @@ def lesson4(deck):
             "Start with why a linear fade looks wrong: it appears to hover "
             "at the ends and rush through the middle.",
             "A sine slows at the extremes, which is what your eye expects. "
-            "That is a perception point, like the colour lesson in the "
+            "That is a perception point, like the color lesson in the "
             "beginner course.",
             "The 0..255 in, 0..255 out convention keeps floating point out "
             "of the caller entirely. Worth noticing as an interface design "
@@ -1932,7 +1932,7 @@ def lesson4(deck):
             "Each frame repaints the headlights so the previous frame is "
             "not left underneath.",
             "The front counts down for a left signal because the growth is "
-            "outward from the centre of the bar.",
+            "outward from the center of the bar.",
             "The signal finishes its cycles because that is what a real "
             "indicator does.",
             "For question 8: one enum value, one set of constants, one "
@@ -2086,7 +2086,7 @@ def lesson5(deck):
          ("", 0),
          ("Reading five millivolts accurately is the sensor's entire job. The "
           "shunt register reports in units of 10 microvolts, which is where the "
-          "0.01 in the maths comes from.", 0)],
+          "0.01 in the math comes from.", 0)],
         lead="A tiny resistor, and Ohm's law",
         speaker=[
             "You cannot measure current directly. Say that first - it is "
@@ -2244,7 +2244,7 @@ def lesson5(deck):
         ])
 
     deck.two_columns(
-        "Diagnostics, and the battery maths you can now do",
+        "Diagnostics, and the battery math you can now do",
         "What  diag  gives you",
         [("Every five seconds, while it is switched on:", 0),
          ("VBat   - bus voltage, straight from the sensor", 1),

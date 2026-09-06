@@ -64,7 +64,7 @@ void setup() {
   Serial.println();
 
   // --- Arithmetic, and one trap worth meeting early ---
-  Serial.println("--- Maths ---");
+  Serial.println("--- Math ---");
   Serial.print("7 + 2 = ");  Serial.println(7 + 2);
   Serial.print("7 - 2 = ");  Serial.println(7 - 2);
   Serial.print("7 * 2 = ");  Serial.println(7 * 2);

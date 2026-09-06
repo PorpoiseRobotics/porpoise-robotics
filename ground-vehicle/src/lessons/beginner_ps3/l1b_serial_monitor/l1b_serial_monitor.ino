@@ -15,7 +15,7 @@
   BEFORE YOU CAN COMPILE THIS
   ---------------------------
   Board package: "esp32" by Espressif Systems, VERSION 3.0.7
-    Tools > Board > ESP32 Arduino > "ESP32 Dev Module".
+    Tools > Board > esp32 > "ESP32 Dev Module".
   Libraries: none.
 
   HOW TO SEE THE OUTPUT
@@ -64,7 +64,7 @@ void setup() {
   Serial.println();
 
   // --- Arithmetic, and one trap worth meeting early ---
-  Serial.println("--- Maths ---");
+  Serial.println("--- Math ---");
   Serial.print("7 + 2 = ");  Serial.println(7 + 2);
   Serial.print("7 - 2 = ");  Serial.println(7 - 2);
   Serial.print("7 * 2 = ");  Serial.println(7 * 2);

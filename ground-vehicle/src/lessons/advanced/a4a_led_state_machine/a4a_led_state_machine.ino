@@ -125,24 +125,24 @@ uint32_t rgb(uint8_t r, uint8_t g, uint8_t b) {
   return strip.Color(r, g, b);
 }
 
-// Scales a packed colour towards black. 255 leaves it alone, 0 turns it off.
-uint32_t scaleColour(uint32_t colour, uint8_t scale) {
-  uint8_t r = (uint8_t)(colour >> 16);
-  uint8_t g = (uint8_t)(colour >> 8);
-  uint8_t b = (uint8_t)colour;
+// Scales a packed color toward black. 255 leaves it alone, 0 turns it off.
+uint32_t scaleColor(uint32_t color, uint8_t scale) {
+  uint8_t r = (uint8_t)(color >> 16);
+  uint8_t g = (uint8_t)(color >> 8);
+  uint8_t b = (uint8_t)color;
   return strip.Color((r * scale) / 255, (g * scale) / 255, (b * scale) / 255);
 }
 
-void fillRange(int first, int count, uint32_t colour) {
+void fillRange(int first, int count, uint32_t color) {
   for (int i = first; i < first + count && i < NUM_LEDS; i++) {
-    strip.setPixelColor(i, colour);
+    strip.setPixelColor(i, color);
   }
 }
 
 /*
   An 8-bit sine: feed it 0..255 for one full turn and it returns 0..255 with
   128 as the midpoint. Op 11.2 got this free from FastLED; Op 12 writes it out,
-  which makes the maths visible instead of magic.
+  which makes the math visible instead of magic.
 */
 uint8_t sine8(uint8_t theta) {
   float radians = (theta / 256.0f) * 2.0f * PI;
@@ -186,7 +186,7 @@ void updatePairingBreathing(unsigned long now) {
   uint8_t phase = (uint8_t)((now % BREATHE_PERIOD_MS) * 255 / BREATHE_PERIOD_MS);
   uint8_t level = map(sine8(phase), 0, 255, 0, BREATHE_MAX);
 
-  fillRange(0, NUM_LEDS, scaleColour(rgb(0, 50, 255), level));
+  fillRange(0, NUM_LEDS, scaleColor(rgb(0, 50, 255), level));
   strip.show();
 }
 
@@ -197,15 +197,15 @@ void updatePairingBreathing(unsigned long now) {
 void drawKittFrame() {
   strip.clear();
 
-  uint32_t base = scaleColour(rgb(KITT_R, KITT_G, KITT_B), KITT_BRIGHTNESS);
+  uint32_t base = scaleColor(rgb(KITT_R, KITT_G, KITT_B), KITT_BRIGHTNESS);
 
   for (int tail = 0; tail <= KITT_TAIL; tail++) {
     int pos = kitt_pos - (kitt_dir * tail);
     if (pos < 0 || pos > FRONT_LAST) continue;
 
-    uint32_t colour = scaleColour(base, 255 >> tail);
-    strip.setPixelColor(pos, colour);
-    strip.setPixelColor(REAR_LAST - pos, colour);
+    uint32_t color = scaleColor(base, 255 >> tail);
+    strip.setPixelColor(pos, color);
+    strip.setPixelColor(REAR_LAST - pos, color);
   }
 
   strip.show();

@@ -134,9 +134,9 @@ void run_self_test() {
       if (now - test_phase_start >= PASS_BLINK_DELAY) {
         test_phase_start = now;
         blink_state = !blink_state;
-        uint32_t colour = blink_state ? (self_test_passed ? rgb(0, 255, 0) : rgb(255, 0, 0))
+        uint32_t color = blink_state ? (self_test_passed ? rgb(0, 255, 0) : rgb(255, 0, 0))
                                       : rgb(0, 0, 0);
-        fill_range(0, NUM_LEDS, colour);
+        fill_range(0, NUM_LEDS, color);
         strip.show();
       }
       break;
