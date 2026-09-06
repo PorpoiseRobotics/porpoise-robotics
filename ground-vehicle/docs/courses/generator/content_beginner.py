@@ -120,7 +120,7 @@ SWITCH = {
     "write": "ledcWrite(channel, duty);",
     "pwm_story": "This board package is built on an older ESP32 core, so you "
                  "work through numbered PWM channels.",
-    "hero": img("vehicle-front-blue-leds.jpg"),
+    "hero": img("vehicle-turn-signal-left.jpg"),
     "pad_image": img("switch-controller-labeled.jpg"),
     "lock_story": "the VEHICLE is told which controller address it will accept",
     "lock_tool": "l3a_controller_check, which prints the address for you",
@@ -475,16 +475,12 @@ def lesson1(deck, T):
 
     deck.image_pair(
         "The Pathfinder",
-        Placeholder(
-            "PHOTO: left turn signal, front and back",
-            "Three-quarter view with the LEFT indicator running, taken so "
-            "that BOTH the front bar and the rear bar are visible at once."),
-        "Left turn signal - front bar and rear bar, both on that side",
-        Placeholder(
-            "PHOTO: right turn signal, front and back",
-            "The same shot from the other side, with the RIGHT indicator "
-            "running. Front and rear bars both visible."),
-        "Right turn signal - the same program, and the same 32 LEDs",
+        img("vehicle-turn-signal-left.jpg"),
+        "LEFT turn signal, from the front. The rear bar is lit on the "
+        "same side at the same time.",
+        img("vehicle-turn-signal-right.jpg"),
+        "RIGHT turn signal. Same vehicle, same program, same 32 LEDs - "
+        "the D-pad just went the other way.",
         lead="A fast, rugged, four-wheel-drive vehicle with an ESP32 computer, "
              "four independently driven motors, 32 programmable LEDs, four "
              "servo outputs and a rechargeable lithium battery.",
@@ -495,9 +491,11 @@ def lesson1(deck, T):
             "Nobody reprogrammed anything between them - somebody pushed "
             "the D-pad the other way. Say that explicitly, because it is "
             "easy to assume two pictures mean two programs.",
-            "Point out that each indicator lights the front bar and the "
-            "rear bar on that side, the way a car does. It is one side of "
-            "the vehicle, seen front and back, not one end of it.",
+            "Both photographs are taken from the front, so you can only "
+            "see the front bar. Say what the camera cannot show: the rear "
+            "bar is indicating on the same side at the same time, the way "
+            "a car does. It is one SIDE of the vehicle lighting up, not "
+            "one end.",
             "That is the through-line of the whole course: the hardware is "
             "fixed, one program covers every behavior, and what changes is "
             "the input it is given.",
@@ -3520,7 +3518,7 @@ def lesson5(deck, T):
         "Non-blocking timing, edge detection, and the full {} "
         "program.".format(T["full_program"]),
         BYLINE + ["", "Three hours.  Bring a charged battery."],
-        hero_image=img("vehicle-side-blue-leds.jpg"), logo=LOGO,
+        hero_image=img("vehicle-turn-signal-right.jpg"), logo=LOGO,
         speaker=[
             "Charged batteries and a cleared floor. Today has the most "
             "driving of any lesson in the course.",
