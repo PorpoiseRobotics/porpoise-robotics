@@ -28,13 +28,23 @@
 
   WHAT TO TRY
   -----------
-  1. Upload and open the Serial Monitor. Press the EN (reset) button on the
-     ESP32 and watch the greeting print again from the start.
+  1. Upload and open the Serial Monitor. Everything setup() prints appears
+     at once, then the board waits five seconds so you can read it before
+     the loop starts. Press the EN (reset) button and watch it again.
   2. Change the greeting to your own name and upload again.
   3. Change the two numbers in the arithmetic section and predict the answers
      BEFORE you upload. Were you right about 7 / 2?
   4. Add a line of your own that prints something every time round the loop.
+  5. Change PRINT_MS to 100 and upload. The numbers are still right, but
+     can you read them? Put it back to 3000.
 */
+
+// How long to wait at the end of setup() before the loop starts printing,
+// and how often the loop prints once it does. Both are here so you can
+// change them: make PRINT_MS smaller and watch how quickly the window
+// becomes unreadable.
+const int PAUSE_MS = 5000;   // Time to read the setup output
+const int PRINT_MS = 3000;   // Milliseconds between loop lines
 
 // A variable is a named box that holds a value which is allowed to change.
 // The word in front of the name says what KIND of value fits in the box.
@@ -80,7 +90,15 @@ void setup() {
   Serial.print("7 % 2 = ");  Serial.println(7 % 2);
   Serial.println();
 
-  Serial.println("Now watch the loop count. One line every second.");
+  Serial.println("Now watch the loop count. One line every three seconds.");
+
+  // Everything above this line is worth reading, and it all printed in
+  // well under a second. Without this pause the loop below starts
+  // immediately and pushes it off the top of the window before anybody
+  // has finished the first sentence.
+  Serial.println();
+  Serial.println("--- scroll up and read all of that first ---");
+  delay(PAUSE_MS);
 }
 
 void loop() {
@@ -92,5 +110,5 @@ void loop() {
   Serial.print(millis() / 1000);   // millis() counts milliseconds since power-up
   Serial.println(" seconds");
 
-  delay(1000);
+  delay(PRINT_MS);
 }
