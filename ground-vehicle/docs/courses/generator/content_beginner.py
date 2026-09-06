@@ -179,6 +179,131 @@ STAGES = {
     ],
 }
 
+AGENDA = {
+    "lesson1": [
+        ("0:00", "What mechatronics is, and what a Pathfinder is", None),
+        ("0:30", "A tour of the vehicle: computer, motors, lights, battery", None),
+        ("0:55", "BREAK  (10 minutes)", "break"),
+        ("1:05", "Install the Arduino IDE, the board package and the libraries",
+         "Setting up the IDE"),
+        ("1:40", "The three parts of every program.  Upload l1a_blink",
+         "Your first circuit and program"),
+        ("2:05", "BREAK  (10 minutes)", "break"),
+        ("2:15", "Talking back: the Serial Monitor.  Upload l1b_serial_monitor",
+         "Talking back"),
+        ("2:40", "Your first light.  Upload l1c_first_pixel",
+         "Your first light"),
+        ("2:55", "Safety, batteries, and what to expect next lesson", None),
+    ],
+    "lesson2": [
+        ("0:00", "Recap. Two kinds of motor, and how an H-bridge works", None),
+        ("0:25", "Pulse width modulation and duty cycle", None),
+        ("0:50", "Upload l2a_one_motor. Find your vehicle's minimum speed",
+         "One motor"),
+        ("1:15", "BREAK  (10 minutes)", "break"),
+        ("1:25", "Upload l2b_speed_ramp. Duty against actual speed",
+         "Duty vs speed"),
+        ("1:45", "STEM break: Ohm's law, and a circuit on a breadboard",
+         "Ohm's law and circuits"),
+        ("2:10", "BREAK  (10 minutes)", "break"),
+        ("2:20", "Tank drive, mixing, and the math that predicts the square",
+         "Driving a square"),
+        ("2:40", "Clear the floor. Upload l2c_maneuver_square and tune it",
+         "Driving a square"),
+        ("2:57", "Sources of error, and what dead reckoning cannot do", None),
+    ],
+    "lesson3": [
+        ("0:00", "Recap. What Bluetooth is, and how a pad finds a vehicle", None),
+        ("0:25", "One vehicle, one controller", None),
+        ("0:50", "Upload l3a_controller_check. Find every button and axis",
+         "What the pad sends"),
+        ("1:15", "BREAK  (10 minutes)", "break"),
+        ("1:25", "The deadzone problem, and map()", "Deadzone and map"),
+        ("1:50", "Upload l3b_deadzone_and_map. Watch the arithmetic",
+         "Deadzone and map"),
+        ("2:10", "BREAK  (10 minutes)", "break"),
+        ("2:20", "Mixing forward and turn", "Driving it"),
+        ("2:35", "Upload l3c_tank_drive. Drive it", "Driving it"),
+        ("2:55", "Failsafe, and what happens when the link drops", None),
+    ],
+    "lesson4": [
+        ("0:00", "Recap. What an addressable LED is", None),
+        ("0:25", "Color: RGB, wavelength, and how your eye works", None),
+        ("0:50", "The power budget. Upload l4a_all_one_color",
+         "The power budget"),
+        ("1:15", "BREAK  (10 minutes)", "break"),
+        ("1:25", "Mapping the loop. Upload l4b_led_map", "The LED map"),
+        ("1:55", "for loops, and four patterns. Upload l4c_patterns",
+         "Patterns"),
+        ("2:20", "BREAK  (10 minutes)", "break"),
+        ("2:30", "Design a pattern of your own", "Patterns"),
+        ("2:55", "Recap", None),
+    ],
+    "lesson5": [
+        ("0:00", "Recap. Why delay() has to go", None),
+        ("0:25", "Upload l5a_millis_not_delay", "Two speeds at once"),
+        ("0:45", "Edge detection. Upload l5b_button_toggle", "Edge detection"),
+        ("1:10", "BREAK  (10 minutes)", "break"),
+        ("1:20", "Driving lights from driving state. Upload l5c_drive_with_lights",
+         "Lights from state"),
+        ("1:50", "A tour of the full program", "The full program"),
+        ("2:10", "BREAK  (10 minutes)", "break"),
+        ("2:20", "Servos, the scanner, and sharp steering", "The full program"),
+        ("2:35", "Calibrate, then race", "The full program"),
+        ("2:57", "Where this course goes next", None),
+    ],
+}
+
+
+# ===================================================================
+# THE AGENDA
+# ===================================================================
+#
+# One agenda per lesson, and it is the ONLY place the timings live. The
+# "Today, in order" table renders from it, and so does the "About N minutes"
+# on every section divider - which is the point. Those numbers used to be
+# typed onto the dividers by hand, and by the 2026-09-05 review they no
+# longer agreed with the agenda they were supposed to come from.
+#
+# Each row is (start time, what we do, stage). The stage is the entry in
+# STAGES that this block belongs to, or None for the opening and the wrap-up,
+# or "break" for a break.
+
+LESSON_ENDS = "3:00"
+
+
+def _minutes(clock):
+    hours, minutes = clock.split(":")
+    return int(hours) * 60 + int(minutes)
+
+
+def agenda_rows(lesson):
+    """The agenda as the two-column table the slide wants."""
+    return [[start, what] for start, what, _stage in AGENDA[lesson]]
+
+
+def stage_minutes(lesson, stage):
+    """
+    How long the agenda gives this stage, in minutes, rounded to the nearest
+    five. Breaks inside the stage are not counted - a divider says how much
+    TEACHING is ahead, and the agenda slide shows where the breaks fall.
+
+    A stage with no agenda row is a mistake, and stops the build.
+    """
+    rows = AGENDA[lesson]
+    if stage not in {row[2] for row in rows}:
+        raise SystemExit(
+            "stage_minutes: %s has no agenda row for stage %r" % (lesson, stage))
+
+    total = 0
+    for index, (start, _what, tag) in enumerate(rows):
+        if tag != stage:
+            continue
+        nxt = rows[index + 1][0] if index + 1 < len(rows) else LESSON_ENDS
+        total += _minutes(nxt) - _minutes(start)
+    return int(round(total / 5.0)) * 5
+
+
 # ===================================================================
 # LESSON 1
 # ===================================================================
@@ -274,15 +399,7 @@ def lesson1(deck, T):
     deck.table(
         "Today, in order",
         ["Time", "What we do"],
-        [["0:00", "What mechatronics is, and what a Pathfinder is"],
-         ["0:30", "A tour of the vehicle: computer, motors, lights, battery"],
-         ["0:55", "BREAK  (10 minutes)"],
-         ["1:05", "Install the Arduino IDE, the board package and the libraries"],
-         ["1:40", "The three parts of every program.  Upload l1a_blink"],
-         ["2:05", "BREAK  (10 minutes)"],
-         ["2:15", "Talking back: the Serial Monitor.  Upload l1b_serial_monitor"],
-         ["2:40", "Your first light.  Upload l1c_first_pixel"],
-         ["2:55", "Safety, batteries, and what to expect next lesson"]],
+        agenda_rows("lesson1"),
         col_widths=[1, 9],
         speaker=[
             "Put the two break times on the whiteboard as well. People "
@@ -637,7 +754,7 @@ def lesson1(deck, T):
             "smaller than most people expect.",
         ])
 
-    deck.section("Setting up the Arduino IDE", minutes=35,
+    deck.section("Setting up the Arduino IDE", minutes=stage_minutes("lesson1", "Setting up the IDE"),
         stages=STAGES["lesson1"], stage="Setting up the IDE",
         speaker=[
             "The next thirty-five minutes are the least fun part of the "
@@ -786,7 +903,7 @@ def lesson1(deck, T):
             "before you move on.",
         ])
 
-    deck.section("Your first program", minutes=25,
+    deck.section("Your first program", minutes=stage_minutes("lesson1", "Your first circuit and program"),
         stages=STAGES["lesson1"], stage="Your first circuit and program",
         speaker=[
             "From here on they are building rather than installing. The "
@@ -960,7 +1077,7 @@ def lesson1(deck, T):
             "Lesson 2.",
         ])
 
-    deck.section("Making the vehicle talk back", minutes=25,
+    deck.section("Making the vehicle talk back", minutes=stage_minutes("lesson1", "Talking back"),
         stages=STAGES["lesson1"], stage="Talking back",
         speaker=[
             "Frame this as giving the vehicle a voice. It is the only way "
@@ -1076,7 +1193,7 @@ def lesson1(deck, T):
             "for Lesson 5.",
         ])
 
-    deck.section("Your first light", minutes=20,
+    deck.section("Your first light", minutes=stage_minutes("lesson1", "Your first light"),
         stages=STAGES["lesson1"], stage="Your first light",
         speaker=[
             "Last twenty minutes. This is the one they will tell people "
@@ -1356,16 +1473,7 @@ def lesson2(deck, T):
     deck.table(
         "Today, in order",
         ["Time", "What we do"],
-        [["0:00", "Recap. Two kinds of motor, and how an H-bridge works"],
-         ["0:25", "Pulse width modulation and duty cycle"],
-         ["0:50", "Upload l2a_one_motor. Find your vehicle's minimum speed"],
-         ["1:15", "BREAK  (10 minutes)"],
-         ["1:25", "Upload l2b_speed_ramp. Duty against actual speed"],
-         ["1:45", "STEM break: Ohm's law, and a circuit on a breadboard"],
-         ["2:10", "BREAK  (10 minutes)"],
-         ["2:20", "Tank drive, mixing, and the math that predicts the square"],
-         ["2:40", "Clear the floor. Upload l2c_maneuver_square and tune it"],
-         ["2:57", "Sources of error, and what dead reckoning cannot do"]],
+        agenda_rows("lesson2"),
         col_widths=[1, 9],
         speaker=[
             "Note where the two breaks fall, and that the floor gets "
@@ -1556,7 +1664,7 @@ def lesson2(deck, T):
             "demonstrate it today.",
         ])
 
-    deck.section("One motor", minutes=25,
+    deck.section("One motor", minutes=stage_minutes("lesson2", "One motor"),
         stages=STAGES["lesson2"], stage="One motor",
         speaker=[
             "First of three activities. Twenty seconds on this slide.",
@@ -1591,7 +1699,7 @@ def lesson2(deck, T):
         ])
 
 
-    deck.section("Duty vs speed", minutes=20,
+    deck.section("Duty vs speed", minutes=stage_minutes("lesson2", "Duty vs speed"),
         stages=STAGES["lesson2"], stage="Duty vs speed",
         speaker=[
             "Two of three. Wheels still off the ground - this one runs "
@@ -1626,7 +1734,7 @@ def lesson2(deck, T):
             "the honest answer: at the bottom, where friction wins.",
         ])
 
-    deck.section("STEM break: Ohm's law and circuits", minutes=25,
+    deck.section("STEM break: Ohm's law and circuits", minutes=stage_minutes("lesson2", "Ohm's law and circuits"),
         stages=STAGES["lesson2"], stage="Ohm's law and circuits",
         speaker=[
             "Twenty-five minutes away from the vehicle. Tell them why: the "
@@ -1711,7 +1819,7 @@ def lesson2(deck, T):
             "problems are the ones to drop.",
         ])
 
-    deck.section("Making it go where you want", minutes=60,
+    deck.section("Making it go where you want", minutes=stage_minutes("lesson2", "Driving a square"),
         stages=STAGES["lesson2"], stage="Driving a square",
         speaker=[
             "The last hour, and the best part of the lesson. From here the "
@@ -2200,16 +2308,7 @@ def lesson3(deck, T):
     deck.table(
         "Today, in order",
         ["Time", "What we do"],
-        [["0:00", "Recap. What Bluetooth is, and how a pad finds a vehicle"],
-         ["0:25", "One vehicle, one controller"],
-         ["0:50", "Upload l3a_controller_check. Find every button and axis"],
-         ["1:15", "BREAK  (10 minutes)"],
-         ["1:25", "The deadzone problem, and map()"],
-         ["1:50", "Upload l3b_deadzone_and_map. Watch the arithmetic"],
-         ["2:10", "BREAK  (10 minutes)"],
-         ["2:20", "Mixing forward and turn"],
-         ["2:35", "Upload l3c_tank_drive. Drive it"],
-         ["2:55", "Failsafe, and what happens when the link drops"]],
+        agenda_rows("lesson3"),
         col_widths=[1, 9],
         speaker=[
             "Point out that the vehicle does not move until 2:35. Manage "
@@ -2323,7 +2422,7 @@ def lesson3(deck, T):
 
     diagrams.six_dof(deck, controller=T["pad_short"])
 
-    deck.section("What the pad sends", minutes=25,
+    deck.section("What the pad sends", minutes=stage_minutes("lesson3", "What the pad sends"),
         stages=STAGES["lesson3"], stage="What the pad sends",
         speaker=[
             "Twenty seconds. First of three.",
@@ -2358,6 +2457,12 @@ def lesson3(deck, T):
             "Walk round with a list of button names. Somebody will find a "
             "button that prints nothing, and that is usually a third-party "
             "pad rather than a fault.",
+        ])
+
+    deck.section("Deadzone and map", minutes=stage_minutes("lesson3", "Deadzone and map"),
+        stages=STAGES["lesson3"], stage="Deadzone and map",
+        speaker=[
+            "Twenty seconds. Two of three.",
         ])
 
     deck.bullets(
@@ -2430,12 +2535,6 @@ def lesson3(deck, T):
             "Get them to work out one example on paper before the activity.",
         ])
 
-    deck.section("Deadzone and map", minutes=20,
-        stages=STAGES["lesson3"], stage="Deadzone and map",
-        speaker=[
-            "Twenty seconds. Two of three.",
-        ])
-
     deck.activity(
         "Do it now  -  watch the arithmetic",
         "l3b_deadzone_and_map",
@@ -2464,6 +2563,12 @@ def lesson3(deck, T):
             "Step 5 previews MOTOR_MIN, which they met in Lesson 2. The "
             "jump the instant they leave the deadzone is what a raised "
             "minimum feels like.",
+        ])
+
+    deck.section("Driving it", minutes=stage_minutes("lesson3", "Driving it"),
+        stages=STAGES["lesson3"], stage="Driving it",
+        speaker=[
+            "Twenty seconds, then clear the floor.",
         ])
 
     deck.bullets(
@@ -2531,12 +2636,6 @@ def lesson3(deck, T):
             "one limits steering to half.",
             "This is the first program in the course they could plausibly "
             "have written themselves. Say so.",
-        ])
-
-    deck.section("Driving it", minutes=30,
-        stages=STAGES["lesson3"], stage="Driving it",
-        speaker=[
-            "Twenty seconds, then clear the floor.",
         ])
 
     mix_left_line = srcfacts.line_of(T["drive_sketch"], "int leftSpeed  =")
@@ -2927,15 +3026,7 @@ def lesson4(deck, T):
     deck.table(
         "Today, in order",
         ["Time", "What we do"],
-        [["0:00", "Recap. What an addressable LED is"],
-         ["0:25", "Color: RGB, wavelength, and how your eye works"],
-         ["0:50", "The power budget. Upload l4a_all_one_color"],
-         ["1:15", "BREAK  (10 minutes)"],
-         ["1:25", "Mapping the loop. Upload l4b_led_map"],
-         ["1:55", "for loops, and four patterns. Upload l4c_patterns"],
-         ["2:20", "BREAK  (10 minutes)"],
-         ["2:30", "Design a pattern of your own"],
-         ["2:55", "Recap"]],
+        agenda_rows("lesson4"),
         col_widths=[1, 9],
         speaker=[
             "Two breaks, and the design exercise at 2:30. Tell them the "
@@ -3130,7 +3221,7 @@ def lesson4(deck, T):
 
     diagrams.ohms_and_power_law(deck)
 
-    deck.section("The power budget", minutes=20,
+    deck.section("The power budget", minutes=stage_minutes("lesson4", "The power budget"),
         stages=STAGES["lesson4"], stage="The power budget",
         speaker=[
             "Twenty seconds. First of three.",
@@ -3173,7 +3264,7 @@ def lesson4(deck, T):
 
     diagrams.led_map(deck)
 
-    deck.section("The LED map", minutes=25,
+    deck.section("The LED map", minutes=stage_minutes("lesson4", "The LED map"),
         stages=STAGES["lesson4"], stage="The LED map",
         speaker=[
             "Twenty seconds. Two of three.",
@@ -3292,7 +3383,7 @@ def lesson4(deck, T):
             "comes back in Lesson 5, done properly without delay().",
         ])
 
-    deck.section("Patterns", minutes=25,
+    deck.section("Patterns", minutes=stage_minutes("lesson4", "Patterns"),
         stages=STAGES["lesson4"], stage="Patterns",
         speaker=[
             "Twenty seconds. Last activity before the design exercise.",
@@ -3482,16 +3573,7 @@ def lesson5(deck, T):
     deck.table(
         "Today, in order",
         ["Time", "What we do"],
-        [["0:00", "Recap. Why delay() has to go"],
-         ["0:25", "Upload l5a_millis_not_delay"],
-         ["0:45", "Edge detection. Upload l5b_button_toggle"],
-         ["1:10", "BREAK  (10 minutes)"],
-         ["1:20", "Driving lights from driving state. Upload l5c_drive_with_lights"],
-         ["1:50", "A tour of the full program"],
-         ["2:10", "BREAK  (10 minutes)"],
-         ["2:20", "Servos, the scanner, and sharp steering"],
-         ["2:35", "Calibrate, then race"],
-         ["2:57", "Where this course goes next"]],
+        agenda_rows("lesson5"),
         col_widths=[1, 9],
         speaker=[
             "Two breaks. The racing is at 2:35, and it will overrun if you "
@@ -3564,7 +3646,7 @@ def lesson5(deck, T):
             "wrap at 49 days.",
         ])
 
-    deck.section("Two speeds at once", minutes=25,
+    deck.section("Two speeds at once", minutes=stage_minutes("lesson5", "Two speeds at once"),
         stages=STAGES["lesson5"], stage="Two speeds at once",
         speaker=[
             "Twenty seconds. First of four.",
@@ -3632,7 +3714,7 @@ def lesson5(deck, T):
             "That is the whole of justPressed().",
         ])
 
-    deck.section("Edge detection", minutes=25,
+    deck.section("Edge detection", minutes=stage_minutes("lesson5", "Edge detection"),
         stages=STAGES["lesson5"], stage="Edge detection",
         speaker=[
             "Twenty seconds. Two of four.",
@@ -3755,7 +3837,7 @@ def lesson5(deck, T):
             "something actually changed.",
         ])
 
-    deck.section("Lights from state", minutes=30,
+    deck.section("Lights from state", minutes=stage_minutes("lesson5", "Lights from state"),
         stages=STAGES["lesson5"], stage="Lights from state",
         speaker=[
             "Twenty seconds. Three of four.",
@@ -3790,7 +3872,7 @@ def lesson5(deck, T):
             "side from the sign of the turn value.",
         ])
 
-    deck.section("The full program", minutes=45,
+    deck.section("The full program", minutes=stage_minutes("lesson5", "The full program"),
         stages=STAGES["lesson5"], stage="The full program",
         speaker=[
             "Forty-five minutes on the real program. Have it open on the "

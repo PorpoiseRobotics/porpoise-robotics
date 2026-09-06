@@ -69,6 +69,128 @@ STAGES = {
     ],
 }
 
+AGENDA = {
+    "lesson1": [
+        ("0:00", "What changed from Op 11.2, and why", None),
+        ("0:30", "One binary, two vehicles: capability flags", None),
+        ("0:50", "How Arduino tabs really work, and why Config.h is a header",
+         "Tabs and Config.h"),
+        ("1:15", "BREAK  (10 minutes)", "break"),
+        ("1:25", "Upload a1a_tabs_and_config. Break it on purpose",
+         "Tabs and Config.h"),
+        ("1:55", "A serial console: reading without blocking, and parsing",
+         "The console"),
+        ("2:15", "BREAK  (10 minutes)", "break"),
+        ("2:25", "Upload a1b_serial_console", "The console"),
+        ("2:45", "The boot sequence of Op Program 12, line by line", None),
+    ],
+    "lesson2": [
+        ("0:00", "Recap. The LEDC peripheral and what it can actually do", None),
+        ("0:25", "Resolution against frequency. Upload a2a_pwm_resolution",
+         "Resolution"),
+        ("1:00", "BREAK  (10 minutes)", "break"),
+        ("1:10", "Coast, brake, and the two decay modes", "Decay and ramping"),
+        ("1:40", "Upload a2b_coast_brake_hybrid. Feel the difference",
+         "Decay and ramping"),
+        ("2:10", "BREAK  (10 minutes)", "break"),
+        ("2:20", "Speed ramping, and the truncation bug", "Decay and ramping"),
+        ("2:35", "remap_axis: deadzones, scale, and per-axis tuning", None),
+        ("2:50", "Four servos on one thumbstick", None),
+    ],
+    "lesson3": [
+        ("0:00", "Recap. Bluepad32, callbacks, and who calls whom", None),
+        ("0:25", "The allowlist, and the order the calls must go in", None),
+        ("0:50", "Upload a3a_controller_address. Lock and unlock a board",
+         "Locking a board"),
+        ("1:20", "BREAK  (10 minutes)", "break"),
+        ("1:30", "There is no EEPROM on an ESP32", "EEPROM"),
+        ("1:55", "Magic bytes, storage maps, and never trusting storage",
+         "EEPROM"),
+        ("2:15", "BREAK  (10 minutes)", "break"),
+        ("2:25", "Upload a3b_eeprom_settings. Pull the cable out", "EEPROM"),
+        ("2:50", "The full pairing workflow in Op 12", None),
+    ],
+    "lesson4": [
+        ("0:00", "Recap. What a state machine buys you", None),
+        ("0:25", "The six modes, and how control passes between them", None),
+        ("0:50", "Non-blocking animation as a discipline", None),
+        ("1:10", "Upload a4a_led_state_machine. Measure a redraw",
+         "Measuring a redraw"),
+        ("1:40", "BREAK  (10 minutes)", "break"),
+        ("1:50", "Color helpers, and why they are written out longhand",
+         "Measuring a redraw"),
+        ("2:10", "Turn signal geometry. Upload a4b_turn_signal_larson",
+         "Turn signal geometry"),
+        ("2:35", "BREAK  (10 minutes)", "break"),
+        ("2:45", "Add a mode of your own", "Turn signal geometry"),
+    ],
+    "lesson5": [
+        ("0:00", "Recap. I2C addressing, acknowledgement, pull-ups", None),
+        ("0:25", "Upload a5a_i2c_scan. Find the sensor, then lose it",
+         "Finding the sensor"),
+        ("0:50", "Measuring current without interrupting it",
+         "Measuring a motor"),
+        ("1:15", "BREAK  (10 minutes)", "break"),
+        ("1:25", "Driving a chip from its datasheet, with no library",
+         "Measuring a motor"),
+        ("1:50", "Upload a5b_ina219_current. Measure a motor",
+         "Measuring a motor"),
+        ("2:20", "BREAK  (10 minutes)", "break"),
+        ("2:30", "Current signatures, and the self-test state machine", None),
+        ("2:50", "Adding a subsystem of your own, properly", None),
+    ],
+}
+
+
+# ===================================================================
+# THE AGENDA
+# ===================================================================
+#
+# One agenda per lesson, and it is the ONLY place the timings live. The
+# "Today, in order" table renders from it, and so does the "About N minutes"
+# on every section divider - which is the point. Those numbers used to be
+# typed onto the dividers by hand, and by the 2026-09-05 review they no
+# longer agreed with the agenda they were supposed to come from.
+#
+# Each row is (start time, what we do, stage). The stage is the entry in
+# STAGES that this block belongs to, or None for the opening and the wrap-up,
+# or "break" for a break.
+
+LESSON_ENDS = "3:00"
+
+
+def _minutes(clock):
+    hours, minutes = clock.split(":")
+    return int(hours) * 60 + int(minutes)
+
+
+def agenda_rows(lesson):
+    """The agenda as the two-column table the slide wants."""
+    return [[start, what] for start, what, _stage in AGENDA[lesson]]
+
+
+def stage_minutes(lesson, stage):
+    """
+    How long the agenda gives this stage, in minutes, rounded to the nearest
+    five. Breaks inside the stage are not counted - a divider says how much
+    TEACHING is ahead, and the agenda slide shows where the breaks fall.
+
+    A stage with no agenda row is a mistake, and stops the build.
+    """
+    rows = AGENDA[lesson]
+    if stage not in {row[2] for row in rows}:
+        raise SystemExit(
+            "stage_minutes: %s has no agenda row for stage %r" % (lesson, stage))
+
+    total = 0
+    for index, (start, _what, tag) in enumerate(rows):
+        if tag != stage:
+            continue
+        nxt = rows[index + 1][0] if index + 1 < len(rows) else LESSON_ENDS
+        total += _minutes(nxt) - _minutes(start)
+    return int(round(total / 5.0)) * 5
+
+
 # ===================================================================
 # LESSON 1
 # ===================================================================
@@ -148,15 +270,7 @@ def lesson1(deck):
     deck.table(
         "Today, in order",
         ["Time", "What we do"],
-        [["0:00", "What changed from Op 11.2, and why"],
-         ["0:30", "One binary, two vehicles: capability flags"],
-         ["0:50", "How Arduino tabs really work, and why Config.h is a header"],
-         ["1:15", "BREAK  (10 minutes)"],
-         ["1:25", "Upload a1a_tabs_and_config. Break it on purpose"],
-         ["1:55", "A serial console: reading without blocking, and parsing"],
-         ["2:15", "BREAK  (10 minutes)"],
-         ["2:25", "Upload a1b_serial_console"],
-         ["2:45", "The boot sequence of Op Program 12, line by line"]],
+        agenda_rows("lesson1"),
         col_widths=[1, 9],
         speaker=[
             "Two breaks. The tabs activity at 1:25 is the one that overruns "
@@ -238,6 +352,12 @@ def lesson1(deck):
             "Show the arithmetic if anybody is shaky on bitwise operators.",
         ])
 
+    deck.section("Tabs and Config.h", minutes=stage_minutes("lesson1", "Tabs and Config.h"),
+        stages=STAGES["lesson1"], stage="Tabs and Config.h",
+        speaker=[
+            "Twenty seconds. First activity.",
+        ])
+
     deck.bullets(
         "How Arduino tabs actually work",
         [("Every .ino file in the sketch folder is a tab in the IDE.", 0),
@@ -299,12 +419,6 @@ def lesson1(deck):
             "why it is dangerous.",
         ])
 
-    deck.section("Tabs and Config.h", minutes=30,
-        stages=STAGES["lesson1"], stage="Tabs and Config.h",
-        speaker=[
-            "Twenty seconds. First activity.",
-        ])
-
     deck.activity(
         "Do it now  -  three files, one program",
         "a1a_tabs_and_config",
@@ -335,6 +449,12 @@ def lesson1(deck):
             "prototype, but a type has to be DEFINED before the prototype "
             "that mentions it.",
             "Thirty minutes, and it is worth every one of them.",
+        ])
+
+    deck.section("The console", minutes=stage_minutes("lesson1", "The console"),
+        stages=STAGES["lesson1"], stage="The console",
+        speaker=[
+            "Twenty seconds. Second activity.",
         ])
 
     deck.bullets(
@@ -409,12 +529,6 @@ def lesson1(deck):
             "set differently.",
             "The printable-character and length checks are the input "
             "validation. Worth pointing out that they are not optional.",
-        ])
-
-    deck.section("The console", minutes=25,
-        stages=STAGES["lesson1"], stage="The console",
-        speaker=[
-            "Twenty seconds. Second activity.",
         ])
 
     deck.activity(
@@ -627,15 +741,7 @@ def lesson2(deck):
     deck.table(
         "Today, in order",
         ["Time", "What we do"],
-        [["0:00", "Recap. The LEDC peripheral and what it can actually do"],
-         ["0:25", "Resolution against frequency. Upload a2a_pwm_resolution"],
-         ["1:00", "BREAK  (10 minutes)"],
-         ["1:10", "Coast, brake, and the two decay modes"],
-         ["1:40", "Upload a2b_coast_brake_hybrid. Feel the difference"],
-         ["2:10", "BREAK  (10 minutes)"],
-         ["2:20", "Speed ramping, and the truncation bug"],
-         ["2:35", "remap_axis: deadzones, scale, and per-axis tuning"],
-         ["2:50", "Four servos on one thumbstick"]],
+        agenda_rows("lesson2"),
         col_widths=[1, 9],
         speaker=[
             "Two breaks. The first activity is thirty-five minutes and it "
@@ -683,7 +789,7 @@ def lesson2(deck):
             "what the extra two bits are for.",
         ])
 
-    deck.section("Resolution", minutes=35,
+    deck.section("Resolution", minutes=stage_minutes("lesson2", "Resolution"),
         stages=STAGES["lesson2"], stage="Resolution",
         speaker=[
             "Twenty seconds. First activity.",
@@ -721,6 +827,12 @@ def lesson2(deck):
         ])
 
     diagrams.h_bridge(deck)
+
+    deck.section("Decay and ramping", minutes=stage_minutes("lesson2", "Decay and ramping"),
+        stages=STAGES["lesson2"], stage="Decay and ramping",
+        speaker=[
+            "Twenty seconds. Second activity.",
+        ])
 
     deck.two_columns(
         "Slow decay against fast decay",
@@ -844,12 +956,6 @@ def lesson2(deck):
             "because a bug you cannot see is worse than one you can.",
             "The fix is one line: if the step rounds to nothing, take one "
             "count.",
-        ])
-
-    deck.section("Decay and ramping", minutes=35,
-        stages=STAGES["lesson2"], stage="Decay and ramping",
-        speaker=[
-            "Twenty seconds. Second activity.",
         ])
 
     deck.activity(
@@ -1028,15 +1134,7 @@ def lesson3(deck):
     deck.table(
         "Today, in order",
         ["Time", "What we do"],
-        [["0:00", "Recap. Bluepad32, callbacks, and who calls whom"],
-         ["0:25", "The allowlist, and the order the calls must go in"],
-         ["0:50", "Upload a3a_controller_address. Lock and unlock a board"],
-         ["1:20", "BREAK  (10 minutes)"],
-         ["1:30", "There is no EEPROM on an ESP32"],
-         ["1:55", "Magic bytes, storage maps, and never trusting storage"],
-         ["2:15", "BREAK  (10 minutes)"],
-         ["2:25", "Upload a3b_eeprom_settings. Pull the cable out"],
-         ["2:50", "The full pairing workflow in Op 12"]],
+        agenda_rows("lesson3"),
         col_widths=[1, 9],
         speaker=[
             "Two breaks. Both activities are long and both are worth their "
@@ -1116,7 +1214,7 @@ def lesson3(deck):
             "source of truth. That principle is worth stating generally.",
         ])
 
-    deck.section("Locking a board", minutes=30,
+    deck.section("Locking a board", minutes=stage_minutes("lesson3", "Locking a board"),
         stages=STAGES["lesson3"], stage="Locking a board",
         speaker=[
             "Twenty seconds. First activity.",
@@ -1151,6 +1249,12 @@ def lesson3(deck):
             "Answers: this sketch keeps the address in RAM only, so it is "
             "gone at reset; and applyAllowlist() must come after "
             "BP32.setup() because setup is what brings the stack up.",
+        ])
+
+    deck.section("EEPROM", minutes=stage_minutes("lesson3", "EEPROM"),
+        stages=STAGES["lesson3"], stage="EEPROM",
+        speaker=[
+            "Twenty seconds. Second activity.",
         ])
 
     deck.bullets(
@@ -1254,12 +1358,6 @@ def lesson3(deck):
             "Defensive loading is not paranoia - it is the difference "
             "between a vehicle that boots with odd settings and one that "
             "will not boot at all.",
-        ])
-
-    deck.section("EEPROM", minutes=35,
-        stages=STAGES["lesson3"], stage="EEPROM",
-        speaker=[
-            "Twenty seconds. Second activity.",
         ])
 
     deck.activity(
@@ -1469,15 +1567,7 @@ def lesson4(deck):
     deck.table(
         "Today, in order",
         ["Time", "What we do"],
-        [["0:00", "Recap. What a state machine buys you"],
-         ["0:25", "The six modes, and how control passes between them"],
-         ["0:50", "Non-blocking animation as a discipline"],
-         ["1:10", "Upload a4a_led_state_machine. Measure a redraw"],
-         ["1:40", "BREAK  (10 minutes)"],
-         ["1:50", "Color helpers, and why they are written out longhand"],
-         ["2:10", "Turn signal geometry. Upload a4b_turn_signal_larson"],
-         ["2:35", "BREAK  (10 minutes)"],
-         ["2:45", "Add a mode of your own"]],
+        agenda_rows("lesson4"),
         col_widths=[1, 9],
         speaker=[
             "Two breaks. The final thirty minutes is a build exercise - "
@@ -1596,7 +1686,7 @@ def lesson4(deck):
             "bit-banging. That is why it is expensive.",
         ])
 
-    deck.section("Measuring a redraw", minutes=35,
+    deck.section("Measuring a redraw", minutes=stage_minutes("lesson4", "Measuring a redraw"),
         stages=STAGES["lesson4"], stage="Measuring a redraw",
         speaker=[
             "Twenty seconds. First activity.",
@@ -1665,6 +1755,12 @@ def lesson4(deck):
             "dependency that will eventually break in a way you cannot fix.",
             "That is not an argument against libraries. It is an argument "
             "for knowing what the ones you rely on actually do.",
+        ])
+
+    deck.section("Turn signal geometry", minutes=stage_minutes("lesson4", "Turn signal geometry"),
+        stages=STAGES["lesson4"], stage="Turn signal geometry",
+        speaker=[
+            "Twenty seconds. Second activity.",
         ])
 
     deck.bullets(
@@ -1740,12 +1836,6 @@ def lesson4(deck):
             "That matches a real indicator, which finishes its blink after "
             "you let go of the stalk. Small detail, and it is what makes it "
             "feel right.",
-        ])
-
-    deck.section("Turn signal geometry", minutes=35,
-        stages=STAGES["lesson4"], stage="Turn signal geometry",
-        speaker=[
-            "Twenty seconds. Second activity.",
         ])
 
     deck.activity(
@@ -1976,15 +2066,7 @@ def lesson5(deck):
     deck.table(
         "Today, in order",
         ["Time", "What we do"],
-        [["0:00", "Recap. I2C addressing, acknowledgement, pull-ups"],
-         ["0:25", "Upload a5a_i2c_scan. Find the sensor, then lose it"],
-         ["0:50", "Measuring current without interrupting it"],
-         ["1:15", "BREAK  (10 minutes)"],
-         ["1:25", "Driving a chip from its datasheet, with no library"],
-         ["1:50", "Upload a5b_ina219_current. Measure a motor"],
-         ["2:20", "BREAK  (10 minutes)"],
-         ["2:30", "Current signatures, and the self-test state machine"],
-         ["2:50", "Adding a subsystem of your own, properly"]],
+        agenda_rows("lesson5"),
         col_widths=[1, 9],
         speaker=[
             "Two breaks. The capstone discussion at 2:50 will overrun if "
@@ -2026,7 +2108,7 @@ def lesson5(deck):
             "the breadboard.",
         ])
 
-    deck.section("Finding the sensor", minutes=25,
+    deck.section("Finding the sensor", minutes=stage_minutes("lesson5", "Finding the sensor"),
         stages=STAGES["lesson5"], stage="Finding the sensor",
         speaker=[
             "Twenty seconds. First activity.",
@@ -2062,6 +2144,12 @@ def lesson5(deck):
             "The question ties it back: this is exactly what "
             "is_ina219_present() does in Op 12, and the decision it drives "
             "is which capability flags get set.",
+        ])
+
+    deck.section("Measuring a motor", minutes=stage_minutes("lesson5", "Measuring a motor"),
+        stages=STAGES["lesson5"], stage="Measuring a motor",
+        speaker=[
+            "Twenty seconds. Second activity.",
         ])
 
     deck.bullets(
@@ -2138,12 +2226,6 @@ def lesson5(deck):
             "which is why it shifts right by three. That is normal for "
             "register maps, and reading a datasheet is a skill worth "
             "naming.",
-        ])
-
-    deck.section("Measuring a motor", minutes=35,
-        stages=STAGES["lesson5"], stage="Measuring a motor",
-        speaker=[
-            "Twenty seconds. Second activity.",
         ])
 
     deck.activity(
