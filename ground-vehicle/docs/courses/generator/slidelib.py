@@ -101,6 +101,10 @@ FOOTER_PT = 10.0       # Chrome
 MAX_BODY_PT = 30.0     # Grow-to-fill ceiling for body text
 MAX_CODE_PT = 20.0     # Grow-to-fill ceiling for code listings
 
+# A blank paragraph is a gap, not a line anybody reads, so it is exempt
+# from the reading floor and set at this fraction of the body size.
+SPACER_SCALE = 0.5
+
 # The gutter between two columns of body text.
 COL_GUTTER = Inches(0.5)
 
@@ -127,10 +131,16 @@ def measure_pt(runs, width_pt, size, *, font=BODY_FONT, space_after=6,
     char_w = CHAR_W.get(font, 0.50)
     total = 0.0
     for text, level in runs:
+        if not text.strip():
+            # A spacer, not a line of text. Nobody reads it, so it does
+            # not have to obey the reading floor - and _set_text sets it
+            # to the same fraction, or this measurement is a lie.
+            total += SPACER_SCALE * size * 1.22 * line_spacing + space_after
+            continue
         indent = level * 18.0
         usable = max(width_pt - indent, 24.0)
         per_line = max(int(usable / (char_w * size)), 1)
-        lines = max(math.ceil(len(text) / per_line), 1) if text else 1
+        lines = max(math.ceil(len(text) / per_line), 1)
         total += lines * size * 1.22 * line_spacing + space_after
     return total
 
@@ -166,7 +176,8 @@ def _set_text(frame, runs, *, size=18, bold=False, color=INK, font=BODY_FONT,
         # Set the size on the PARAGRAPH as well as its runs. A blank spacer
         # line has no runs at all, and without this it takes the theme default
         # of 18pt and quietly makes the block taller than it was measured to be.
-        para.font.size = Pt(size)
+        # Spacers are set short, to match what measure_pt allowed for them.
+        para.font.size = Pt(size if text.strip() else size * SPACER_SCALE)
         para.font.name = font
         para.font.bold = bold
         para.font.color.rgb = color
@@ -249,7 +260,31 @@ def two_column_pack(runs, width_pt, height_pt, size, *, space_after=6):
             best = (score, cut)
 
     if best is None:
-        return None
+        # No cut between blocks works, which usually means one block -
+        # a point with its sub-points - is most of a column by itself.
+        # Cut inside it instead, between sub-points, and repeat the
+        # parent at the top of the second column.
+        inner_best = None
+        for index, block in enumerate(blocks):
+            if len(block) < 3:
+                continue            # nothing to divide
+            parent = block[0]
+            carried = (parent[0].rstrip(":.") + "  (cont.)", parent[1])
+            head = [para for b in blocks[:index] for para in b]
+            tail = [para for b in blocks[index + 1:] for para in b]
+            for inner in range(2, len(block)):
+                left = head + block[:inner]
+                right = [carried] + block[inner:] + tail
+                left_h = height_of(left)
+                right_h = height_of(right)
+                if left_h > height_pt or right_h > height_pt:
+                    continue
+                score = abs(left_h - right_h)
+                if inner_best is None or score < inner_best[0]:
+                    inner_best = (score, left, right)
+        if inner_best is None:
+            return None
+        return inner_best[1], inner_best[2]
 
     cut = best[1]
 

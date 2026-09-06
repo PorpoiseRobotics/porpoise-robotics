@@ -3496,22 +3496,16 @@ def lesson5(deck, T):
 
     deck.bullets(
         "The problem with delay()",
-        [("delay(1000) does not mean \"come back in a second\". It means \"stand "
-          "here and do absolutely nothing for a second\".", 0),
-         ("", 0),
-         ("While the ESP32 is inside a delay() it is not reading the controller, "
-          "not checking anything, and not updating any other light. Everything "
-          "stops.", 0),
-         ("", 0),
-         ("In Lesson 2 that was fine, because blinking was all we wanted. But "
-          "now we need a turn signal every 300 ms, a scanner every 40 ms, and "
-          "the motors updated as fast as possible - and you cannot write those "
-          "three numbers as delays without them fighting.", 0),
-         ("", 0),
-         ("The old System Test program did exactly this. Press a button and the "
-          "vehicle froze for two seconds while the light pattern played, still "
-          "holding whatever motor command was last set. That is why it was "
-          "replaced.", 0)],
+        [("delay(1000) does not mean \"come back in a second\". It means "
+          "\"stand here and do nothing for a second\".", 0),
+         ("Inside a delay() the ESP32 is not reading the controller, not "
+          "checking anything, not updating any other light.", 0),
+         ("In Lesson 2 that was fine. Now we need a turn signal every "
+          "300 ms, a scanner every 40 ms, and the motors as fast as "
+          "possible - and those three cannot all be delays.", 0),
+         ("The old System Test program did exactly this: press a button "
+          "and the vehicle froze for two seconds, still holding the last "
+          "motor command. That is why it was replaced.", 0)],
         lead="It does not wait. It stops.",
         note="This is the single biggest difference between a program that works "
              "on the bench and one that works on a vehicle.",
@@ -3854,22 +3848,20 @@ def lesson5(deck, T):
     deck.bullets(
         "The last two additions",
         [("THE KITT SCANNER, done properly.", 0),
-         ("The version in Lesson 4 used delay(), so the vehicle froze while it "
-          "swept. The full program moves the dot one step every 40 ms off "
-          "millis(), so you can drive with the scanner running.", 1),
+         ("Lesson 4 used delay(), so the vehicle froze while it swept. "
+          "The full program moves the dot every 40 ms off millis(), so "
+          "you can drive with it running.", 1),
          ("Toggled with {}.".format(T["btn_scanner"]), 1),
-         ("", 0),
          ("SHARP STEERING.", 0),
-         ("turnMax is normally MOTOR_MAX / 2, which makes the vehicle easy to "
+         ("turnMax is normally MOTOR_MAX / 2, which makes it easy to "
           "aim. {} flips it to full power, for spinning on the "
           "spot.".format(T["btn_stickclick"]), 1),
-         ("The bottom of the range stays the same in both modes, so a gentle "
+         ("The bottom of the range is the same either way, so a gentle "
           "turn still breaks the wheels loose.", 1),
-         ("", 0),
          ("THE STARTUP LIGHT SHOW.", 0),
          ("One scanner sweep at power-up. delay() is fine THERE, because "
-          "nothing else needs to happen yet - and it proves every LED works "
-          "before you drive off.", 1)],
+          "nothing else needs to happen yet, and it proves every LED "
+          "works before you drive off.", 1)],
         note="Read the top of the file. Every setting you might want to change "
              "is in the SETTINGS block, with a comment saying what it does.",
         speaker=[
@@ -4025,27 +4017,20 @@ def lesson5(deck, T):
 
     deck.bullets(
         "Take it further  -  projects that fit on this vehicle",
-        [("Each of these is a real addition to the program you now understand. "
+        [("Each is a real addition to the program you now understand. "
           "Pick one and build it.", 0),
-         ("", 0),
-         ("LOW BATTERY WARNING.  Flash the LEDs yellow below 12 volts and red "
-          "below 10. A 4S pack should never be run flat, and the vehicle is in "
-          "a better position to notice than you are.", 0),
-         ("", 0),
-         ("COLLISION WARNING.  An ultrasonic range finder on the top plate. "
-          "Closer than 20 inches: stop the motors, flash red, wait three "
-          "seconds, then carry on.", 0),
-         ("", 0),
-         ("AUTOMATIC LIGHTS.  You already switch the turn signals from the "
-          "stick. Add reversing beeps, hazard lights, or headlights that come "
-          "on only when the vehicle is moving.", 0),
-         ("", 0),
-         ("WAYPOINT NAVIGATION.  Lesson 2 drove one square. Give the program a "
-          "LIST of moves - distance and heading - and drive a course you typed "
-          "in rather than one that was hard-coded.", 0),
-         ("", 0),
-         ("SERVO PAN AND TILT.  Two servos and a bracket, aimed with the right "
-          "stick. The mount points are already on the top plate.", 0)],
+         ("LOW BATTERY WARNING.  Flash yellow below 12 volts and red "
+          "below 10. A 4S pack should never be run flat, and the vehicle "
+          "notices sooner than you do.", 0),
+         ("COLLISION WARNING.  An ultrasonic range finder on the top "
+          "plate. Closer than 20 inches: stop, flash red, wait three "
+          "seconds, carry on.", 0),
+         ("AUTOMATIC LIGHTS.  Reversing beeps, hazard lights, or "
+          "headlights that come on only when the vehicle is moving.", 0),
+         ("WAYPOINT NAVIGATION.  Give the program a LIST of moves - "
+          "distance and heading - instead of one hard-coded square.", 0),
+         ("SERVO PAN AND TILT.  Two servos and a bracket, aimed with the "
+          "right stick. The mount points are already there.", 0)],
         note="All five are within reach of what you learned in five lessons. "
              "The range finder and the servos are the two the kit already has "
              "parts for.",
@@ -4080,26 +4065,23 @@ def lesson5(deck, T):
     deck.two_columns(
         "Where this goes next",
         "Straight on from here",
-        [("SENSORS - a range finder that stops the vehicle before it hits "
-          "something, line followers, light and temperature.", 0),
-         ("Once the vehicle can sense the world, dead reckoning stops being "
-          "the only way it knows where it is.", 0),
-         ("", 0),
-         ("VEHICLE TO VEHICLE - ESP-NOW lets ESP32s talk directly to each "
-          "other with no router in between.", 0),
-         ("", 0),
-         ("CAMERAS AND AI - object recognition, and a 6-DOF arm that picks "
-          "things up.", 0)],
+        [("SENSORS - a range finder that stops the vehicle before it "
+          "hits something, line followers, light and temperature. Once "
+          "it can sense the world, dead reckoning stops being the only "
+          "way it knows where it is.", 0),
+         ("VEHICLE TO VEHICLE - ESP-NOW lets ESP32s talk directly to "
+          "each other, with no router in between.", 0),
+         ("CAMERAS AND AI - object recognition, and a 6-DOF arm that "
+          "picks things up.", 0)],
         "The advanced program",
         [("Pathfinder_Op_Program12 is the same vehicle with:", 0),
-         ("the program split across eight files by subsystem", 1),
-         ("10-bit PWM and hybrid drive for finer low-speed control", 1),
+         ("eight files, split by subsystem", 1),
+         ("10-bit PWM and hybrid drive at low speed", 1),
          ("speed ramping, so it does not lurch", 1),
          ("a serial console for tuning without recompiling", 1),
          ("settings saved to EEPROM", 1),
          ("a current sensor and a powered self-test", 1),
-         ("", 0),
-         ("It is a five-lesson course of its own.", 0)],
+         ("A five-lesson course of its own.", 0)],
         note="Everything you learned this term transfers directly. The advanced "
              "course starts by taking this program apart.",
         speaker=[
