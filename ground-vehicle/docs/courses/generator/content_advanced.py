@@ -1044,7 +1044,7 @@ def lesson2(deck):
          ("servo 2  -  stick left", 1),
          ("servo 4  -  stick right", 1),
          ("", 0),
-         ("Each sits centerd whenever the stick is not pushed its way, so one "
+         ("Each sits centered whenever the stick is not pushed its way, so one "
           "stick aims four independent things.", 0),
          ("", 0),
          ("Travel is 1.0 to 2.0 ms. 11.2 used 0.5 to 2.5, which can drive a "
@@ -1057,7 +1057,7 @@ def lesson2(deck):
             "vehicle feel broken, a steering cap makes it feel "
             "controllable. Ask whether they agree.",
             "The four-servo scheme surprises people. One stick, four "
-            "servos, each owning one direction and centerd otherwise.",
+            "servos, each owning one direction and centered otherwise.",
             "1.0 to 2.0 ms is the corrected travel. Point back to the "
             "change log in Lesson 1 - the old range could drive a servo "
             "into its stops.",

@@ -628,7 +628,7 @@ class Deck:
         box.text_frame.word_wrap = True
         # python-pptx builds an autoshape with algn="ctr" on its first
         # paragraph. Left is what we want everywhere unless a caller says
-        # otherwise, and a centerd line of code looks broken.
+        # otherwise, and a centered line of code looks broken.
         box.text_frame.paragraphs[0].alignment = PP_ALIGN.LEFT
         return box
 
@@ -638,7 +638,7 @@ class Deck:
 
         Returns the shape that was placed, or None if `image` was None. A
         picture keeps its aspect ratio inside the (width, height) box given
-        and is centerd in it; a placeholder fills the box exactly, so the
+        and is centered in it; a placeholder fills the box exactly, so the
         caption below it lands where the caption of the real photograph will.
         """
         if image is None:
@@ -907,7 +907,7 @@ class Deck:
                  "safety": "SAFETY"}.get(kind, "KEY POINT")
         width_pt = width / EMU_PER_PT - 0.5
         combined = label + "   " + text
-        size, _, _ = fit_size([combined], width_pt, 1.0 * 72 - 12, 15, floor=12)
+        size, _, _ = fit_size([combined], width_pt, 1.0 * 72 - 12, 18, floor=18)
         wanted_pt = measure_pt([combined], width_pt, size, space_after=0)
         height = max(Inches(1.05), Emu(int((wanted_pt + 18) * EMU_PER_PT)))
         return min(height, Inches(1.7)) + Inches(0.14)
@@ -1022,7 +1022,7 @@ class Deck:
         # Grow the panel if the note is long, rather than overflowing it.
         width_pt = width / EMU_PER_PT - 0.5
         combined = label + "   " + text
-        size, _, _ = fit_size([combined], width_pt, 1.0 * 72 - 12, 15, floor=12)
+        size, _, _ = fit_size([combined], width_pt, 1.0 * 72 - 12, 18, floor=18)
         wanted_pt = measure_pt([combined], width_pt, size, space_after=0)
         height = max(Inches(1.05), Emu(int((wanted_pt + 18) * EMU_PER_PT)))
         height = min(height, Inches(1.7))

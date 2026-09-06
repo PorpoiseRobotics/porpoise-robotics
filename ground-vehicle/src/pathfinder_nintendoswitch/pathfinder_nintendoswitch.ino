@@ -298,7 +298,7 @@ int stickToSpeed(int stickValue, int maxSpeed) {
 
 /*
   Turns a thumbstick reading into a servo pulse length in microseconds.
-  A centerd stick gives a centerd servo.
+  A centered stick gives a centered servo.
 */
 int stickToServoMicroseconds(int stickValue) {
   if (abs(stickValue) < STICK_DEADZONE) {

@@ -165,6 +165,39 @@ def check_deck(path):
 
             if getattr(shape, "has_table", False) and shape.has_table:
                 table = shape.table
+
+                # Do the rows fit the box? If not, the ones at the bottom
+                # are drawn under whatever comes next and vanish.
+                wanted = 0.0
+                for row in table.rows:
+                    tallest = 0.0
+                    for number, cell in enumerate(row.cells):
+                        if number >= len(table.columns):
+                            continue
+                        cell_w = table.columns[number].width / EMU_PER_PT - 14
+                        for para in cell.text_frame.paragraphs:
+                            body = para.text or ""
+                            if not body.strip():
+                                continue
+                            size, name = None, None
+                            for run in para.runs:
+                                size = run.font.size or size
+                                name = run.font.name or name
+                            pt = size.pt if size is not None else 18.0
+                            per = max(int(cell_w / (CHAR_W.get(name, CHAR_W[None]) * pt)), 1)
+                            lines = max(math.ceil(len(body) / per), 1)
+                            tallest = max(tallest, lines * pt * 1.25 + 6)
+                    wanted += tallest
+                # shape.height, not the loop's `height` - that is not
+                # assigned until further down and would be the previous
+                # shape's.
+                have = shape.height / EMU_PER_PT
+                if wanted > have + SLOP_PT:
+                    issues.append(
+                        (index,
+                         "table overflows by {:.0f} pt".format(wanted - have),
+                         "{} rows".format(len(table.rows))))
+
                 for number, column in enumerate(table.columns):
                     width_pt = column.width / EMU_PER_PT
                     for row in table.rows:

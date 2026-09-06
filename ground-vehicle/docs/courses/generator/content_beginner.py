@@ -848,15 +848,10 @@ def lesson1(deck, T):
     deck.table(
         "Every program in this course, and what it needs",
         ["Lesson", "Sketch", "Libraries beyond the board package"],
-        [["1", "l1a_blink", "none"],
-         ["1", "l1b_serial_monitor", "none"],
+        [["1", "l1a_blink / l1b_serial_monitor", "none"],
          ["1", "l1c_first_pixel", "Adafruit NeoPixel"],
-         ["2", "l2a_one_motor", "none"],
-         ["2", "l2b_speed_ramp", "none"],
-         ["2", "l2c_maneuver_square", "none"],
-         ["3", "l3a_controller_check", T["lib_short"]],
-         ["3", "l3b_deadzone_and_map", T["lib_short"]],
-         ["3", "l3c_tank_drive", T["lib_short"]],
+         ["2", "l2a / l2b / l2c", "none"],
+         ["3", "l3a / l3b / l3c", T["lib_short"]],
          ["4", "l4a / l4b / l4c", "Adafruit NeoPixel"],
          ["5", "l5a / l5b / l5c", "Adafruit NeoPixel" + T["lib_and"]],
          ["5", T["full_program"], "Adafruit NeoPixel" + T["lib_and"]]],
@@ -867,6 +862,10 @@ def lesson1(deck, T):
              "any code. A missing library is by far the most common cause.",
         speaker=[
             "This is the reference page. Tell students to photograph it.",
+            "The sketches are grouped by lesson because they need the same "
+            "things. The one row worth pointing at is l1c_first_pixel: "
+            "Lesson 1 is the only lesson where the three sketches do not "
+            "all need the same library.",
             "Worth saying out loud: the board package is not a library. The "
             "board package teaches the IDE what an ESP32 is; a library is code "
             "your program calls.",
@@ -2724,7 +2723,7 @@ def lesson3(deck, T):
          ["Wheels spin the wrong way",
           "Motor pins swapped",
           "Swap that motor's two pin numbers in the sketch"],
-         ["It creeps with the stick centerd",
+         ["It creeps with the stick centered",
           "Deadzone too small",
           "Raise STICK_DEADZONE"],
          ["Nothing at all, no serial output",
@@ -3912,7 +3911,7 @@ def lesson5(deck, T):
           "program drives them from the RIGHT stick.", 0),
          ("", 0),
          ("Each servo owns one direction of the stick, so one stick aims "
-          "four independent things and each sits centerd when the stick is "
+          "four independent things and each sits centered when the stick is "
           "not pushed its way.", 0),
          ("", 0),
          ("A pan and tilt mount is the obvious first use: two servos, one "
@@ -4217,7 +4216,7 @@ def lesson5(deck, T):
          ("3.  Why does unsigned long matter for millis()?", 0),
          ("4.  What is edge detection, and what goes wrong without it?", 0),
          ("5.  What is a dirty flag, and what does it save?", 0),
-         ("6.  A servo is centerd by a pulse of what length? How often is it "
+         ("6.  A servo is centered by a pulse of what length? How often is it "
           "sent?", 0),
          ("7.  Name three things the full program does that l5c does not.", 0),
          ("8.  Your vehicle drifts left on the drag strip. Give one mechanical "

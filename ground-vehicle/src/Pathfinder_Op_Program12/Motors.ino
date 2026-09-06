@@ -168,7 +168,7 @@ void write_servo(uint8_t channel, int microseconds) {
 
 /*
   The right stick drives four servos, one per direction. Each servo sweeps its
-  full travel across half of the stick's range and sits centerd otherwise, so
+  full travel across half of the stick's range and sits centered otherwise, so
   a single stick can aim four independent things.
 */
 void update_servos(ControllerPtr gp) {

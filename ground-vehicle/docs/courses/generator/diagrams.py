@@ -518,7 +518,7 @@ def deadzone_map(deck, title="From thumbstick to motor speed", stick_max=127,
                  deadzone=20, speaker=None):
     slide = deck.blank(title, speaker=speaker or [
         "The two numbers that matter are the deadzone and the top of the stick range. Everything else on the slide follows from those.",
-        "Ask why the line does not start at zero. The answer - a stick at rest is never exactly centerd - is worth getting from the room rather than telling them.",
+        "Ask why the line does not start at zero. The answer - a stick at rest is never exactly centered - is worth getting from the room rather than telling them.",
         "The jump at the deadzone edge is deliberate: below the minimum duty the motor buzzes instead of turning, so the map skips straight past it.",
         "Come back to this diagram when somebody's vehicle creeps on its own.",
     ])
@@ -622,7 +622,7 @@ def tank_mixing(deck, title="Mixing: one stick, two sides", speaker=None):
          "curves right\nwhile moving", LIGHT_TEAL),
         ("hard right only", "forward 0\nturn 127", "left 127\nright -127",
          "spins on the spot", LIGHT_AMBER),
-        ("stick centerd", "forward 0\nturn 0", "left 0\nright 0",
+        ("stick centered", "forward 0\nturn 0", "left 0\nright 0",
          "both sides coast", LIGHT_GREY),
     ]
 
@@ -919,7 +919,7 @@ def servo_pulse(deck, title="A servo listens to the LENGTH of a pulse", speaker=
 
     rows = [
         ("1.0 ms", 0.05, "one end of the travel", TEAL),
-        ("1.5 ms", 0.075, "centerd", NAVY),
+        ("1.5 ms", 0.075, "centered", NAVY),
         ("2.0 ms", 0.10, "the other end", AMBER),
     ]
 
