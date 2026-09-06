@@ -141,7 +141,8 @@ SWITCH = {
 }
 
 
-# The stages each lesson moves through, used by the progress markers.
+# The stages each lesson moves through. Each one is announced by a section
+# divider, which carries the strip showing where in the lesson you are.
 STAGES = {
     "lesson1": [
         "The vehicle",
@@ -637,6 +638,7 @@ def lesson1(deck, T):
         ])
 
     deck.section("Setting up the Arduino IDE", minutes=35,
+        stages=STAGES["lesson1"], stage="Setting up the IDE",
         speaker=[
             "The next thirty-five minutes are the least fun part of the "
             "whole course. Say so, and promise them something blinking at "
@@ -785,6 +787,7 @@ def lesson1(deck, T):
         ])
 
     deck.section("Your first program", minutes=25,
+        stages=STAGES["lesson1"], stage="Your first circuit and program",
         speaker=[
             "From here on they are building rather than installing. The "
             "energy in the room should go up.",
@@ -922,12 +925,6 @@ def lesson1(deck, T):
             "5 and that there is a good reason.",
         ])
 
-    deck.progress(STAGES["lesson1"], 1,
-        speaker=[
-            "Twenty seconds. Where we have been, where we are, what is "
-            "left.",
-        ])
-
     deck.activity(
         "Do it now  -  blink",
         "l1a_blink",
@@ -964,6 +961,7 @@ def lesson1(deck, T):
         ])
 
     deck.section("Making the vehicle talk back", minutes=25,
+        stages=STAGES["lesson1"], stage="Talking back",
         speaker=[
             "Frame this as giving the vehicle a voice. It is the only way "
             "it can tell them anything.",
@@ -1053,11 +1051,6 @@ def lesson1(deck, T):
             "The % operator is new to most. One example is enough.",
         ])
 
-    deck.progress(STAGES["lesson1"], 2,
-        speaker=[
-            "Twenty seconds. Two down, three to go.",
-        ])
-
     deck.activity(
         "Do it now  -  make it talk",
         "l1b_serial_monitor",
@@ -1084,6 +1077,7 @@ def lesson1(deck, T):
         ])
 
     deck.section("Your first light", minutes=20,
+        stages=STAGES["lesson1"], stage="Your first light",
         speaker=[
             "Last twenty minutes. This is the one they will tell people "
             "about.",
@@ -1162,11 +1156,6 @@ def lesson1(deck, T):
             "set once. setPixelColor is per LED. Keep those two apart.",
             "Point at strip.show() and say that nothing reaches the vehicle "
             "without it.",
-        ])
-
-    deck.progress(STAGES["lesson1"], 3,
-        speaker=[
-            "Twenty seconds. One to go, and it is the one with the lights.",
         ])
 
     deck.activity(
@@ -1567,9 +1556,11 @@ def lesson2(deck, T):
             "demonstrate it today.",
         ])
 
-    deck.progress(STAGES["lesson2"], 1,
+    deck.section("One motor", minutes=25,
+        stages=STAGES["lesson2"], stage="One motor",
         speaker=[
-            "Twenty seconds. First of three activities.",
+            "First of three activities. Twenty seconds on this slide.",
+            "Blocks under every vehicle before anybody uploads.",
         ])
 
     deck.activity(
@@ -1600,9 +1591,11 @@ def lesson2(deck, T):
         ])
 
 
-    deck.progress(STAGES["lesson2"], 2,
+    deck.section("Duty vs speed", minutes=20,
+        stages=STAGES["lesson2"], stage="Duty vs speed",
         speaker=[
-            "Twenty seconds. Two of three.",
+            "Two of three. Wheels still off the ground - this one runs "
+            "all four to full speed.",
         ])
 
     deck.activity(
@@ -1634,6 +1627,7 @@ def lesson2(deck, T):
         ])
 
     deck.section("STEM break: Ohm's law and circuits", minutes=25,
+        stages=STAGES["lesson2"], stage="Ohm's law and circuits",
         speaker=[
             "Twenty-five minutes away from the vehicle. Tell them why: the "
             "LED resistor, the current budget in Lesson 4 and the battery "
@@ -1718,6 +1712,7 @@ def lesson2(deck, T):
         ])
 
     deck.section("Making it go where you want", minutes=60,
+        stages=STAGES["lesson2"], stage="Driving a square",
         speaker=[
             "The last hour, and the best part of the lesson. From here the "
             "vehicle drives on the floor.",
@@ -1997,11 +1992,6 @@ def lesson2(deck, T):
             "fix it for them - tuning it is the exercise.",
             "The twenty-second stop at the end is so nobody has to chase a "
             "vehicle that has started a second square.",
-        ])
-
-    deck.progress(STAGES["lesson2"], 3,
-        speaker=[
-            "Twenty seconds, then clear the floor.",
         ])
 
     deck.activity(
@@ -2333,7 +2323,8 @@ def lesson3(deck, T):
 
     diagrams.six_dof(deck, controller=T["pad_short"])
 
-    deck.progress(STAGES["lesson3"], 1,
+    deck.section("What the pad sends", minutes=25,
+        stages=STAGES["lesson3"], stage="What the pad sends",
         speaker=[
             "Twenty seconds. First of three.",
         ])
@@ -2439,7 +2430,8 @@ def lesson3(deck, T):
             "Get them to work out one example on paper before the activity.",
         ])
 
-    deck.progress(STAGES["lesson3"], 2,
+    deck.section("Deadzone and map", minutes=20,
+        stages=STAGES["lesson3"], stage="Deadzone and map",
         speaker=[
             "Twenty seconds. Two of three.",
         ])
@@ -2541,7 +2533,8 @@ def lesson3(deck, T):
             "have written themselves. Say so.",
         ])
 
-    deck.progress(STAGES["lesson3"], 3,
+    deck.section("Driving it", minutes=30,
+        stages=STAGES["lesson3"], stage="Driving it",
         speaker=[
             "Twenty seconds, then clear the floor.",
         ])
@@ -3137,7 +3130,8 @@ def lesson4(deck, T):
 
     diagrams.ohms_and_power_law(deck)
 
-    deck.progress(STAGES["lesson4"], 1,
+    deck.section("The power budget", minutes=20,
+        stages=STAGES["lesson4"], stage="The power budget",
         speaker=[
             "Twenty seconds. First of three.",
         ])
@@ -3179,7 +3173,8 @@ def lesson4(deck, T):
 
     diagrams.led_map(deck)
 
-    deck.progress(STAGES["lesson4"], 2,
+    deck.section("The LED map", minutes=25,
+        stages=STAGES["lesson4"], stage="The LED map",
         speaker=[
             "Twenty seconds. Two of three.",
         ])
@@ -3297,7 +3292,8 @@ def lesson4(deck, T):
             "comes back in Lesson 5, done properly without delay().",
         ])
 
-    deck.progress(STAGES["lesson4"], 3,
+    deck.section("Patterns", minutes=25,
+        stages=STAGES["lesson4"], stage="Patterns",
         speaker=[
             "Twenty seconds. Last activity before the design exercise.",
         ])
@@ -3568,7 +3564,8 @@ def lesson5(deck, T):
             "wrap at 49 days.",
         ])
 
-    deck.progress(STAGES["lesson5"], 1,
+    deck.section("Two speeds at once", minutes=25,
+        stages=STAGES["lesson5"], stage="Two speeds at once",
         speaker=[
             "Twenty seconds. First of four.",
         ])
@@ -3635,7 +3632,8 @@ def lesson5(deck, T):
             "That is the whole of justPressed().",
         ])
 
-    deck.progress(STAGES["lesson5"], 2,
+    deck.section("Edge detection", minutes=25,
+        stages=STAGES["lesson5"], stage="Edge detection",
         speaker=[
             "Twenty seconds. Two of four.",
         ])
@@ -3757,7 +3755,8 @@ def lesson5(deck, T):
             "something actually changed.",
         ])
 
-    deck.progress(STAGES["lesson5"], 3,
+    deck.section("Lights from state", minutes=30,
+        stages=STAGES["lesson5"], stage="Lights from state",
         speaker=[
             "Twenty seconds. Three of four.",
         ])
@@ -3792,6 +3791,7 @@ def lesson5(deck, T):
         ])
 
     deck.section("The full program", minutes=45,
+        stages=STAGES["lesson5"], stage="The full program",
         speaker=[
             "Forty-five minutes on the real program. Have it open on the "
             "projector.",
@@ -3954,11 +3954,6 @@ def lesson5(deck, T):
             "that IS tank steering.",
             "The failsafe calls drive(0, 0) and then return, which skips the "
             "whole of the rest of loop() and starts it again.",
-        ])
-
-    deck.progress(STAGES["lesson5"], 4,
-        speaker=[
-            "Twenty seconds. Last one, and it is the real program.",
         ])
 
     deck.activity(

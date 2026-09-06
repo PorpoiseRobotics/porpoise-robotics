@@ -717,19 +717,39 @@ class Deck:
         set_notes(slide, speaker)
         return slide
 
-    def section(self, title, subtitle=None, minutes=None, speaker=None):
+    def section(self, title, subtitle=None, minutes=None, stages=None,
+                stage=None, speaker=None):
+        """
+        A divider between the stages of a lesson.
+
+        Pass `stages` (the lesson's stage list) and `stage` (the name of
+        the one starting here) and the divider carries the progress strip
+        that used to live on its own "Where we are" slide. The position is
+        looked up, never counted by hand, so it cannot drift when slides
+        move - and a name that is not in the list stops the build.
+        """
         slide = self._new(layout=LAYOUT_BLANK, title=None)
 
-        bar = slide.shapes.add_shape(MSO_SHAPE.RECTANGLE, 0, Inches(2.4),
-                                     Inches(0.28), Inches(2.0))
+        has_strip = bool(stages and stage)
+        if stages and stage and stage not in stages:
+            raise SystemExit(
+                "section(): stage %r is not in this lesson's stages %r"
+                % (stage, list(stages)))
+
+        title_top = Inches(1.45) if has_strip else Inches(2.5)
+        bar_top = title_top - Inches(0.10)
+
+        bar = slide.shapes.add_shape(MSO_SHAPE.RECTANGLE, 0, bar_top,
+                                     Inches(0.28), Inches(1.7))
         bar.fill.solid()
         bar.fill.fore_color.rgb = TEAL
         bar.line.fill.background()
         bar.shadow.inherit = False
 
-        box = self._textbox(slide, Inches(0.85), Inches(2.5), Inches(11.5), Inches(1.3))
+        box = self._textbox(slide, Inches(0.85), title_top, Inches(11.5),
+                            Inches(1.15))
         _set_fitted(box.text_frame, [title], width=Inches(11.5),
-                    height=Inches(1.3), size=36, floor=22, bold=True,
+                    height=Inches(1.15), size=36, floor=22, bold=True,
                     color=NAVY, space_after=0)
 
         rows = []
@@ -738,11 +758,17 @@ class Deck:
         if minutes:
             rows.append("About {} minutes".format(minutes))
         if rows:
-            box = self._textbox(slide, Inches(0.85), Inches(3.85), Inches(11.5),
-                                Inches(1.0))
+            box = self._textbox(slide, Inches(0.85),
+                                title_top + Inches(1.20), Inches(11.5),
+                                Inches(0.75))
             _set_fitted(box.text_frame, rows, width=Inches(11.5),
-                        height=Inches(1.0), size=16, floor=12, color=GREY,
+                        height=Inches(0.75), size=16, floor=12, color=GREY,
                         space_after=4)
+
+        if has_strip:
+            self._stage_strip(slide, stages, list(stages).index(stage),
+                              Inches(4.25))
+
         set_notes(slide, speaker)
         return slide
 
@@ -771,19 +797,16 @@ class Deck:
         set_notes(slide, speaker)
         return slide
 
-    def progress(self, stages, done, title="Where we are", speaker=None):
+    def _stage_strip(self, slide, stages, done, top):
         """
-        A strip of the lesson's stages with the finished ones ticked and the
-        current one highlighted. Shown between sections so the class can see
-        how far through the three hours they are.
+        The lesson's stages in a row, finished ones ticked and the current
+        one highlighted. It used to be a slide of its own; it now sits at
+        the foot of the section divider that starts the stage.
         """
-        slide = self._new(title=title)
-
         gap = Inches(0.16)
         count = len(stages)
         box_w = Emu(int((CONTENT_W - gap * (count - 1)) / count))
-        top = BODY_TOP + Inches(1.15)
-        box_h = Inches(1.9)
+        box_h = Inches(1.45)
 
         for index, stage in enumerate(stages):
             left = MARGIN_L + (box_w + gap) * index
@@ -814,13 +837,11 @@ class Deck:
                         align=PP_ALIGN.CENTER, space_after=0)
 
             if mark:
-                tag = self._textbox(slide, left, top - Inches(0.42), box_w,
-                                    Inches(0.38))
+                tag = self._textbox(slide, left, top - Inches(0.40), box_w,
+                                    Inches(0.34))
                 _set_fitted(tag.text_frame, [mark], width=box_w,
-                            height=Inches(0.38), size=13, floor=11, bold=True,
+                            height=Inches(0.34), size=13, floor=11, bold=True,
                             color=TEAL, align=PP_ALIGN.CENTER)
-
-        set_notes(slide, speaker)
         return slide
 
     def _note_height(self, text, kind="info", width=None):

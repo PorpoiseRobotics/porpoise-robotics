@@ -39,7 +39,8 @@ TRACK_LABEL = "Pathfinder Advanced - Op Program 12"
 SRC = "ground-vehicle/src/lessons/advanced"
 
 
-# The stages each lesson moves through, used by the progress markers.
+# The stages each lesson moves through. Each one is announced by a section
+# divider, which carries the strip showing where in the lesson you are.
 STAGES = {
     "lesson1": [
         "Architecture",
@@ -298,7 +299,8 @@ def lesson1(deck):
             "why it is dangerous.",
         ])
 
-    deck.progress(STAGES["lesson1"], 1,
+    deck.section("Tabs and Config.h", minutes=30,
+        stages=STAGES["lesson1"], stage="Tabs and Config.h",
         speaker=[
             "Twenty seconds. First activity.",
         ])
@@ -409,7 +411,8 @@ def lesson1(deck):
             "validation. Worth pointing out that they are not optional.",
         ])
 
-    deck.progress(STAGES["lesson1"], 2,
+    deck.section("The console", minutes=25,
+        stages=STAGES["lesson1"], stage="The console",
         speaker=[
             "Twenty seconds. Second activity.",
         ])
@@ -680,7 +683,8 @@ def lesson2(deck):
             "what the extra two bits are for.",
         ])
 
-    deck.progress(STAGES["lesson2"], 1,
+    deck.section("Resolution", minutes=35,
+        stages=STAGES["lesson2"], stage="Resolution",
         speaker=[
             "Twenty seconds. First activity.",
         ])
@@ -842,7 +846,8 @@ def lesson2(deck):
             "count.",
         ])
 
-    deck.progress(STAGES["lesson2"], 2,
+    deck.section("Decay and ramping", minutes=35,
+        stages=STAGES["lesson2"], stage="Decay and ramping",
         speaker=[
             "Twenty seconds. Second activity.",
         ])
@@ -1111,7 +1116,8 @@ def lesson3(deck):
             "source of truth. That principle is worth stating generally.",
         ])
 
-    deck.progress(STAGES["lesson3"], 1,
+    deck.section("Locking a board", minutes=30,
+        stages=STAGES["lesson3"], stage="Locking a board",
         speaker=[
             "Twenty seconds. First activity.",
         ])
@@ -1250,7 +1256,8 @@ def lesson3(deck):
             "will not boot at all.",
         ])
 
-    deck.progress(STAGES["lesson3"], 2,
+    deck.section("EEPROM", minutes=35,
+        stages=STAGES["lesson3"], stage="EEPROM",
         speaker=[
             "Twenty seconds. Second activity.",
         ])
@@ -1589,7 +1596,8 @@ def lesson4(deck):
             "bit-banging. That is why it is expensive.",
         ])
 
-    deck.progress(STAGES["lesson4"], 1,
+    deck.section("Measuring a redraw", minutes=35,
+        stages=STAGES["lesson4"], stage="Measuring a redraw",
         speaker=[
             "Twenty seconds. First activity.",
         ])
@@ -1734,7 +1742,8 @@ def lesson4(deck):
             "feel right.",
         ])
 
-    deck.progress(STAGES["lesson4"], 2,
+    deck.section("Turn signal geometry", minutes=35,
+        stages=STAGES["lesson4"], stage="Turn signal geometry",
         speaker=[
             "Twenty seconds. Second activity.",
         ])
@@ -2017,7 +2026,8 @@ def lesson5(deck):
             "the breadboard.",
         ])
 
-    deck.progress(STAGES["lesson5"], 1,
+    deck.section("Finding the sensor", minutes=25,
+        stages=STAGES["lesson5"], stage="Finding the sensor",
         speaker=[
             "Twenty seconds. First activity.",
         ])
@@ -2130,7 +2140,8 @@ def lesson5(deck):
             "naming.",
         ])
 
-    deck.progress(STAGES["lesson5"], 2,
+    deck.section("Measuring a motor", minutes=35,
+        stages=STAGES["lesson5"], stage="Measuring a motor",
         speaker=[
             "Twenty seconds. Second activity.",
         ])
