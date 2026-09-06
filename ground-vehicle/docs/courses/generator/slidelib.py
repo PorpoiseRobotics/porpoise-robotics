@@ -93,6 +93,17 @@ MIN_CODE_PT = 14.0     # Code listings only
 MIN_SMALL_PT = 18.0    # Captions and diagram labels are content too
 FOOTER_PT = 10.0       # Chrome
 
+# House rule, added after the 2026-09-05 review: 18pt is a FLOOR, not a
+# target. A slide holding four short bullets used to set them at 18pt and
+# leave two thirds of the slide empty. Text now grows to fill the box it was
+# given, up to these ceilings, so a sparse slide reads from the back of the
+# room instead of looking unfinished.
+MAX_BODY_PT = 30.0     # Grow-to-fill ceiling for body text
+MAX_CODE_PT = 20.0     # Grow-to-fill ceiling for code listings
+
+# The gutter between two columns of body text.
+COL_GUTTER = Inches(0.5)
+
 
 # ===================================================================
 # MEASUREMENT
@@ -191,6 +202,70 @@ def _set_fitted(frame, runs, *, width, height, size=18, floor=MIN_BODY_PT,
     _set_text(frame, runs, size=used, space_after=gap, font=font,
               line_spacing=line_spacing, **kwargs)
     return used
+
+
+def _top_level_blocks(runs):
+    """
+    Groups normalised runs into blocks, each a top-level item followed by any
+    sub-points that belong to it. Content is only ever divided between blocks,
+    so a sub-point is never orphaned from its parent.
+    """
+    blocks = []
+    for text, level in _norm(runs):
+        if level == 0 or not blocks:
+            blocks.append([(text, level)])
+        else:
+            blocks[-1].append((text, level))
+    return blocks
+
+
+def two_column_pack(runs, width_pt, height_pt, size, *, space_after=6):
+    """
+    Splits `runs` into a balanced LEFT and RIGHT column, each of which fits
+    `height_pt` at `size` in a column `width_pt` wide. Returns (left, right),
+    or None if two columns of that box will not hold it.
+
+    This is what keeps a list off a "(continued)" slide. A list too tall for
+    one column at the 18pt floor very often fits two, and one slide the class
+    can see all at once beats two half-empty ones.
+    """
+    blocks = _top_level_blocks(runs)
+    if len(blocks) < 2:
+        return None
+
+    def height_of(block):
+        return measure_pt(block, width_pt, size, space_after=space_after)
+
+    heights = [height_of(b) for b in blocks]
+
+    best = None
+    for cut in range(1, len(blocks)):
+        left_h = sum(heights[:cut])
+        right_h = sum(heights[cut:])
+        if left_h > height_pt or right_h > height_pt:
+            continue
+        score = abs(left_h - right_h)
+        if best is None or score < best[0]:
+            best = (score, cut)
+
+    if best is None:
+        return None
+
+    cut = best[1]
+
+    def trimmed(paras):
+        # A blank separator at the top or bottom of a column is wasted height.
+        while paras and not paras[0][0].strip():
+            paras = paras[1:]
+        while paras and not paras[-1][0].strip():
+            paras = paras[:-1]
+        return paras
+
+    left = trimmed([para for block in blocks[:cut] for para in block])
+    right = trimmed([para for block in blocks[cut:] for para in block])
+    if not left or not right:
+        return None
+    return left, right
 
 
 def _split_runs(runs, width_pt, height_pt, size, *, space_after=6):
@@ -713,6 +788,22 @@ class Deck:
         set_notes(slide, speaker)
         return slide
 
+    def _note_height(self, text, kind="info", width=None):
+        """
+        How tall _note() will actually draw this note. Callers used to reserve
+        a flat 1.15in whatever the note said, which quietly stole a quarter of
+        an inch from the body on every short one.
+        """
+        width = CONTENT_W if width is None else width
+        label = {"info": "KEY POINT", "warn": "WATCH OUT",
+                 "safety": "SAFETY"}.get(kind, "KEY POINT")
+        width_pt = width / EMU_PER_PT - 0.5
+        combined = label + "   " + text
+        size, _, _ = fit_size([combined], width_pt, 1.0 * 72 - 12, 15, floor=12)
+        wanted_pt = measure_pt([combined], width_pt, size, space_after=0)
+        height = max(Inches(1.05), Emu(int((wanted_pt + 18) * EMU_PER_PT)))
+        return min(height, Inches(1.7)) + Inches(0.14)
+
     def bullets(self, title, items, lead=None, note=None, note_kind="info",
                 size=18, speaker=None):
         """
@@ -724,8 +815,9 @@ class Deck:
         height = BODY_H
         if lead:
             height -= Inches(0.62)
+        note_h = self._note_height(note, note_kind) if note else Inches(0)
         if note:
-            height -= Inches(1.15)
+            height -= note_h
 
         width_pt = CONTENT_W / EMU_PER_PT
         # _set_fitted keeps 6pt of slack inside the box. Measure against the
@@ -736,13 +828,33 @@ class Deck:
         # or the split decision is made against the wrong height.
         gap = 9
 
-        # Would it fit if we shrank it? If so, one slide will do.
-        _, _, fits = fit_size(items, width_pt, height_pt, size, space_after=gap)
+        # 18pt is the floor, not the target. Start high and let fit_size come
+        # down, so a short list fills its box instead of floating in it.
+        start = max(size, MAX_BODY_PT)
+
+        col_w = Emu(int((CONTENT_W - COL_GUTTER) / 2))
+        col_w_pt = col_w / EMU_PER_PT
+        columns = None
+
+        # Would it fit in one column? If so, one slide will do.
+        _, _, fits = fit_size(items, width_pt, height_pt, start, space_after=gap)
         if fits:
             chunks = [_norm(items)]
         else:
-            chunks = _split_runs(items, width_pt, height_pt, MIN_BODY_PT,
-                                 space_after=gap)
+            # It will not. Before spilling onto a "(continued)" slide, try two
+            # columns on THIS one - a list too tall for one column at 18pt very
+            # often fits two, and one slide beats two half-empty ones.
+            # At the floor size fit_size tightens the paragraph gap, so the
+            # split decision has to measure with the tight one too - otherwise
+            # we spill onto a second slide that the render did not need.
+            tight = max(gap - 3, 1)
+            columns = two_column_pack(items, col_w_pt, height_pt, MIN_BODY_PT,
+                                      space_after=tight)
+            if columns:
+                chunks = [_norm(items)]
+            else:
+                chunks = _split_runs(items, width_pt, height_pt, MIN_BODY_PT,
+                                     space_after=tight)
 
         slides = []
         for index, chunk in enumerate(chunks):
@@ -764,11 +876,24 @@ class Deck:
                 body_h -= Inches(0.62)
 
             if note and is_last:
-                body_h -= Inches(1.15)
+                body_h -= note_h
 
-            box = self._textbox(slide, MARGIN_L, body_top, CONTENT_W, body_h)
-            _set_fitted(box.text_frame, chunk, width=CONTENT_W, height=body_h,
-                        size=size, space_after=9)
+            if columns:
+                # One size for both columns, or the pair looks mismatched.
+                shared = min(
+                    fit_size(side, col_w_pt, body_h / EMU_PER_PT - 8.0,
+                             start, space_after=9)[0]
+                    for side in columns)
+                for side_index, side in enumerate(columns):
+                    left = MARGIN_L + (col_w + COL_GUTTER) * side_index
+                    box = self._textbox(slide, left, body_top, col_w, body_h)
+                    _set_fitted(box.text_frame, side, width=col_w,
+                                height=body_h, size=shared, space_after=9)
+            else:
+                box = self._textbox(slide, MARGIN_L, body_top, CONTENT_W,
+                                    body_h)
+                _set_fitted(box.text_frame, chunk, width=CONTENT_W,
+                            height=body_h, size=start, space_after=9)
 
             if note and is_last:
                 self._note(slide, note, note_kind)
@@ -956,24 +1081,30 @@ class Deck:
         """
         gap = Inches(0.5)
         col_w = Emu(int((CONTENT_W - gap) / 2))
-        body_h = BODY_H - (Inches(1.25) if note else Inches(0)) - Inches(0.5)
+        note_h = self._note_height(note, note_kind) if note else Inches(0)
+        body_h = BODY_H - note_h - Inches(0.5)
 
         width_pt = col_w / EMU_PER_PT
         height_pt = body_h / EMU_PER_PT - 8.0
 
-        _, _, left_fits = fit_size(left_items, width_pt, height_pt, size,
-                                   space_after=8)
-        _, _, right_fits = fit_size(right_items, width_pt, height_pt, size,
-                                    space_after=8)
+        # 18pt is a floor, not a target: start high and come down.
+        start = max(size, MAX_BODY_PT)
+
+        left_used, _, left_fits = fit_size(left_items, width_pt, height_pt,
+                                           start, space_after=8)
+        right_used, _, right_fits = fit_size(right_items, width_pt, height_pt,
+                                             start, space_after=8)
+        # One size across both columns, or the pair looks mismatched.
+        shared = min(left_used, right_used)
 
         if left_fits and right_fits:
             left_chunks = [_norm(left_items)]
             right_chunks = [_norm(right_items)]
         else:
             left_chunks = _split_runs(left_items, width_pt, height_pt,
-                                      MIN_BODY_PT, space_after=8)
+                                      MIN_BODY_PT, space_after=5)
             right_chunks = _split_runs(right_items, width_pt, height_pt,
-                                       MIN_BODY_PT, space_after=8)
+                                       MIN_BODY_PT, space_after=5)
 
         pages = max(len(left_chunks), len(right_chunks))
         left_chunks += [[]] * (pages - len(left_chunks))
@@ -988,7 +1119,7 @@ class Deck:
             made.append(slide)
             is_last = index == pages - 1
 
-            this_h = BODY_H - (Inches(1.25) if (note and is_last) else Inches(0))
+            this_h = BODY_H - (note_h if (note and is_last) else Inches(0))
 
             for column, (heading, chunk) in enumerate(
                     ((left_heading, left_chunks[index]),
@@ -1000,13 +1131,14 @@ class Deck:
                 head = self._textbox(slide, left, BODY_TOP, col_w, Inches(0.5))
                 _set_fitted(head.text_frame,
                             [heading if index == 0 else heading + " (cont.)"],
-                            width=col_w, height=Inches(0.5), size=18,
+                            width=col_w, height=Inches(0.5),
+                            size=max(shared, MIN_BODY_PT + 2),
                             floor=MIN_BODY_PT, bold=True, color=TEAL)
 
                 box = self._textbox(slide, left, BODY_TOP + Inches(0.56), col_w,
                                     this_h - Inches(0.56))
                 _set_fitted(box.text_frame, chunk, width=col_w,
-                            height=this_h - Inches(0.56), size=size,
+                            height=this_h - Inches(0.56), size=shared,
                             space_after=8)
 
             if note and is_last:
@@ -1036,7 +1168,9 @@ class Deck:
         avail_h_pt = panel_h / EMU_PER_PT - 14
         longest = max((len(l) for l in lines), default=1)
 
-        code_size = float(size)
+        # Start at the ceiling and come down. A six-line listing used to sit
+        # at 13pt in a panel six inches tall; now it fills it.
+        code_size = float(max(size, MAX_CODE_PT))
         while code_size > MIN_CODE_PT:
             if (longest * CHAR_W[CODE_FONT] * code_size <= avail_w_pt and
                     len(lines) * code_size * 1.22 <= avail_h_pt):
@@ -1099,8 +1233,8 @@ class Deck:
                 note_left = MARGIN_L + code_w + Inches(0.35)
                 note_w = CONTENT_W - code_w - Inches(0.35)
                 box = self._textbox(slide, note_left, top, note_w, this_h)
-                _set_fitted(box.text_frame, notes, width=note_w, height=this_h,
-                            size=16, space_after=10)
+                _set_fitted(box.text_frame, notes, width=note_w,
+                            height=this_h, size=MAX_BODY_PT, space_after=10)
 
         set_notes_all(made, speaker)
         return first
@@ -1125,7 +1259,9 @@ class Deck:
         col_pt = [(CONTENT_W / EMU_PER_PT) * w / total_weight - 10
                   for w in widths]
 
-        cell_size = float(size)
+        # Grow to fill: start at the body ceiling and shrink until the rows
+        # fit the space between the lead and the note.
+        cell_size = float(max(size, MAX_BODY_PT))
         while cell_size >= 9.0:
             needed = 0.0
             for row in [headers] + [list(map(str, r)) for r in rows]:
@@ -1203,9 +1339,29 @@ class Deck:
         width_pt = col_w / EMU_PER_PT
         height_pt = col_h / EMU_PER_PT - 8.0
 
-        _, _, fits = fit_size(steps, width_pt, height_pt, 16, space_after=8)
-        chunks = [_norm(steps)] if fits else _split_runs(
-            steps, width_pt, height_pt, MIN_BODY_PT, space_after=8)
+        # 18pt is the floor. Start at the ceiling so a four-step activity
+        # fills its column instead of sitting at the top of an empty one.
+        step_used, _, fits = fit_size(steps, width_pt, height_pt,
+                                      MAX_BODY_PT, space_after=8)
+        step_columns = None
+        if fits:
+            chunks = [_norm(steps)]
+        else:
+            # No right-hand column means the full slide width is free, so try
+            # two columns here before spilling onto a "(continued)" slide.
+            if not has_right:
+                pair_w_pt = ((CONTENT_W - gap) / 2) / EMU_PER_PT
+                step_columns = two_column_pack(steps, pair_w_pt, height_pt,
+                                               MIN_BODY_PT, space_after=5)
+            if step_columns:
+                chunks = [_norm(steps)]
+                step_used = min(
+                    fit_size(side, pair_w_pt, height_pt, MAX_BODY_PT,
+                             space_after=8)[0]
+                    for side in step_columns)
+            else:
+                chunks = _split_runs(steps, width_pt, height_pt, MIN_BODY_PT,
+                                     space_after=5)
 
         first = None
         made = []
@@ -1247,9 +1403,20 @@ class Deck:
             this_bottom = Inches(5.55) if (safety and is_last) else Inches(6.85)
             this_h = this_bottom - top
 
-            box = self._textbox(slide, MARGIN_L, top, col_w, this_h)
-            _set_fitted(box.text_frame, chunk, width=col_w, height=this_h,
-                        size=16, space_after=8)
+            if step_columns:
+                pair_w = Emu(int((CONTENT_W - gap) / 2))
+                for side_index, side in enumerate(step_columns):
+                    left = MARGIN_L + (pair_w + gap) * side_index
+                    box = self._textbox(slide, left, top, pair_w, this_h)
+                    _set_fitted(box.text_frame, side, width=pair_w,
+                                height=this_h, size=step_used, space_after=8)
+            else:
+                # A continuation slide has no right-hand column, so the steps
+                # get the whole width rather than half of it.
+                this_w = col_w if (has_right and index == 0) else CONTENT_W
+                box = self._textbox(slide, MARGIN_L, top, this_w, this_h)
+                _set_fitted(box.text_frame, chunk, width=this_w,
+                            height=this_h, size=step_used, space_after=8)
 
             # What to look for and the questions belong with the first page.
             if has_right and index == 0:
@@ -1267,12 +1434,12 @@ class Deck:
                     head = self._textbox(slide, right, right_top, col_w,
                                          Inches(0.4))
                     _set_fitted(head.text_frame, [heading], width=col_w,
-                                height=Inches(0.4), size=16,
+                                height=Inches(0.4), size=MIN_BODY_PT + 2,
                                 floor=MIN_BODY_PT, bold=True, color=TEAL)
                     box = self._textbox(slide, right, right_top + Inches(0.44),
                                         col_w, share)
-                    _set_fitted(box.text_frame, body, width=col_w, height=share,
-                                size=15, space_after=6)
+                    _set_fitted(box.text_frame, body, width=col_w,
+                                height=share, size=MAX_BODY_PT, space_after=6)
                     right_top += share + Inches(0.48)
 
             if safety and is_last:
@@ -1293,7 +1460,7 @@ class Deck:
         height = Inches(6.85) - top
         box = self._textbox(slide, MARGIN_L, top, CONTENT_W, height)
         _set_fitted(box.text_frame, questions, width=CONTENT_W, height=height,
-                    size=17, space_after=14)
+                    size=MAX_BODY_PT, space_after=14)
         set_notes(slide, speaker)
         return slide
 
