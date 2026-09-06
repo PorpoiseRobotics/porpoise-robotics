@@ -1,5 +1,5 @@
 /*
-  Motors.ino - drive motors, servos, and the maths that turns a thumbstick
+  Motors.ino - drive motors, servos, and the math that turns a thumbstick
   reading into a motor speed.
 */
 
@@ -63,10 +63,10 @@ int remap_axis(int raw_value, int specific_dz, float scale_factor, int in_max, i
 }
 
 /*
-  Moves one step of the ramp from where we are towards where we want to be.
+  Moves one step of the ramp from where we are toward where we want to be.
 
   11.2 wrote this as `current += (target - current) * RAMP_FACTOR`, which in
-  integer maths truncates a remainder of 0.5 to zero. Once the gap closed to a
+  integer math truncates a remainder of 0.5 to zero. Once the gap closed to a
   single count the vehicle stopped converging and sat there forever. Forcing a
   minimum step of one count fixes it.
 */
@@ -168,7 +168,7 @@ void write_servo(uint8_t channel, int microseconds) {
 
 /*
   The right stick drives four servos, one per direction. Each servo sweeps its
-  full travel across half of the stick's range and sits centred otherwise, so
+  full travel across half of the stick's range and sits centered otherwise, so
   a single stick can aim four independent things.
 */
 void update_servos(ControllerPtr gp) {

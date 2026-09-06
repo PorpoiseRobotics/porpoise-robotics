@@ -1,17 +1,17 @@
 /*
-  l4a_all_one_colour.ino
-  Porpoise Robotics - Pathfinder beginner course (PS3 track), Lesson 4
+  l4a_all_one_color.ino
+  Porpoise Robotics - Pathfinder beginner course (Nintendo Switch track), Lesson 4
 
   WHAT THIS PROGRAM DOES
   ----------------------
-  Sets all 32 LEDs to the same colour, one colour after another, using a for
-  loop. Nothing moves. It also prints how much current that colour is drawing
+  Sets all 32 LEDs to the same color, one color after another, using a for
+  loop. Nothing moves. It also prints how much current that color is drawing
   from the battery, which turns out to matter a great deal.
 
   BEFORE YOU CAN COMPILE THIS
   ---------------------------
-  1. Board package: "esp32" by Espressif Systems, VERSION 3.0.7
-       Tools > Board > ESP32 Arduino > "ESP32 Dev Module".
+  1. Board package: "esp32_bluepad32" by Ricardo Quesada, version 4.1.0
+       Tools > Board > esp32_bluepad32 > "ESP32 Dev Module".
   2. Library: "Adafruit NeoPixel" by Adafruit
 
   THE POWER BUDGET - READ THIS BEFORE YOU TURN THE BRIGHTNESS UP
@@ -27,7 +27,7 @@
   Two things keep it sane:
     - setBrightness() scales EVERY pixel down before it is sent. At 60 out of
       255 you are drawing roughly a quarter of the worst case.
-    - Coloured light is cheaper than white. Pure red only lights one of the
+    - Colored light is cheaper than white. Pure red only lights one of the
       three LEDs in each pixel, so it costs about a third of what white costs.
 
   This is why the vehicle programs run the LEDs at about 120 rather than 255,
@@ -35,7 +35,7 @@
 
   WHAT TO TRY
   -----------
-  1. Watch the estimated current print for each colour. Which colour is
+  1. Watch the estimated current print for each color. Which color is
      cheapest? Which is most expensive? Why?
   2. Change BRIGHTNESS to 255 and put your hand near the LED bars after a
      minute of white. Then put it back to 60.
@@ -60,17 +60,17 @@ void setup() {
   strip.clear();
   strip.show();
 
-  Serial.println("All 32 LEDs, one colour at a time.");
+  Serial.println("All 32 LEDs, one color at a time.");
 }
 
 /*
-  Sets every LED on the strip to one colour and works out roughly how much
+  Sets every LED on the strip to one color and works out roughly how much
   current that costs.
 
-  Each of the three colours inside a pixel draws about 20 mA flat out, and
+  Each of the three colors inside a pixel draws about 20 mA flat out, and
   setBrightness scales the value we asked for before it reaches the LED, so:
 
-        current for one colour channel = 20 mA x (value/255) x (brightness/255)
+        current for one color channel = 20 mA x (value/255) x (brightness/255)
 
   This is an estimate, not a measurement. The advanced vehicles carry a real
   current sensor - you will meet it if you move on to Op Program 12.

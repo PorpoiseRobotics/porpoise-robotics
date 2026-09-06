@@ -15,14 +15,14 @@
 
   SAFETY
   ------
-  This one drives on the floor, on purpose. Clear a space about three metres
+  This one drives on the floor, on purpose. Clear a space about three meters
   square, keep bags and feet out of it, and be ready to switch the vehicle off
   at the power switch. It starts moving as soon as it is powered up or reset.
 
   BEFORE YOU CAN COMPILE THIS
   ---------------------------
   Board package: "esp32" by Espressif Systems, VERSION 3.0.7
-    Tools > Board > ESP32 Arduino > "ESP32 Dev Module".
+    Tools > Board > esp32 > "ESP32 Dev Module".
   Libraries: none.
 
   THE TWO EQUATIONS THIS PROGRAM IS BUILT ON

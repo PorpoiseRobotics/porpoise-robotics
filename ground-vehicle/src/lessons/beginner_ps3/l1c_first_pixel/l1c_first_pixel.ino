@@ -17,7 +17,7 @@
   BEFORE YOU CAN COMPILE THIS
   ---------------------------
   1. Board package: "esp32" by Espressif Systems, VERSION 3.0.7
-       Tools > Board > ESP32 Arduino > "ESP32 Dev Module".
+       Tools > Board > esp32 > "ESP32 Dev Module".
   2. Library: "Adafruit NeoPixel" by Adafruit
        Tools > Manage Libraries, search for it, click Install.
 
@@ -28,7 +28,7 @@
      paper and mark where LED 0, 8, 15, 16, 24 and 31 are. You will need that
      map in Lesson 4.
   3. Change BRIGHTNESS from 60 to 255. Do not stare at it from close up.
-  4. Make up a colour of your own with strip.Color(red, green, blue), where
+  4. Make up a color of your own with strip.Color(red, green, blue), where
      each number is 0 to 255. What do you get from (255, 255, 0)? From
      (128, 0, 128)?
 */
@@ -41,7 +41,7 @@ const int WHICH_LED  = 0;    // The one LED this program lights. 0 is the first.
 const int BRIGHTNESS = 60;   // Master brightness, 0 (off) to 255 (blinding)
 
 // This line creates the object we talk to the LED strip through. NEO_GRB says
-// these LEDs expect their colour data green first, and NEO_KHZ800 is the speed
+// these LEDs expect their color data green first, and NEO_KHZ800 is the speed
 // the data is clocked out at. Both are right for the WS2812B LEDs we use.
 Adafruit_NeoPixel strip(LED_COUNT, LED_PIN, NEO_GRB + NEO_KHZ800);
 
@@ -58,7 +58,7 @@ void setup() {
 }
 
 void loop() {
-  // setPixelColor() only changes the colour stored in the ESP32 memory.
+  // setPixelColor() only changes the color stored in the ESP32 memory.
   // NOTHING happens on the vehicle until show() pushes that memory out to the
   // LEDs. Forgetting show() is the single most common NeoPixel mistake.
 
@@ -74,7 +74,7 @@ void loop() {
   strip.show();
   delay(1000);
 
-  // All three colours at once makes white. That is how your television works.
+  // All three colors at once makes white. That is how your television works.
   strip.setPixelColor(WHICH_LED, strip.Color(255, 255, 255));
   strip.show();
   delay(1000);

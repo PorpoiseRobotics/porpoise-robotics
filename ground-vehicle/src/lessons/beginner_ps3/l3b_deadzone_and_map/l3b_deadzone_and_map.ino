@@ -15,7 +15,7 @@
   BEFORE YOU CAN COMPILE THIS
   ---------------------------
   1. Board package: "esp32" by Espressif Systems, VERSION 3.0.7
-       Tools > Board > ESP32 Arduino > "ESP32 Dev Module".
+       Tools > Board > esp32 > "ESP32 Dev Module".
   2. Library: "PS3 Controller Host" by Jeffrey van Pernis
 
   THE TWO IDEAS
@@ -37,7 +37,7 @@
 
   WHAT TO TRY
   -----------
-  1. Push the stick very slowly from centre to full forward and watch both
+  1. Push the stick very slowly from center to full forward and watch both
      columns. Where does speed stop being 0?
   2. Set STICK_DEADZONE to 0 and upload. Leave the controller flat on the desk
      and untouched. Does the speed stay at 0?

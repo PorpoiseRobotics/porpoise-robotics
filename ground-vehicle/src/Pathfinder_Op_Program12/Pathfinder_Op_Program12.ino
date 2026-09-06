@@ -3,7 +3,7 @@
  * Porpoise Robotics - Pathfinder vehicle, advanced program
  *
  * Successor to Pathfinder_Op_Program11.2. Same vehicle, same feature set,
- * reorganised into tabs and with several bugs fixed. See the change log at
+ * reorganized into tabs and with several bugs fixed. See the change log at
  * the bottom of this comment for what actually changed.
  *
  * HARDWARE
@@ -72,7 +72,7 @@
  *   the Bluetooth allowlist at every boot, so a vehicle cannot lose track of
  *   its controller after a power cycle.
  * - Bluetooth addresses now print in the correct byte order.
- * - Speed ramping always reaches its target. The old integer maths could stall
+ * - Speed ramping always reaches its target. The old integer math could stall
  *   one count short and sit there.
  * - The self-test now compares motor current against the measured baseline it
  *   already took, rather than against fixed absolute thresholds.

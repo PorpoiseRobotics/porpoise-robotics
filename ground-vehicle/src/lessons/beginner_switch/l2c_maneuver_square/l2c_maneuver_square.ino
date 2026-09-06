@@ -15,7 +15,7 @@
 
   SAFETY
   ------
-  This one drives on the floor, on purpose. Clear a space about three metres
+  This one drives on the floor, on purpose. Clear a space about three meters
   square, keep bags and feet out of it, and be ready to switch the vehicle off
   at the power switch. It starts moving as soon as it is powered up or reset.
 

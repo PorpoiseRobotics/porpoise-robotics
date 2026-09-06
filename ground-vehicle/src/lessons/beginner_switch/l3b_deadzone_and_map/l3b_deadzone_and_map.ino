@@ -48,7 +48,7 @@
 
   WHAT TO TRY
   -----------
-  1. Push the stick very slowly from centre to full forward and watch both
+  1. Push the stick very slowly from center to full forward and watch both
      columns. Where does speed stop being 0?
   2. Set STICK_DEADZONE to 0 and upload. Put the controller down and do not
      touch it. Does the speed stay at 0?

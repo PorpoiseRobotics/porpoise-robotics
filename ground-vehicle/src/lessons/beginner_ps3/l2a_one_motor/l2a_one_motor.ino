@@ -16,7 +16,7 @@
   BEFORE YOU CAN COMPILE THIS
   ---------------------------
   Board package: "esp32" by Espressif Systems, VERSION 3.0.7
-    Tools > Board > ESP32 Arduino > "ESP32 Dev Module".
+    Tools > Board > esp32 > "ESP32 Dev Module".
   Libraries: none.
 
   HOW ONE MOTOR IS WIRED

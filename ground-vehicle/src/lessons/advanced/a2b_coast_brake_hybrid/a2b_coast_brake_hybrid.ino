@@ -57,7 +57,7 @@
   to what you asked for. This is FAST DECAY, and the result is noticeably
   better control at low duty, which is exactly where you need it.
 
-  Look at the maths in setMotorHybrid(): the duty you ask for turns into
+  Look at the math in setMotorHybrid(): the duty you ask for turns into
   PWM_MAX on one pin and (PWM_MAX - duty) on the other. At duty 0 both are
   PWM_MAX, which is BRAKE, not coast. That is why Op 12 tests for zero
   separately and calls coast_all() instead.
@@ -70,14 +70,14 @@
 
         step = (target - current) x RAMP_FACTOR
 
-  With integer maths that has a trap. Once the gap is down to one count,
+  With integer math that has a trap. Once the gap is down to one count,
   1 x 0.5 truncates to 0 and the ramp stalls one short of the target forever.
   Op 11.2 had that bug. rampTowards() below forces a minimum step of one
   count, which is the fix.
 
   WHAT TO TRY
   -----------
-  1. "sign", then "go 100". Now pinch the tyre gently. Now "hybrid", "go 100",
+  1. "sign", then "go 100". Now pinch the tire gently. Now "hybrid", "go 100",
      and pinch it again. Which one holds its speed?
   2. Find the lowest "go" value that turns the wheel in each mode.
   3. "ramp off", then "go 1023" from a standstill, then "ramp on" and do it
@@ -173,9 +173,9 @@ void applyDuty(int duty) {
 }
 
 /*
-  Moves one step of the ramp from where we are towards where we want to be.
+  Moves one step of the ramp from where we are toward where we want to be.
 
-  The minimum-step line is the whole point. In integer maths a gap of 1 times
+  The minimum-step line is the whole point. In integer math a gap of 1 times
   0.5 truncates to 0, and without the fix the ramp stalls one count short of
   its target and stays there.
 */

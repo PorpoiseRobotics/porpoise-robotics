@@ -65,6 +65,46 @@ def estimate_height_pt(frame, width_pt):
     return total
 
 
+def broken_words(frame, width_pt):
+    """
+    The first word in this frame that is wider than the box, or None.
+
+    A word that does not fit is not wrapped, it is CUT - PowerPoint breaks
+    it mid-word rather than hyphenating. It is never what anybody wanted,
+    and it does not show up as an overflow because the pieces still fit.
+    """
+    for para in frame.paragraphs:
+        # para.text keeps the <a:br/> between runs as a vertical tab.
+        # Joining the runs by hand loses it, and a deliberate two-line
+        # label then reads as one impossible word.
+        text = para.text or ""
+        if not text.strip():
+            continue
+        size = None
+        font = None
+        for run in para.runs:
+            if run.font.size is not None:
+                size = run.font.size.pt
+            if run.font.name:
+                font = run.font.name
+        if size is None and para.font.size is not None:
+            size = para.font.size.pt
+        if font is None and para.font.name:
+            font = para.font.name
+        size = size or 18.0
+        char_w = CHAR_W.get(font, CHAR_W[None])
+        for word in text.split():
+            span = len(word) * char_w
+            if span * size <= width_pt + SLOP_PT:
+                continue
+            # A token that will not fit even at the smallest size we allow
+            # - a URL, say - has to break somewhere. Nothing to report.
+            if span * 12.0 > width_pt:
+                continue
+            return word
+    return None
+
+
 def overlapping_text(shapes, slide_h):
     """
     Pairs of text-bearing shapes that sit on top of each other.
@@ -123,6 +163,54 @@ def check_deck(path):
         for shape in slide.shapes:
             name = shape.shape_type
 
+            if getattr(shape, "has_table", False) and shape.has_table:
+                table = shape.table
+
+                # Do the rows fit the box? If not, the ones at the bottom
+                # are drawn under whatever comes next and vanish.
+                wanted = 0.0
+                for row in table.rows:
+                    tallest = 0.0
+                    for number, cell in enumerate(row.cells):
+                        if number >= len(table.columns):
+                            continue
+                        cell_w = table.columns[number].width / EMU_PER_PT - 14
+                        for para in cell.text_frame.paragraphs:
+                            body = para.text or ""
+                            if not body.strip():
+                                continue
+                            size, name = None, None
+                            for run in para.runs:
+                                size = run.font.size or size
+                                name = run.font.name or name
+                            pt = size.pt if size is not None else 18.0
+                            per = max(int(cell_w / (CHAR_W.get(name, CHAR_W[None]) * pt)), 1)
+                            lines = max(math.ceil(len(body) / per), 1)
+                            tallest = max(tallest, lines * pt * 1.25 + 6)
+                    wanted += tallest
+                # shape.height, not the loop's `height` - that is not
+                # assigned until further down and would be the previous
+                # shape's.
+                have = shape.height / EMU_PER_PT
+                if wanted > have + SLOP_PT:
+                    issues.append(
+                        (index,
+                         "table overflows by {:.0f} pt".format(wanted - have),
+                         "{} rows".format(len(table.rows))))
+
+                for number, column in enumerate(table.columns):
+                    width_pt = column.width / EMU_PER_PT
+                    for row in table.rows:
+                        cell = row.cells[number]
+                        inset = ((cell.margin_left.pt if cell.margin_left
+                                  is not None else 7.2)
+                                 + (cell.margin_right.pt if cell.margin_right
+                                    is not None else 7.2))
+                        cut = broken_words(cell.text_frame, width_pt - inset)
+                        if cut:
+                            issues.append(
+                                (index, "table word broken mid-word", cut))
+
             # Off the edge of the slide?
             try:
                 left, top = shape.left, shape.top
@@ -167,6 +255,10 @@ def check_deck(path):
                 issues.append((index,
                                "text overflows by {:.0f} pt".format(wanted - height_pt),
                                preview))
+
+            cut = broken_words(frame, width_pt)
+            if cut:
+                issues.append((index, "word broken mid-word", cut))
 
     return issues
 

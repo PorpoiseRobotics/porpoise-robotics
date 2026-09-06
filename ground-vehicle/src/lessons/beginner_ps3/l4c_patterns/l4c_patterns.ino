@@ -4,7 +4,7 @@
 
   WHAT THIS PROGRAM DOES
   ----------------------
-  Runs four light patterns in turn: a colour wipe, a theatre chase, a rainbow,
+  Runs four light patterns in turn: a color wipe, a theatre chase, a rainbow,
   and the KITT scanner from the full vehicle program. Nothing moves.
 
   Each pattern is written as its own FUNCTION. A function is a piece of the
@@ -15,7 +15,7 @@
   BEFORE YOU CAN COMPILE THIS
   ---------------------------
   1. Board package: "esp32" by Espressif Systems, VERSION 3.0.7
-       Tools > Board > ESP32 Arduino > "ESP32 Dev Module".
+       Tools > Board > esp32 > "ESP32 Dev Module".
   2. Library: "Adafruit NeoPixel" by Adafruit
 
   WHAT TO TRY
@@ -23,7 +23,7 @@
   1. Change the wait argument on colorWipe from 30 to 5 and to 150.
   2. In theaterChase, change the 3 to a 4 in both places. What changes?
   3. In the scanner, change SCANNER_TAIL from 3 to 0, then to 8.
-  4. Change the scanner colour to blue and you have a Cylon instead of KITT.
+  4. Change the scanner color to blue and you have a Cylon instead of KITT.
   5. Write a pattern of your own and call it from loop(). Start by copying
      colorWipe and making it run backwards.
 */
@@ -52,12 +52,12 @@ void setup() {
 }
 
 /*
-  Fills the strip one LED at a time, in order, so the colour appears to sweep
+  Fills the strip one LED at a time, in order, so the color appears to sweep
   along it. The strip is NOT cleared first, so each wipe paints over the last.
 */
-void colorWipe(uint32_t colour, int wait) {
+void colorWipe(uint32_t color, int wait) {
   for (int i = 0; i < strip.numPixels(); i++) {
-    strip.setPixelColor(i, colour);
+    strip.setPixelColor(i, color);
     strip.show();
     delay(wait);
   }
@@ -71,12 +71,12 @@ void colorWipe(uint32_t colour, int wait) {
   positions is lit this frame, and the "c" loop steps along the strip in
   threes lighting them.
 */
-void theaterChase(uint32_t colour, int wait) {
+void theaterChase(uint32_t color, int wait) {
   for (int a = 0; a < 10; a++) {           // Repeat the whole effect 10 times
     for (int b = 0; b < 3; b++) {          // Three frames per cycle
       strip.clear();
       for (int c = b; c < strip.numPixels(); c += 3) {
-        strip.setPixelColor(c, colour);
+        strip.setPixelColor(c, color);
       }
       strip.show();
       delay(wait);
@@ -88,13 +88,13 @@ void theaterChase(uint32_t colour, int wait) {
   A rainbow flowing round the whole strip.
 
   Instead of red, green and blue, this uses HUE: one number that goes all the
-  way round the colour wheel. The full circle is 65536 steps. Each LED is given
+  way round the color wheel. The full circle is 65536 steps. Each LED is given
   a hue a little further round the wheel than the one before, which spreads a
   whole rainbow along the strip, and then the starting point creeps forward so
   the rainbow appears to move.
 
   gamma32() corrects for the fact that human eyes do not see brightness in a
-  straight line, which makes the colours look truer.
+  straight line, which makes the colors look truer.
 */
 void rainbow(int wait) {
   for (long firstPixelHue = 0; firstPixelHue < 65536L; firstPixelHue += 256) {
@@ -146,16 +146,16 @@ void drawScannerFrame(int position, int step, int red, int green, int blue) {
       continue;   // This part of the tail has slid off the end, so skip it
     }
 
-    uint32_t colour = strip.Color(red >> tail, green >> tail, blue >> tail);
-    strip.setPixelColor(p, colour);              // Front of the vehicle
-    strip.setPixelColor(REAR_LAST - p, colour);  // Matching LED at the rear
+    uint32_t color = strip.Color(red >> tail, green >> tail, blue >> tail);
+    strip.setPixelColor(p, color);              // Front of the vehicle
+    strip.setPixelColor(REAR_LAST - p, color);  // Matching LED at the rear
   }
 
   strip.show();
 }
 
 void loop() {
-  Serial.println("colour wipe");
+  Serial.println("color wipe");
   colorWipe(strip.Color(255, 0, 0), 30);   // Red
   colorWipe(strip.Color(0, 255, 0), 30);   // Green
   colorWipe(strip.Color(0, 0, 255), 30);   // Blue
