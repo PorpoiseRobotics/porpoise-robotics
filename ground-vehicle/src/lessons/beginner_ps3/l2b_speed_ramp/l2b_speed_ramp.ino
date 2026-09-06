@@ -22,7 +22,7 @@
     Tools > Board > esp32 > "ESP32 Dev Module".
   Libraries: none.
 
-  THE MATHS TO WATCH FOR
+  THE MATH TO WATCH FOR
   ----------------------
   Duty cycle is the fraction of each PWM cycle that the pin spends switched on:
 

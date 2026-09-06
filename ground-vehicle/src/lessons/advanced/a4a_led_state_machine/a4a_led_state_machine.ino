@@ -118,7 +118,7 @@ long load_passes = 0;
 String input_line = "";
 
 // ===================================================================
-// COLOUR HELPERS
+// COLOR HELPERS
 // ===================================================================
 
 uint32_t rgb(uint8_t r, uint8_t g, uint8_t b) {

@@ -952,10 +952,11 @@ class Deck:
         img_w = Emu(int(CONTENT_W * image_ratio))
         txt_w = CONTENT_W - img_w - Inches(0.4)
 
-        body_h = BODY_H - (Inches(1.25) if note else Inches(0))
+        body_h = BODY_H - (self._note_height(note, note_kind) if note
+                           else Inches(0))
         box = self._textbox(slide, MARGIN_L, BODY_TOP, txt_w, body_h)
         _set_fitted(box.text_frame, items, width=txt_w, height=body_h,
-                    size=size, space_after=9)
+                    size=max(size, MAX_BODY_PT), space_after=9)
 
         # A photograph is usually shorter than the box it is given, so its
         # caption floats up with it. A placeholder fills the box exactly, so

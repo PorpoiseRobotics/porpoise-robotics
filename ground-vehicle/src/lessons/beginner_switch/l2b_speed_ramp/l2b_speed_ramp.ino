@@ -29,7 +29,7 @@
   attachMotorPwm() below does the two-line job once and gets called eight
   times. That is what functions are for.
 
-  THE MATHS TO WATCH FOR
+  THE MATH TO WATCH FOR
   ----------------------
   Duty cycle is the fraction of each PWM cycle that the pin spends switched on:
 

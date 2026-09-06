@@ -162,12 +162,13 @@ def program_structure(deck, title="Every program has the same three parts", spea
     # The loop arrow, curling back on itself.
     loop_left = MARGIN_L + (col_w + gap) * 2
     _label(slide, loop_left, top + Inches(3.2), col_w,
-           "and round again, thousands of times a second", size=12,
-           color=AMBER, align=PP_ALIGN.CENTER, bold=True)
+           "and round again, as fast as it can - unless you make it wait",
+           size=12, color=AMBER, align=PP_ALIGN.CENTER, bold=True)
 
     deck._note(slide,
-               "Ingredients, then preparation, then cooking. A 500-line vehicle "
-               "program has exactly this shape - there is just more in each part.",
+               "delay(1000) is what makes this one blink once a second. Take "
+               "the delay out and the same loop runs thousands of times a "
+               "second, too fast to see.",
                "info")
     return slide
 
@@ -1122,43 +1123,96 @@ def led_circuit(deck, title="The circuit you are about to build", speaker=None):
         "Trace the loop with a finger: out of the pin, through the resistor, through the LED, back to ground. A circuit that is not a loop does nothing.",
         "Ask what the resistor is for BEFORE you say. The answer is that the LED will take as much current as you let it, and then stop being an LED.",
         "The long leg is the anode and goes toward the pin. Backwards means no light and no damage, so let them find out.",
+        "This is a SCHEMATIC, and for most of the room it is the first one they have read. Name the two symbols out loud - a zigzag is a resistor, a triangle pointing at a bar is a diode - and say that the bar is the side current cannot come back through.",
+        "The three-bar symbol at the bottom is ground. They will see it on every circuit diagram for the rest of their lives.",
         "Ground is not optional. Half the circuits that do not work are missing the return path.",
     ])
 
-    left = MARGIN_L + Inches(0.6)
-    top = BODY_TOP + Inches(0.55)
-    w = Inches(6.6)
-    h = Inches(2.6)
+    left = MARGIN_L + Inches(1.15)
+    top = BODY_TOP + Inches(0.62)
+    w = Inches(5.5)
+    h = Inches(2.0)
 
-    # The loop itself.
-    _plain_line(slide, left, top, left + w, top, color=NAVY, width=2.5)
-    _plain_line(slide, left + w, top, left + w, top + h, color=NAVY, width=2.5)
-    _plain_line(slide, left, top + h, left + w, top + h, color=NAVY, width=2.5)
-    _plain_line(slide, left, top, left, top + h, color=NAVY, width=2.5)
+    wire = dict(color=NAVY, width=2.5)
 
-    _box(slide, left - Inches(1.0), top - Inches(0.32), Inches(2.0),
-         Inches(0.64), "ESP32  GPIO 2", fill=LIGHT_TEAL, edge=TEAL, size=14,
-         bold=True, color=NAVY)
-    _box(slide, left - Inches(0.95), top + h - Inches(0.32), Inches(1.9),
-         Inches(0.64), "ESP32  GND", fill=LIGHT_GREY, edge=GREY, size=14,
-         bold=True, color=NAVY)
+    # --- top wire, broken by the resistor ---------------------------
+    res_x0 = left + Inches(1.5)
+    res_x1 = left + Inches(3.3)
+    _plain_line(slide, left, top, res_x0, top, **wire)
+    _plain_line(slide, res_x1, top, left + w, top, **wire)
 
-    _box(slide, left + Inches(1.6), top - Inches(0.34), Inches(2.1),
-         Inches(0.68), "220 ohm", fill=WHITE, edge=AMBER, size=15, bold=True,
-         color=NAVY)
-    _box(slide, left + w - Inches(0.55), top + Inches(0.85), Inches(1.1),
-         Inches(0.9), "LED", fill=LIGHT_AMBER, edge=AMBER, size=15, bold=True,
-         color=NAVY)
+    # The resistor: the standard six-peak zigzag.
+    span = (res_x1 - res_x0) / 6.0
+    amp = Inches(0.20)
+    points = [(res_x0, 0.0), (res_x0 + span * 0.5, -1.0)]
+    for step in range(1, 5):
+        points.append((res_x0 + span * (step + 0.5), 1.0 if step % 2 else -1.0))
+    points += [(res_x1 - span * 0.5, 1.0), (res_x1, 0.0)]
+    for (x1, o1), (x2, o2) in zip(points, points[1:]):
+        _plain_line(slide, Emu(int(x1)), top + Emu(int(amp * o1)),
+                    Emu(int(x2)), top + Emu(int(amp * o2)), **wire)
 
-    _label(slide, left + w - Inches(2.35), top + Inches(0.72), Inches(1.7),
-           "long leg  +", size=14, color=TEAL, bold=True, align=PP_ALIGN.RIGHT)
-    _label(slide, left + w - Inches(2.35), top + Inches(1.68), Inches(1.7),
-           "short leg  -", size=14, color=GREY, align=PP_ALIGN.RIGHT)
+    # --- right-hand wire, broken by the LED -------------------------
+    led_x = left + w
+    led_top = top + Inches(0.80)
+    led_h = Inches(0.62)
+    led_w = Inches(0.76)
+    _plain_line(slide, led_x, top, led_x, led_top, **wire)
+    _plain_line(slide, led_x, led_top + led_h, led_x, top + h, **wire)
 
-    _label(slide, left, top + h + Inches(0.35), w,
-           "Current goes round ONE loop. The resistor may sit on either side "
-           "of the LED - what matters is that it is in the loop.",
-           size=14, color=INK, align=PP_ALIGN.CENTER)
+    # The LED: a triangle pointing at a bar. The flat side is the anode,
+    # the bar is the cathode, and the arrows are the light coming out.
+    body = slide.shapes.add_shape(
+        MSO_SHAPE.ISOSCELES_TRIANGLE,
+        led_x - Emu(int(led_w / 2)), led_top, led_w, led_h)
+    body.rotation = 180
+    body.fill.solid()
+    body.fill.fore_color.rgb = LIGHT_AMBER
+    body.line.color.rgb = NAVY
+    body.line.width = Pt(2.0)
+    body.text_frame.text = ""
+
+    _plain_line(slide, led_x - Inches(0.42), led_top + led_h,
+                led_x + Inches(0.42), led_top + led_h, **wire)
+
+    for offset in (Inches(0.02), Inches(0.24)):
+        _arrow(slide, led_x + Inches(0.30), led_top + offset + Inches(0.16),
+               led_x + Inches(0.78), led_top + offset - Inches(0.14),
+               color=AMBER, width=1.5)
+
+    # --- bottom wire and the return to ground -----------------------
+    _plain_line(slide, left, top + h, led_x, top + h, **wire)
+    _plain_line(slide, left, top, left, top + h, **wire)
+
+    # Ground: three bars, each shorter than the last.
+    gnd_y = top + h
+    _plain_line(slide, left, gnd_y, left, gnd_y + Inches(0.22), **wire)
+    for index, half in enumerate((0.30, 0.19, 0.09)):
+        y = gnd_y + Inches(0.22) + Inches(0.10) * index
+        _plain_line(slide, left - Inches(half), y, left + Inches(half), y,
+                    **wire)
+
+    # --- labels ------------------------------------------------------
+    _label(slide, left - Inches(1.30), top - Inches(0.52), Inches(2.4),
+           "ESP32  GPIO 2", size=15, bold=True, color=TEAL,
+           align=PP_ALIGN.CENTER)
+    _label(slide, left - Inches(1.30), gnd_y + Inches(0.50), Inches(2.4),
+           "ESP32  GND", size=15, bold=True, color=GREY,
+           align=PP_ALIGN.CENTER)
+    _label(slide, res_x0 - Inches(0.3), top - Inches(0.62), Inches(2.4),
+           "R = 220 ohms", size=15, bold=True, color=NAVY,
+           align=PP_ALIGN.CENTER)
+    _label(slide, led_x - Inches(3.15), led_top - Inches(0.14), Inches(2.5),
+           "ANODE - the long leg, toward the pin", size=13, bold=True,
+           color=TEAL, align=PP_ALIGN.RIGHT)
+    _label(slide, led_x - Inches(3.15), led_top + led_h - Inches(0.06),
+           Inches(2.5), "CATHODE - the short leg, toward ground", size=13,
+           color=GREY, align=PP_ALIGN.RIGHT)
+
+    _label(slide, MARGIN_L, gnd_y + Inches(0.98), Inches(7.4),
+           "Current leaves GPIO 2, crosses the resistor, passes through the "
+           "LED from the triangle to the bar, and returns to ground.",
+           size=14, color=INK, align=PP_ALIGN.LEFT)
 
     # The sizing calculation.
     right = MARGIN_L + Inches(8.1)
@@ -1184,9 +1238,9 @@ def led_circuit(deck, title="The circuit you are about to build", speaker=None):
            size=14, color=INK)
 
     deck._note(slide,
-               "No resistor means one bright flash and a dead LED. An ESP32 pin "
-               "should not be asked for more than about 20 mA, so erring high "
-               "is the right way to err.", "warn")
+               "WHEN IN DOUBT, PICK THE BIGGER RESISTOR. Too big and the LED "
+               "is dim. Too small and you get one bright flash, a dead LED, "
+               "and possibly a damaged pin.", "warn")
     return slide
 
 
@@ -1540,6 +1594,22 @@ def pin_reference(deck, title="The ESP32 pins this vehicle actually uses",
           ("and have no pull-ups", "")]),
     ]
 
+    # Spread the rows over the height the slide actually has. A fixed
+    # 0.52in step left the longest column ending an inch and a half above
+    # the footer, which is exactly the wasted space the 2026-09-05 review
+    # asked us to stop leaving.
+    BLANK, NOTE, ROW = 0.385, 0.654, 1.0
+
+    def units(rows):
+        total = 0.0
+        for label, pins in rows:
+            total += BLANK if not label else (ROW if pins else NOTE)
+        return total
+
+    tallest = max(units(rows) for _, _, _, rows in groups)
+    available = Inches(6.85) - (top + Inches(0.66))
+    pitch = min(Inches(0.72), Emu(int(available / tallest)))
+
     for index, (heading, fill, edge, rows) in enumerate(groups):
         left = MARGIN_L + (col_w + gap) * index
         _box(slide, left, top, col_w, Inches(0.52), heading,
@@ -1549,7 +1619,7 @@ def pin_reference(deck, title="The ESP32 pins this vehicle actually uses",
         row_top = top + Inches(0.66)
         for label, pins in rows:
             if not label:
-                row_top += Inches(0.20)
+                row_top += Emu(int(pitch * BLANK))
                 continue
             is_note = not pins
             _label(slide, left + Inches(0.06), row_top,
@@ -1560,10 +1630,6 @@ def pin_reference(deck, title="The ESP32 pins this vehicle actually uses",
                 _label(slide, left + col_w - Inches(1.15), row_top,
                        Inches(1.10), pins, size=15, bold=True, color=NAVY,
                        align=PP_ALIGN.RIGHT, font=CODE_FONT)
-            row_top += Inches(0.52) if not is_note else Inches(0.34)
+            row_top += pitch if not is_note else Emu(int(pitch * NOTE))
 
-    deck._note(slide,
-               "Every number on this page is read out of the sketches when "
-               "the deck is built, so it cannot drift away from the code.",
-               "info")
     return slide

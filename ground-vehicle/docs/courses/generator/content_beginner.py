@@ -48,7 +48,13 @@ PS3 = {
     "full_program": "pathfinder_ps3",
     "board_pkg": "esp32  by Espressif Systems,  version 3.0.7",
     "board_menu": "Tools > Board > esp32 > \"ESP32 Dev Module\"",
-    "boards_url": None,
+    "boards_url": "https://espressif.github.io/arduino-esp32/"
+                  "package_esp32_index.json",
+    "boards_search": "esp32",
+    "board_version": "3.0.7",
+    "board_note": "Version 3.0.7 specifically. Newer versions changed the way "
+                  "PWM is set up, and every motor program on this track uses "
+                  "the 3.0.7 spelling.",
     "extra_lib": "\"PS3 Controller Host\" by Jeffrey van Pernis",
     "extra_lib_note": "Searching Library Manager for \"Ps3Controller\" finds nothing. "
                       "The display name is the longer one.",
@@ -88,6 +94,10 @@ SWITCH = {
     "boards_url": "https://raw.githubusercontent.com/ricardoquesada/"
                   "esp32-arduino-lib-builder/master/bluepad32_files/"
                   "package_esp32_bluepad32_index.json",
+    "boards_search": "bluepad32",
+    "board_version": "4.1.0",
+    "board_note": "Two entries are now called \"ESP32 Dev Module\". This "
+                  "track needs the one under \"esp32_bluepad32\".",
     "extra_lib": "none - Bluepad32 arrives with the board package",
     "extra_lib_note": "You still need \"Adafruit NeoPixel\" by Adafruit for the "
                       "lighting lessons.",
@@ -298,28 +308,34 @@ def lesson1(deck, T):
     deck.two_columns(
         "STEM, and where it shows up in this course",
         "Math and science you will actually use",
-        [("Circumference and pi, to work out how far one wheel turn takes you", 0),
-         ("Distance = speed x time, for every pre-programmed maneuver", 0),
+        [("Circumference and pi, for wheel travel", 0),
+         ("Distance = speed x time, for maneuvers", 0),
          ("Ratios and percentages, for duty cycle", 0),
-         ("Linear mapping, to turn a stick reading into a motor speed", 0),
-         ("Ohm's law and power, for the LED current budget", 0),
-         ("Wavelength and color perception, for the lighting", 0),
-         ("Trigonometry, when you plot where a maneuver ends up", 0)],
+         ("Linear mapping, stick reading to speed", 0),
+         ("Ohm's law and power, for the LED budget", 0),
+         ("Wavelength and color, for the lighting", 0),
+         ("Trigonometry, to plot where you end up", 0)],
         "Engineering practice",
-        [("Reading somebody else's program before changing it", 0),
-         ("Changing ONE thing at a time and observing the result", 0),
+        [("Reading a program before changing it", 0),
+         ("Changing ONE thing at a time", 0),
          ("Measuring rather than guessing", 0),
          ("Writing down what you measured", 0),
-         ("Working out whether a fault is mechanical, electrical or software", 0),
-         ("Version control, so a working program is never lost", 0)],
+         ("Mechanical, electrical or software?", 0),
+         ("Version control, so work is never lost", 0)],
         note="STEM is not four subjects. It is using math and science to build "
              "something that has to actually work.",
         speaker=[
             "This is the slide to point at when somebody asks why they are "
             "doing math in a robotics class.",
             "Every item on the left is used in a specific lesson, not in "
-            "general. Say which: circumference and trigonometry in Lesson "
-            "2, mapping in Lesson 3, Ohm's law in Lessons 2 and 4.",
+            "general, and the slide is deliberately terse so you can say "
+            "which. Circumference and trigonometry in Lesson 2, linear "
+            "mapping in Lesson 3, Ohm's law in Lessons 2 and 4, "
+            "wavelength and color perception in Lesson 4.",
+            "\"Mechanical, electrical or software?\" is the diagnostic "
+            "question of the whole course. Ask it out loud every time "
+            "something does not work, and they will start asking it "
+            "themselves by Lesson 3.",
             "The right-hand column is what actually gets people hired. Read "
             "it as a list of habits, and tell them you will be marking "
             "those habits all term.",
@@ -327,20 +343,32 @@ def lesson1(deck, T):
 
     deck.image_pair(
         "The Pathfinder",
-        img("vehicle-front-blue-leds.jpg"),
-        "Turn signal running on one side...",
-        img("vehicle-side-blue-leds.jpg"),
-        "...and on the other. Same 32 LEDs, different program.",
+        Placeholder(
+            "PHOTO: left turn signal, front and back",
+            "Three-quarter view with the LEFT indicator running, taken so "
+            "that BOTH the front bar and the rear bar are visible at once."),
+        "Left turn signal - front bar and rear bar, both on that side",
+        Placeholder(
+            "PHOTO: right turn signal, front and back",
+            "The same shot from the other side, with the RIGHT indicator "
+            "running. Front and rear bars both visible."),
+        "Right turn signal - the same program, and the same 32 LEDs",
         lead="A fast, rugged, four-wheel-drive vehicle with an ESP32 computer, "
              "four independently driven motors, 32 programmable LEDs, four "
              "servo outputs and a rechargeable lithium battery.",
         speaker=[
             "Pass a vehicle round while you talk over this slide. Let them pick "
             "it up - it is built to be handled.",
-            "Point out that BOTH pictures are the same vehicle running the same "
-            "hardware. The only difference is which LEDs the program lit.",
+            "Both pictures are the same vehicle running the SAME PROGRAM. "
+            "Nobody reprogrammed anything between them - somebody pushed "
+            "the D-pad the other way. Say that explicitly, because it is "
+            "easy to assume two pictures mean two programs.",
+            "Point out that each indicator lights the front bar and the "
+            "rear bar on that side, the way a car does. It is one side of "
+            "the vehicle, seen front and back, not one end of it.",
             "That is the through-line of the whole course: the hardware is "
-            "fixed, and everything interesting comes from the program.",
+            "fixed, one program covers every behavior, and what changes is "
+            "the input it is given.",
         ])
 
     deck.bullets(
@@ -406,26 +434,43 @@ def lesson1(deck, T):
             "sensors - lands here.",
         ])
 
+    deck.image_pair(
+        "Three generations of Pathfinder",
+        Placeholder(
+            "PHOTO: Gen 1 and Gen 2 together",
+            "Gen 1 beside a Gen 2, same angle, so the change in the "
+            "frame and the electronics is obvious."),
+        "Gen 1 and Gen 2  -  an open chassis, board and battery on top",
+        img("vehicle-gen3-top.jpg"),
+        "Gen 3  -  one piece, everything inside, a clear top plate to build on",
+        lead="The vehicle has been through three designs. The program "
+             "you write today runs on the last two.",
+        speaker=[
+            "Thirty seconds of history, no more. The point is that the "
+            "vehicle is a real product line that has been revised, not a "
+            "kit somebody assembled once.",
+            "Gen 1 was the proof that the idea worked. Gen 2 is most of "
+            "the fleet. Gen 3 is what new vehicles are built as.",
+            "Do not let this run long. The slide they actually need is "
+            "the next one, which tells them which vehicle is in front of "
+            "them.",
+        ])
+
     deck.two_columns(
         "Gen 2 and Gen 3  -  which vehicle are you holding?",
         "Gen 2",
-        [("The vehicle most of the fleet is built from.", 0),
+        [("Most of the fleet.", 0),
          ("ESP32, four DRV8871 H-bridges, 32 LEDs, four servo outputs.", 0),
          ("No current sensor.", 0),
-         ("", 0),
-         ("Everything in this course works on it. Nothing in these five "
-          "lessons needs anything a Gen 2 does not have.", 0)],
+         ("Everything in this course works on it.", 0)],
         "Gen 3",
-        [("A UNIBODY frame. The structure is one piece, and the board, battery "
-          "and wiring sit inside it rather than on top, so nothing catches on "
-          "anything when the vehicle rolls.", 0),
-         ("The wheels are mounted at the vehicle's VERTICAL CENTRE, so it "
-          "drives just as well upside down. Flip it over and keep going.", 0),
-         ("A clear lexan TOP PLATE: somewhere to mount sensors, and you can "
-          "see the electronics working underneath it.", 0),
-         ("An INA219 power monitor, so the vehicle can measure its own battery "
-          "voltage and current draw - which is what makes a powered self-test "
-          "possible.", 0)],
+        [("A UNIBODY frame: one piece, with the board, battery and wiring "
+          "inside it rather than on top.", 0),
+         ("Wheels at the vehicle's VERTICAL CENTER, so it drives just as "
+          "well upside down.", 0),
+         ("A clear lexan TOP PLATE to mount sensors on.", 0),
+         ("An INA219 power monitor, so it can measure its own voltage and "
+          "current - which is what makes a self-test possible.", 0)],
         note="The programs detect which one they are running on at boot, by "
              "looking for the sensor. One program, either vehicle - you do not "
              "have to know which you have before you upload.",
@@ -462,10 +507,65 @@ def lesson1(deck, T):
             "it arrives, demonstrate it instead.",
         ])
 
+    deck.two_columns(
+        "What a self-test looks like  -  a demonstration",
+        "What it does",
+        [("Fit the jumper on GPIO 34 and switch the vehicle on.", 0),
+         ("It measures what the electronics draw with the motors "
+          "stopped. That is the BASELINE.", 0),
+         ("Then it drives each motor forward, then in reverse, watching "
+          "the current against that baseline.", 0),
+         ("The LEDs blink GREEN if every motor passed, RED if any "
+          "failed.", 0),
+         ("Press any button on the controller to clear it and drive.", 0)],
+        "What the current tells it",
+        [("A healthy motor spikes as it breaks away, then settles.", 0),
+         ("A disconnected motor draws almost nothing.", 0),
+         ("A jammed motor draws a lot, and keeps drawing it.", 0),
+         ("The Serial Monitor prints a line per motor with the numbers "
+          "it measured, and PASS or FAIL beside each one.", 0)],
+        note="This is the advanced program, not today's. But every idea "
+             "in it is one of yours: a current is a number, a number can "
+             "be compared, and a comparison can drive an LED.",
+        speaker=[
+            "DO THIS LIVE if you have a Gen 3 and the jumper. Two minutes "
+            "of watching beats a slide, and it is the first time they see "
+            "the vehicle check itself.",
+            "Put the Serial Monitor on the projector while it runs. The "
+            "per-motor PASS and FAIL lines are the interesting part.",
+            "Unplug one motor first if you want a FAIL to show. It is "
+            "worth doing - a test that only ever passes teaches nothing.",
+            "Head off the obvious question: no, they are not writing this "
+            "today. It is the advanced course. Today it is a promise of "
+            "where the five lessons lead.",
+            "A Gen 2 has no current sensor and will simply skip the test. "
+            "Say so, so nobody thinks their vehicle is broken.",
+        ])
+
     diagrams.system_block(deck, controller=T["pad_short"])
 
     diagrams.pin_reference(deck, motor_pins=T["motor_pins"],
                            led_pin=T["led_pin"])
+
+    deck.image_slide(
+        "The Gen 3 control board, drawn out",
+        Placeholder(
+            "SCHEMATIC: Gen 3 control board",
+            "The full circuit diagram, exported as an image. A reference "
+            "page - nobody is asked to read it today."),
+        caption="You are not expected to read this today. It is here so "
+                "you know it exists, and so you can come back to it.",
+        speaker=[
+            "Show it, say what it is, and move on. Fifteen seconds.",
+            "The reason it is in the deck is that somebody always asks "
+            "what is actually on the board, and \"there is a drawing, "
+            "here it is\" is a better answer than a description.",
+            "Point out that everything on the previous slide - the motor "
+            "pins, the LED pin, the I2C pins - is somewhere on this "
+            "sheet. That is the connection worth making.",
+            "Anybody who wants to follow it properly should be pointed at "
+            "the advanced course.",
+        ])
 
     deck.two_columns(
         "What a microcontroller actually is",
@@ -536,7 +636,7 @@ def lesson1(deck, T):
     deck.bullets(
         "Step 1  -  install the Arduino IDE",
         [("Go to arduino.cc/en/software and download the Arduino IDE, version "
-          "2.3.4 or newer.", 0),
+          "2.3.10 or newer.", 0),
          ("Windows: install it and sign in to your Microsoft account if it asks. "
           "You can ignore the donation and newsletter prompts.", 1),
          ("Mac: open the downloaded .zip and drag Arduino.app into your "
@@ -569,7 +669,7 @@ def lesson1(deck, T):
          ("PORT:  plug the vehicle into your computer with a micro USB cable "
           "FIRST, then choose Tools > Port.", 0),
          ("Windows: the next available COM port, such as COM4.", 1),
-         ("Mac: something like /dev/cu.usbserial-14130.", 1),
+         ("Mac: something like /dev/cu.usbserial-0001.", 1),
          ("", 0),
          ("If no port appears at all, the usual causes are: the vehicle is not "
           "switched on, or the cable is a charge-only cable with no data wires "
@@ -591,9 +691,7 @@ def lesson1(deck, T):
 
     deck.bullets(
         "Step 4  -  install the libraries",
-        [("A LIBRARY is code somebody else already wrote and tested, which your "
-          "program can call instead of you writing it again.", 0),
-         ("Tools > Manage Libraries, then search and click Install.", 0),
+        [("Tools > Manage Libraries, then search the name and click Install.", 0),
          ("", 0),
          ("\"Adafruit NeoPixel\" by Adafruit  -  drives the 32 LEDs.", 0),
          (T["extra_lib"] if T["extra_lib"].startswith("none")
@@ -602,8 +700,11 @@ def lesson1(deck, T):
          (T["extra_lib_note"], 0)],
         note="Without the NeoPixel library, nothing in Lesson 4 will compile.",
         speaker=[
-            "Define LIBRARY properly here. It is the first time the word "
-            "has meant anything to most of the room.",
+            "Define LIBRARY properly here, out loud: code somebody else "
+            "already wrote and tested, which your program can call instead "
+            "of you writing it again. It is the first time the word has "
+            "meant anything to most of the room, and it does not need to be "
+            "on the slide.",
             "Both libraries go in now, even though nothing needs them until "
             "Lesson 4. Doing it once saves a whole class of upload failures "
             "later.",
@@ -640,23 +741,18 @@ def lesson1(deck, T):
 
     deck.bullets(
         "Getting the course files onto your computer",
-        [("The sketches arrive on a thumb drive, or as a zip in an email. They "
-          "have to end up in the right folder or the IDE will not find them.", 0),
+        [("The thumb drive carries the SKETCHES - the programs for all five "
+          "lessons. There are no libraries on it; you installed those from "
+          "Library Manager in Step 4.", 0),
          ("", 0),
-         ("WINDOWS", 0),
-         ("Copy the sketch folders into  Documents\\\\Arduino\\\\", 1),
-         ("Copy the library folders into  Documents\\\\Arduino\\\\libraries\\\\", 1),
+         ("WINDOWS.  Copy the sketch folders into", 0),
+         ("Documents\\\\Arduino\\\\", 1),
+         ("MAC.  Copy the sketch folders into", 0),
+         ("Documents/Arduino/", 1),
          ("", 0),
-         ("MAC", 0),
-         ("Copy the sketch folders into  Documents/Arduino/", 1),
-         ("Copy the library folders into  Documents/Arduino/libraries/", 1),
-         ("", 0),
-         ("If they came as .zip files, UNZIP them first - except a library you "
-          "are adding through Sketch > Include Library > Add .ZIP Library, "
-          "which wants the zip as it is.", 0),
-         ("", 0),
-         ("Then restart the Arduino IDE. It only looks for sketches and "
-          "libraries when it starts.", 0)],
+         ("If they arrived as a .zip, unzip it first.", 0),
+         ("Then restart the Arduino IDE. It only looks for sketches when "
+          "it starts.", 0)],
         lead="Thumb drive or email, into your Arduino folder",
         note="One folder per sketch, and the folder name must match the .ino "
              "inside it. l1a_blink/l1a_blink.ino. The IDE will refuse to open a "
@@ -665,6 +761,11 @@ def lesson1(deck, T):
         speaker=[
             "Do this together. It is the single most common place a beginner "
             "gets stuck, and it costs ten minutes now against forty later.",
+            "Say plainly that the drive holds programs only. Anybody who "
+            "did an earlier version of this course will remember copying "
+            "libraries off it, and that is no longer how it works. "
+            "Library Manager is the one route in, and it gets them the "
+            "version we tested against.",
             "Walk the room. Check File > Sketchbook actually lists the lessons "
             "before you move on.",
         ])
@@ -1013,7 +1114,6 @@ def lesson1(deck, T):
          "const int LED_COUNT = 32;",
          "const int WHICH_LED = 0;      // the one we light",
          "const int BRIGHTNESS = 60;    // master brightness, 0 to 255",
-         "",
          "Adafruit_NeoPixel strip(LED_COUNT, LED_PIN, NEO_GRB + NEO_KHZ800);",
          "",
          "void setup() {",
@@ -1139,59 +1239,57 @@ def lesson1(deck, T):
 
 
 def _board_setup_slide(deck, T):
-    if T["boards_url"]:
-        deck.bullets(
-            "Step 2  -  install the board package",
-            [("The Arduino IDE does not know about the ESP32 until you add it.", 0),
-             ("", 0),
-             ("1.  File > Preferences > \"Additional boards manager URLs\".", 0),
-             ("2.  Paste this in (one line, no spaces):", 0),
-             (T["boards_url"], 1),
-             ("3.  Click OK.", 0),
-             ("4.  Tools > Board > Boards Manager, search \"bluepad32\", install "
-              "it. Choose version 4.1.0.", 0),
-             ("5.  Tools > Board > esp32_bluepad32 > \"ESP32 Dev Module\".", 0),
-             ("", 0),
-             ("Package:  {}".format(T["board_pkg"]), 0)],
-            note="You now have TWO entries called \"ESP32 Dev Module\" - one under "
-                 "\"esp32\" and one under \"esp32_bluepad32\". Everything on this "
-                 "track needs the esp32_bluepad32 one. A pile of errors that make "
-                 "no sense usually means the wrong one is selected.",
-            note_kind="warn",
-            speaker=[
-                "This is the step that goes wrong most often, and it goes "
-                "wrong differently on each track. Follow the slide exactly.",
-                "The board package is a large download. Start everybody "
-                "off, then talk over it rather than watching the bar.",
-                "If a download fails halfway, the fix is usually to close "
-                "the IDE completely and start it again before retrying.",
-                "Nobody moves on until Boards Manager shows the package as "
-                "INSTALLED. Check screens rather than taking their word for "
-                "it.",
-            ])
-    else:
-        deck.bullets(
-            "Step 2  -  install the board package",
-            [("The Arduino IDE does not know about the ESP32 until you add it.", 0),
-             ("", 0),
-             ("1.  Tools > Board > Boards Manager.", 0),
-             ("2.  Search for \"esp32\".", 0),
-             ("3.  Find \"esp32 by Espressif Systems\".", 0),
-             ("4.  In the version box choose 3.0.7 - NOT the latest.", 0),
-             ("5.  Click Install and wait. It is a large download.", 0),
-             ("6.  Tools > Board > esp32 > \"ESP32 Dev Module\".", 0),
-             ("", 0),
-             ("Package:  {}".format(T["board_pkg"]), 0)],
-            note="Version 3.0.7 specifically. Newer versions changed the way PWM "
-                 "is set up, and every motor program on this track uses the 3.0.7 "
-                 "spelling.",
-            note_kind="warn",
-            speaker=[
-                "Continuation of the same step - keep the room together "
-                "rather than letting the fast groups run ahead.",
-                "The version number matters. A different version is the "
-                "cause of most compile errors that make no sense.",
-            ])
+    """
+    Step 2, written once for both tracks.
+
+    Both of them need the Additional Boards Manager URL - the PS3 track was
+    missing it entirely, which is the step Kevin caught in the 2026-09-05
+    review. The only differences are the URL, what you search for, and which
+    version to pin, so they come out of the track dictionary.
+    """
+    deck.bullets_image(
+        "Step 2  -  install the board package",
+        [("The Arduino IDE does not know what an ESP32 is until you tell "
+          "it.", 0),
+         ("1.  File > Preferences.", 0),
+         ("2.  Paste this into \"Additional boards manager URLs\", one line, "
+          "no spaces:", 0),
+         (T["boards_url"], 1),
+         ("3.  Click OK.", 0),
+         ("4.  Tools > Board > Boards Manager. Search \"{}\".".format(
+             T["boards_search"]), 0),
+         ("The entry you want is  {}".format(T["board_pkg"]), 1),
+         ("5.  Choose version {} - NOT the latest - and click Install.".format(
+             T["board_version"]), 0),
+         ("6.  {}".format(T["board_menu"]), 0)],
+        Placeholder(
+            "SCREENSHOT: Arduino IDE Preferences",
+            "File > Preferences with the URL above pasted into the "
+            "\"Additional boards manager URLs\" box, so students can see "
+            "exactly which field it goes in."),
+        image_ratio=0.28,
+        note=T["board_note"],
+        note_kind="warn",
+        speaker=[
+            "This is the step that goes wrong most often. Do it together, "
+            "one line at a time, and do not let the fast groups run ahead.",
+            "The URL is the part everybody mistypes. Have it ready to paste "
+            "into the chat, or written on the board, rather than reading it "
+            "out.",
+            "The board package is a large download. Start everybody off, "
+            "then talk over it rather than watching a progress bar with "
+            "thirty people.",
+            "If a download fails halfway, close the IDE completely and start "
+            "it again before retrying.",
+            "Nobody moves on until Boards Manager shows the package as "
+            "INSTALLED. Check screens rather than taking their word for it.",
+            "The version number matters more than they think. A different "
+            "version is the cause of most compile errors that make no sense.",
+            "On the Switch track, warn them that Boards Manager now lists "
+            "TWO entries called \"ESP32 Dev Module\", one under \"esp32\" "
+            "and one under \"esp32_bluepad32\". A pile of errors that make "
+            "no sense almost always means the wrong one is selected.",
+        ])
 
 
 # ===================================================================
@@ -2879,7 +2977,7 @@ def lesson4(deck, T):
           "interchangeable.", 0),
          ("", 0),
          ("strip.Color(60, 0, 0) sets the RED channel to a quarter. The green "
-          "and blue channels are untouched. This changes the COLOUR you asked "
+          "and blue channels are untouched. This changes the COLOR you asked "
           "for.", 0),
          ("", 0),
          ("strip.setBrightness(60) scales EVERY channel of EVERY pixel on the "
