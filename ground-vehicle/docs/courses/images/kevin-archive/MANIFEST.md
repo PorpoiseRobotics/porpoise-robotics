@@ -31,7 +31,6 @@ folder redraws figures like the Ohm's law triangles natively.
 | `ide-boards-manager-esp32.png` | ours | Boards Manager showing esp32 by Espressif installed | L1 slide 18 |
 | `ide-examples-menu.png` | ours | Arduino IDE File > Examples | L1 slide 21 |
 | `ide-pathfinder-ps3-open.png` | ours | Arduino IDE with pathfinder_ps3.ino open | L1 slide 22 |
-| `ide-preferences-boards-url.png` | ours | Preferences with the Additional boards manager URL filled in - this is the screenshot L1 s24 is waiting for | L1 slide 16 |
 | `ide-tools-menu.png` | ours | Arduino IDE Tools menu | L1 slide 17 |
 | `ide-tools-port-menu.png` | ours | Arduino IDE Tools menu with Port > COM4 | L1 slide 19 |
 | `mcp2515-can-module.png` | third-party | MCP2515 SPI-to-CAN module and its schematic | L2 slide 14 |
@@ -46,7 +45,6 @@ folder redraws figures like the Ohm's law triangles natively.
 | `porpoise-logo-alt.png` | ours | Porpoise Robotics logo, higher resolution | L2 slide 50 |
 | `ps3-button-map-callouts.jpg` | third-party | PS3 pad with Kevin's L1/R1/L3/R3 number callouts over a stock Sony product photo | L3 slide 2 |
 | `pwm-duty-cycle-examples.png` | third-party | 50%, 75% and 25% duty cycle traces | L2 slide 8 |
-| `rgb-additive-mixing.png` | third-party | Red, green and blue circles overlapping to white - the figure L4 s7 is waiting for | L4 slide 5 |
 | `servo-fs90r-parts.jpg` | third-party | FS90R servo with its horns and screws | L5 slide 18 |
 | `servo-fs90r.jpg` | third-party | FiTec FS90R continuous servo | L5 slide 18 |
 | `ship-axes-coordinate-system.jpg` | third-party | Ship coordinate system, X/Y/Z with fore and stern | L3 slide 6, 7 |
@@ -68,7 +66,6 @@ folder redraws figures like the Ohm's law triangles natively.
 | `vehicle-with-ps3-controller-alt.jpg` | ours | Vehicle beside a PS3 controller | L2 slide 6, 17 |
 | `vehicle-with-rangefinder-alt.jpg` | ours | Vehicle with an ultrasonic range finder on the top plate | L5 slide 19 |
 | `waveform-types.png` | third-party | Sine, complex, triangular and square waves | L2 slide 8 |
-| `ws2812b-stick-8.jpg` | third-party | Eight-LED WS2812B stick, front and back, pads labelled - the closest thing here to the close-up L4 s5 wants | L4 slide 30 |
 
 56 images: 26 ours, 30 third-party. Dropped: 6a38137fc7bc (a 'Wholesale' watermark banner).
 
@@ -104,3 +101,17 @@ slide and cropped to the drawing. They are all Kevin's own work.
 | `diagram-vehicle-parts-callouts.png` | The vehicle from above with Kevin's callouts: ESP32, servo connectors, 16 V output, front and back LED bars | L1 slide 6 | 11.5 x 6.5 in |
 
 22 diagrams.
+
+## In use, moved to the parent folder
+
+Three of these answered placeholders and are now slide assets, so they live in
+`images/` rather than here. Recorded so the provenance is not lost:
+
+| File | From | Used on |
+|---|---|---|
+| `ide-preferences-boards-url.png` | L1 slide 16 | Beginner L1 s24, PS3 track only - the box holds the espressif URL, so the Switch track still wants its own shot |
+| `ws2812b-stick-8.jpg` | L4 slide 30 | Beginner L4 s5 |
+| `rgb-additive-mixing.png` | L4 slide 5 | Beginner L4 s7, upscaled 4x from the 220px original because it was going onto a slide nearly five inches tall |
+
+The last two are vendor/third-party artwork, added on Valentino's instruction
+2026-09-05. They want a licence check before this goes anywhere public.

@@ -80,6 +80,7 @@ PS3 = {
     "read_button": "Ps3.data.button.square",
     "connected": "Ps3.isConnected()",
     "guard": "!Ps3.isConnected()",
+    "boards_screenshot": img("ide-preferences-boards-url.png"),
     "analog_extra": "The TRIGGERS are analog too, and so are the shoulder "
                     "and face buttons - a Sixaxis reports how hard you "
                     "press.",
@@ -132,6 +133,14 @@ SWITCH = {
     "read_button": "myController->x()",
     "connected": "myController->isConnected()",
     "guard": "myController == nullptr || !myController->isConnected()",
+    # Kevin's screenshot has the espressif url in the box, which is the
+    # wrong one for this track, so this stays a placeholder until somebody
+    # takes the same shot with the bluepad32 url in it.
+    "boards_screenshot": Placeholder(
+        "SCREENSHOT: Arduino IDE Preferences",
+        "File > Preferences with the bluepad32 URL above pasted into the "
+        "\"Additional boards manager URLs\" box. Kevin's screenshot shows "
+        "the espressif URL, which is the PS3 track's."),
     "analog_extra": "The TRIGGERS are analog too. Bluepad32 reports them "
                     "as brake() and throttle(), not as buttons.",
     "analog_speaker": "The two triggers are ANALOG on this track as well. "
@@ -1379,11 +1388,8 @@ def _board_setup_slide(deck, T):
          ("5.  Choose version {} - NOT the latest - and click Install.".format(
              T["board_version"]), 0),
          ("6.  {}".format(T["board_menu"]), 0)],
-        Placeholder(
-            "SCREENSHOT: Arduino IDE Preferences",
-            "File > Preferences with the URL above pasted into the "
-            "\"Additional boards manager URLs\" box, so students can see "
-            "exactly which field it goes in."),
+        T["boards_screenshot"],
+        caption="It is the bottom row",
         image_ratio=0.28,
         note=T["board_note"],
         note_kind="warn",
@@ -1393,6 +1399,9 @@ def _board_setup_slide(deck, T):
             "The URL is the part everybody mistypes. Have it ready to paste "
             "into the chat, or written on the board, rather than reading it "
             "out.",
+            "The screenshot is the real dialog. Point at the bottom row - "
+            "the box is easy to miss, and it is the one field on the page "
+            "that matters today.",
             "The board package is a large download. Start everybody off, "
             "then talk over it rather than watching a progress bar with "
             "thirty people.",
@@ -3043,11 +3052,8 @@ def lesson4(deck, T):
           "one, which does the same.", 0),
          ("So ONE WIRE drives the whole chain. Our vehicle has 32 on "
           "GPIO 5, numbered in the order the data flows.", 0)],
-        Placeholder(
-            "PHOTO: a single NeoPixel, close up",
-            "One WS2812B on its own, big enough to see the four pads and "
-            "the three dies inside the package."),
-        caption="One WS2812B: 5 V, ground, data in, data out",
+        img("ws2812b-stick-8.jpg"),
+        caption="Eight WS2812Bs, front and back: 5 V, ground, DI, DO",
         image_ratio=0.34,
         note="In theory a chain can be any length. In practice the whole "
              "chain is refreshed every frame, so about 350 pixels is the "
@@ -3062,6 +3068,10 @@ def lesson4(deck, T):
             "always asks about how long a chain can be.",
             "WS2812B is the part number. Worth saying once - they will meet "
             "it everywhere.",
+            "The photograph is a stick of eight rather than a single "
+            "pixel, and the back is worth pointing at: DI at one end, DO "
+            "at the other, and 5 V and ground shared down the whole "
+            "strip. That is the chain, in one picture.",
         ])
 
     deck.table(
@@ -3094,11 +3104,7 @@ def lesson4(deck, T):
 
     deck.image_slide(
         "One pixel is three LEDs, and color is a mixture",
-        Placeholder(
-            "FIGURE: additive RGB mixing",
-            "Three overlapping circles - red, green, blue - with yellow, "
-            "cyan and magenta where two meet and white where all three "
-            "do. Kevin is supplying this one."),
+        img("rgb-additive-mixing.png"),
         caption="Red + green = yellow. All three at full = white. This is "
                 "ADDITIVE mixing, and it is not how paint behaves.",
         speaker=[
