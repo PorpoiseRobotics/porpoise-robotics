@@ -36,6 +36,17 @@ PANEL_NAME = "CODE_PANEL"
 # deliberately wrong so students can see the bug.
 ALLOWED = {
     # generic C and Arduino, taught as language rather than as our code
+    # Lesson 2, "if, else if, else - the three shapes". The same status as
+    # the loop forms below it: C taught as a language, not our program.
+    "if (speed > MOTOR_MAX) {",
+    "speed = MOTOR_MAX;",
+    "headlightsOn();",
+    "allLightsOff();",
+    "if (duty > 200) {",
+    "} else if (duty > 60) {",
+    'Serial.println("fast");',
+    'Serial.println("moving");',
+    'Serial.println("stopped");',
     "for (int i = 0; i < 32; i++) {",
     "strip.setPixelColor(i, color);",
     "strip.setPixelColor(0, white);",

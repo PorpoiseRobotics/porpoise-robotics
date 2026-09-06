@@ -1331,10 +1331,16 @@ class Deck:
         """
         gap = Inches(0.45)
         has_right = bool(expect or questions)
-        col_w = Emu(int((CONTENT_W - gap) / 2)) if has_right else CONTENT_W
+        # The steps are instructions and the right-hand panels are short
+        # notes, so an even split starves the half that needs the room.
+        col_w = (Emu(int((CONTENT_W - gap) * 0.58)) if has_right
+                 else CONTENT_W)
+        side_w = CONTENT_W - col_w - gap
 
+        safety_h = (self._note_height(safety, "safety") if safety
+                    else Inches(0))
         top = BODY_TOP + Inches(0.78)
-        bottom = Inches(5.55) if safety else Inches(6.85)
+        bottom = Inches(6.85) - safety_h
         col_h = bottom - top
 
         width_pt = col_w / EMU_PER_PT
@@ -1401,7 +1407,8 @@ class Deck:
                 run.font.color.rgb = WHITE
                 run.font.name = BODY_FONT
 
-            this_bottom = Inches(5.55) if (safety and is_last) else Inches(6.85)
+            this_bottom = (Inches(6.85) - safety_h if (safety and is_last)
+                           else Inches(6.85))
             this_h = this_bottom - top
 
             if step_columns:
@@ -1429,19 +1436,28 @@ class Deck:
                 if questions:
                     blocks.append(("Answer these", questions))
 
-                share = Emu(int((this_h - Inches(0.44) * len(blocks))
-                                / len(blocks)))
-                for heading, body in blocks:
-                    head = self._textbox(slide, right, right_top, col_w,
+                # Share the column by content, not by block count: a
+                # one-line expectation beside four lines of questions
+                # used to leave one half empty and overflow the other.
+                spare = this_h - Inches(0.48) * len(blocks)
+                side_pt = side_w / EMU_PER_PT
+                wanted = [max(measure_pt(body, side_pt, MIN_BODY_PT,
+                                         space_after=6), 1.0)
+                          for _, body in blocks]
+                total = sum(wanted)
+                shares = [Emu(int(spare * want / total)) for want in wanted]
+
+                for (heading, body), share in zip(blocks, shares):
+                    head = self._textbox(slide, right, right_top, side_w,
                                          Inches(0.4))
-                    _set_fitted(head.text_frame, [heading], width=col_w,
+                    _set_fitted(head.text_frame, [heading], width=side_w,
                                 height=Inches(0.4), size=MIN_BODY_PT + 2,
                                 floor=MIN_BODY_PT, bold=True, color=TEAL)
                     box = self._textbox(slide, right, right_top + Inches(0.44),
-                                        col_w, share)
-                    _set_fitted(box.text_frame, body, width=col_w,
+                                        side_w, share)
+                    _set_fitted(box.text_frame, body, width=side_w,
                                 height=share, size=MAX_BODY_PT, space_after=6)
-                    right_top += share + Inches(0.48)
+                    right_top += share + Inches(0.52)
 
             if safety and is_last:
                 self._note(slide, safety, "safety")

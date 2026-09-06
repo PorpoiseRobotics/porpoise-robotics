@@ -139,7 +139,7 @@ STAGES = {
     "lesson2": [
         "H-bridges and PWM",
         "One motor",
-        "Duty against speed",
+        "Duty vs speed",
         "Ohm's law and circuits",
         "Driving a square",
     ],
@@ -1406,35 +1406,29 @@ def lesson2(deck, T):
     deck.two_columns(
         "Why driving A rather than B reverses the motor",
         "What is physically happening",
-        [("A motor is a coil of wire sitting in a magnetic field. Push current "
-          "through the coil and the field around the coil pushes against the "
-          "magnets, and the shaft turns.", 0),
-         ("", 0),
-         ("Reverse the direction of the current and the coil's field reverses "
-          "with it. Same magnets, same coil, opposite push - so the shaft "
-          "turns the other way.", 0),
-         ("", 0),
-         ("That is the whole trick. DIRECTION OF ROTATION IS DIRECTION OF "
-          "CURRENT. Everything the H-bridge does is in service of that one "
-          "fact.", 0)],
+        [("A motor is a coil of wire in a magnetic field. Push current "
+          "through the coil and its field pushes against the magnets, so "
+          "the shaft turns.", 0),
+         ("Reverse the current and the coil's field reverses with it. "
+          "Same magnets, same coil, opposite push, opposite rotation.", 0),
+         ("DIRECTION OF ROTATION IS DIRECTION OF CURRENT. Everything the "
+          "H-bridge does is in service of that one fact.", 0)],
         "What the two pins do about it",
-        [("The motor has two terminals. Current flows from the one at the "
-          "higher voltage to the one at the lower.", 0),
-         ("", 0),
+        [("Current flows from the terminal at the higher voltage to the "
+          "one at the lower.", 0),
          ("A at 3.3 V, B at 0 V  ->  current flows A to B", 1),
          ("A at 0 V, B at 3.3 V  ->  current flows B to A", 1),
-         ("", 0),
-         ("So the pins do not mean \"forwards\" and \"backwards\". They mean "
-          "\"this end is positive\". Which way the wheel then turns depends on "
-          "which way round the motor was wired - which is why swapping the two "
-          "pin numbers in the program fixes a wheel that runs backwards.", 0),
-         ("", 0),
-         ("How MUCH current flows sets how hard it pushes, and that is what "
-          "the duty cycle controls.", 0)],
-        note="Voltage is the push, current is the flow, and the motor turns "
-             "because of the flow. Hold that and the next slide - Ohm's law - "
-             "is the same idea with a resistor instead of a motor.",
+         ("The pins do not mean forwards and backwards. They mean "
+          "\"this end is positive\" - which is why swapping them "
+          "fixes a backwards wheel.", 0),
+         ("How MUCH current flows sets how hard it pushes, which is "
+          "what the duty cycle controls.", 0)],
+        note="Voltage is the push, current is the flow, and the motor "
+             "turns because of the flow.",
         speaker=[
+            "Land the KEY POINT and then extend it out loud: hold voltage "
+            "as push and current as flow, and Ohm's law after the break "
+            "is the same idea with a resistor in place of the motor.",
             "If a student asks about back-EMF, that is a good question and it "
             "belongs in the advanced course. Park it.",
             "The practical takeaway is the last sentence on the right: a wheel "
@@ -1567,60 +1561,30 @@ def lesson2(deck, T):
     deck.activity(
         "Do it now  -  one motor",
         "l2a_one_motor",
-        [("1.  Put the vehicle on a block. Check all four wheels spin free.", 0),
-         ("2.  Upload it. Watch the front left wheel and the Serial Monitor.", 0),
-         ("3.  Change SPEED from 200 to 60. Upload. Does the wheel still turn?", 0),
-         ("4.  Try 40, then 30, then 20. Find the SMALLEST number that still "
-          "gets the wheel moving from a standstill. Write it down.", 0),
-         ("5.  Swap MOTOR_PIN_A and MOTOR_PIN_B. Upload. What changed?", 0),
-         ("6.  Change the pins to 22 and 23. Which wheel moves now?", 0)],
+        [("1.  Vehicle on a block. Check all four wheels spin free.", 0),
+         ("2.  Upload. Watch the front left wheel and the Serial Monitor.", 0),
+         ("3.  Change SPEED from 200 to 60. Does the wheel still turn?", 0),
+         ("4.  Swap MOTOR_PIN_A and MOTOR_PIN_B. What changed?", 0),
+         ("5.  Change the pins to 22 and 23. Which wheel moves?", 0)],
         expect=[("Front left wheel: forward, stop, reverse, stop, repeating.", 0)],
-        questions=[("What was your minimum turning speed?", 0),
-                   ("Compare with another group. Are they the same? Why not?", 0)],
+        questions=[("At 60, is the wheel turning as fast as it did at 200, "
+                    "or is it turning with less force?", 0),
+                   ("Swapping the two pins reversed it. Why does that work?", 0)],
         safety="Wheels off the ground. Nothing on this slide should touch the floor.",
         minutes=25,
         speaker=[
             "Check every vehicle is on a block before anybody uploads. Walk "
             "the room.",
-            "Step 4 is the real work. Make them write the number down - it "
-            "comes back on the next slide and again in Lesson 3.",
-            "Numbers will differ between groups, and that is the finding, "
-            "not an error. Get two groups to compare out loud.",
-            "Step 6 moves the pins to another motor. If nothing happens, "
+            "Step 3 is the one to talk about: at a lower duty the wheel "
+            "is being pushed less hard, which is not quite the same as "
+            "going slower. Keep it at that level.",
+            "If a group finds a duty so low the wheel will not start at "
+            "all, tell them what they have found and move on. We are "
+            "deliberately not chasing that number in this course.",
+            "Step 5 moves the pins to another motor. If nothing happens, "
             "they have almost certainly typed one pin of a pair.",
         ])
 
-    deck.bullets(
-        "That minimum number matters",
-        [("Below a certain duty, a motor does not turn at all. It has to "
-          "overcome friction in the gearbox and the bearings before anything "
-          "moves.", 0),
-         ("Your number will not be the same as the next group's. It depends on "
-          "your motors, your wheels, your bearings and how charged your battery "
-          "is.", 0),
-         ("", 0),
-         ("In the full vehicle program there is a setting called MOTOR_MIN for "
-          "exactly this. It is currently 0, which means the speed climbs "
-          "smoothly from nothing.", 0),
-         ("If the first part of your stick travel ever feels dead, raising "
-          "MOTOR_MIN is the fix - it lifts the slowest speed the vehicle is ever "
-          "given, so the wheels start moving the moment you leave the deadzone.", 0),
-         ("", 0),
-         ("You will meet the deadzone next lesson.", 0)],
-        note="Measure it, do not guess it. The number in the program was once a "
-             "guess, and it was wrong.",
-        speaker=[
-            "This slide only works if they measured. Ask three groups for "
-            "their number before you say anything.",
-            "MOTOR_MIN is currently zero in the shipped program. That is "
-            "deliberate, and it means the speed climbs smoothly from "
-            "nothing.",
-            "The symptom to describe: the first part of the stick travel "
-            "feels dead. The fix is raising MOTOR_MIN, and they will have "
-            "the vocabulary for it next lesson.",
-            "Measure, do not guess. Say it - the number in the program was "
-            "once a guess and it was wrong.",
-        ])
 
     deck.progress(STAGES["lesson2"], 2,
         speaker=[
@@ -1628,7 +1592,7 @@ def lesson2(deck, T):
         ])
 
     deck.activity(
-        "Do it now  -  duty against speed",
+        "Do it now  -  duty vs speed",
         "l2b_speed_ramp",
         [("1.  Wheels still off the ground. Upload it.", 0),
          ("2.  Watch the wheels and read the Serial Monitor at the same time.", 0),
@@ -1721,16 +1685,14 @@ def lesson2(deck, T):
         [("SERIES. Your LED circuit from Lesson 1: supply, resistor, LED, "
           "back to ground. One loop, one current.", 0),
          ("Add resistance and the current everywhere drops.", 1),
-         ("", 0),
-         ("PARALLEL. The four motors. Each one hangs across the same supply, "
-          "so each gets the full battery voltage, and the currents add up.", 0),
+         ("PARALLEL. The four motors. Each hangs across the same supply, "
+          "so each gets the full battery voltage and the currents add up.", 0),
          ("Four motors at 1.5 A each is 6 A out of the battery.", 1),
-         ("That is why the battery goes flat four times faster with all four "
-          "driving than with one.", 1),
-         ("", 0),
-         ("The 32 LEDs are in parallel too. Each pixel draws its own current "
-          "from the same 5 V rail, which is exactly why the power budget in "
-          "Lesson 4 adds up the way it does.", 0)],
+         ("Which is why it goes flat four times faster on four motors "
+          "than on one.", 1),
+         ("The 32 LEDs are in parallel too, each drawing its own current "
+          "from the same 5 V rail. That is why the Lesson 4 power budget "
+          "adds up the way it does.", 0)],
         lead="You have already built both",
         note="Series: current is shared, voltage divides. Parallel: voltage is "
              "shared, current divides. Almost every wiring question comes down "
@@ -1813,23 +1775,17 @@ def lesson2(deck, T):
 
     deck.bullets(
         "Running the bases  -  a maneuver that is not a square",
-        [("A square is four legs on bearings 0, 90, 180 and 270, which is why "
-          "you can do it in your head.", 0),
-         ("", 0),
-         ("Now try a baseball diamond. The batter hits the ball and runs at "
-          "45 degrees to first base, then makes three more left turns back "
-          "to home plate.", 0),
-         ("", 0),
-         ("Nothing in the program changes. It is still drive, turn, drive, "
-          "turn. What changes is that the bearings are no longer whole "
-          "quarter turns, so you need sin and cos to work out where it ends "
-          "up.", 0),
-         ("", 0),
+        [("A square is four legs on bearings 0, 90, 180 and 270, which is "
+          "why you can do it in your head.", 0),
+         ("Now try a baseball diamond: run at 45 degrees to first base, "
+          "then three more left turns back to home plate.", 0),
+         ("Nothing in the program changes - it is still drive, turn, "
+          "drive, turn. The bearings are no longer whole quarter turns, "
+          "so you need sin and cos to work out where it ends up.", 0),
          ("Set it up in a spreadsheet: one row per leg, with time, speed, "
-          "bearing, and the running east and north totals. Plot east against "
-          "north as a scatter chart and you have drawn the path before the "
-          "vehicle has moved.", 0),
-         ("", 0),
+          "bearing, and the running east and north totals. Plot east "
+          "against north and you have drawn the path before the vehicle "
+          "has moved.", 0),
          ("Then run it, and measure how far off the real one finishes.", 0)],
         lead="Same program, four legs, different bearings",
         note="A closed shape should add up to zero east and zero north. "
@@ -1850,15 +1806,94 @@ def lesson2(deck, T):
             "arithmetic stays easy.",
         ])
 
+    deck.two_columns(
+        "Deciding what to do: if, else if, else",
+        "The shape of it",
+        [("An IF runs a block only when its test is true, and carries "
+          "straight on when it is not.", 0),
+         ("Add an ELSE and exactly one of the two blocks runs. Never "
+          "both, never neither.", 0),
+         ("Chain them with ELSE IF and the FIRST true test wins. The "
+          "rest are not even looked at, so order matters.", 0),
+         ("A test is anything that comes out true or false: a "
+          "comparison, a button, a bool.", 0)],
+        "Where you have already met one",
+        [("Is the stick inside the deadzone? Then the speed is zero.", 0),
+         ("Is the controller connected? If not, stop the motors.", 0),
+         ("Are the lights on? Then turn them off, otherwise turn them "
+          "on.", 0),
+         ("Every one of those is a question with a yes and a no, and "
+          "that is all an if is.", 0)],
+        note="You will write far more of these than loops. Almost "
+             "everything a robot does is a decision about a number it "
+             "just read.",
+        speaker=[
+            "Kevin's point, and it is right: conditionals turn up more "
+            "often than loops, so they go first and they get the same "
+            "space.",
+            "Do the = versus == trap out loud. One equals sign ASSIGNS, "
+            "two COMPARE, and if (x = 5) compiles happily and is always "
+            "true. It will bite somebody this term.",
+            "The right-hand column is all code they have run or are "
+            "about to. Point at each one rather than reading it.",
+            "If somebody asks about switch, say it exists, it is a "
+            "tidier else-if chain for one variable, and they will see "
+            "one in the advanced course.",
+        ])
+
+    deck.code(
+        "if, else if, else  -  the three shapes",
+        ["// if  -  do it only when the test is true",
+         "if (speed > MOTOR_MAX) {",
+         "  speed = MOTOR_MAX;",
+         "}",
+         "",
+         "// if / else  -  one or the other, never both",
+         "if (lightsOn) {",
+         "  headlightsOn();",
+         "} else {",
+         "  allLightsOff();",
+         "}",
+         "",
+         "// else if  -  a chain. The FIRST true one wins.",
+         "if (duty > 200) {",
+         "  Serial.println(\"fast\");",
+         "} else if (duty > 60) {",
+         "  Serial.println(\"moving\");",
+         "} else {",
+         "  Serial.println(\"stopped\");",
+         "}"],
+        filename="the three conditional forms",
+        notes=[("== compares. = assigns. if (x = 5) compiles, and is "
+                "always true. This one catches everybody once.", 0),
+               ("An if on its own can run zero times or one time. An "
+                "if / else always runs exactly one of the two.", 0),
+               ("In a chain, put the NARROWEST test first. Swap the "
+                "last two here and nothing is ever \"fast\".", 0),
+               ("", 0),
+               ("The braces are optional for a single line. Use them "
+                "anyway - the bug they prevent is a nasty one.", 0)],
+        size=13, highlight={1, 6, 13, 15, 17},
+        speaker=[
+            "Three shapes, and they cover almost everything they will "
+            "write this year.",
+            "The else-if chain is the one worth dwelling on. Ask what "
+            "happens if you put duty > 60 first: the answer is that "
+            "nothing is ever fast, because the first true test wins.",
+            "lightsOn is real - it is the toggle in l5b_button_toggle, "
+            "which they will write in Lesson 5.",
+            "End on the braces. Optional for one line, and the source "
+            "of a famous class of bug when somebody adds a second line "
+            "later and does not notice.",
+        ])
+
     deck.table(
         "The three kinds of loop in C",
         ["Loop", "When the test happens", "Use it when"],
         [["for", "Before each pass", "You know how many times. Stepping through the 32 LEDs, or four sides of a square."],
          ["while", "Before each pass", "You do not know how many times. It depends on a condition, and it might not run at all."],
          ["do-while", "After each pass", "The body must run at least once, whatever the condition says."]],
-        lead="You have been using for loops all lesson. There are two more, and "
-             "between them they turn up in almost every program you will ever "
-             "read.",
+        lead="You have been using for loops all lesson. There are two more.",
         col_widths=[1.4, 2.6, 7],
         size=14,
         note="Study these three properly. If you genuinely understand when to "
@@ -1958,18 +1993,18 @@ def lesson2(deck, T):
     deck.activity(
         "Do it now  -  drive a square",
         "l2c_maneuver_square",
-        [("1.  Clear a space about three meters square. Bags and feet out.", 0),
-         ("2.  Mark the starting point with a piece of tape.", 0),
+        [("1.  Clear three meters square. Bags and feet out.", 0),
+         ("2.  Mark the starting point with tape.", 0),
          ("3.  Upload. It waits five seconds, then goes.", 0),
          ("4.  MEASURE one side of the square it actually drove.", 0),
-         ("5.  Work out the speed:  side length / (FORWARD_MS / 1000)", 0),
-         ("6.  The corners will not be 90 degrees. Adjust TURN_MS by 25 ms at a "
-          "time until the vehicle comes back to its tape.", 0),
-         ("7.  Now change FORWARD_MS and PREDICT the new square before running "
-          "it. How close were you?", 0)],
+         ("5.  Speed = side length / (FORWARD_MS / 1000)", 0),
+         ("6.  The corners will not be 90 degrees. Adjust TURN_MS by "
+          "25 ms at a time until it comes back to its tape.", 0),
+         ("7.  Change FORWARD_MS and PREDICT the new square before you "
+          "run it. How close were you?", 0)],
         expect=[("Roughly a square. Roughly.", 0),
-                ("It will not close perfectly on the first attempt. That is the "
-                 "point of the exercise, not a failure.", 0)],
+                ("It will not close on the first attempt. That is the "
+                 "point, not a failure.", 0)],
         questions=[("What is your vehicle's speed in feet per second?", 0),
                    ("What is its turn rate in degrees per second?", 0)],
         safety="This one drives on the floor. Know where your power switch is "
@@ -1990,20 +2025,18 @@ def lesson2(deck, T):
 
     deck.bullets(
         "Dead reckoning, and what it cannot do",
-        [("DEAD RECKONING is working out where you are from your speed, your "
-          "heading and the time - with no outside reference at all.", 0),
-         ("Ships and aircraft navigated this way for centuries. Submersibles "
-          "still fall back on it, because GPS does not work underwater.", 0),
-         ("", 0),
-         ("It DRIFTS. Every small error accumulates, and nothing ever corrects "
-          "it. Errors in your square come from:", 0),
-         ("Battery charge - a fresher pack drives further in the same time", 1),
+        [("DEAD RECKONING is working out where you are from your speed, "
+          "your heading and the time, with no outside reference at all. "
+          "Ships and aircraft navigated this way for centuries, and "
+          "submersibles still do, because GPS does not work underwater.", 0),
+         ("It DRIFTS. Every small error accumulates and nothing ever "
+          "corrects it. Yours came from:", 0),
+         ("Battery charge - a fresher pack drives further", 1),
          ("Floor surface - carpet, tile and concrete all differ", 1),
-         ("Wheel slip during the turns, which skid steering guarantees", 1),
-         ("Motors that are not perfectly matched to each other", 1),
-         ("", 0),
-         ("The fix is a SENSOR that tells you something true about the outside "
-          "world. That is where the course goes after this one.", 0)],
+         ("Wheel slip in the turns, which skid steering guarantees", 1),
+         ("Motors not perfectly matched to each other", 1),
+         ("The fix is a SENSOR that tells you something true about the "
+          "outside world. That is where the course goes next.", 0)],
         note="Recharge the battery and run the same numbers again. The square "
              "gets bigger. Nothing in the program changed.",
         note_kind="warn",
@@ -2019,29 +2052,6 @@ def lesson2(deck, T):
             "the outside world. That is the next course.",
         ])
 
-    deck.bullets_image(
-        "The same ideas, underwater",
-        [("The Explorer Gen 2 ROV is built from the pieces you just met:", 0),
-         ("", 0),
-         ("An ESP32, like the one on your desk", 0),
-         ("Brushless motors on ESCs, not brushed on H-bridges - more "
-          "thrust for the weight", 0),
-         ("A pressure sensor and an IMU on an I2C bus", 0),
-         ("A CAN bus tying it together", 0),
-         ("", 0),
-         ("Different vehicle, same engineering.", 0)],
-        img("rov-can-bus.jpg"),
-        caption="Explorer Gen 2 ROV: ESP32, ESC, sensors, CAN bus",
-        image_ratio=0.50,
-        note="If this looks interesting, there is a whole ROV course. The "
-             "ground vehicle is the easiest place to learn the ideas; the "
-             "submersible is where they get hard.",
-        speaker=[
-            "Worth thirty seconds of enthusiasm. Several students each year "
-            "come for the rover and stay for the ROV.",
-            "The honest pitch: a mistake on a rover bumps a wall. A mistake on "
-            "a submersible floods an electronics bay.",
-        ])
 
     deck.bullets(
         "Drag race  -  next lesson and the one after",
@@ -2073,26 +2083,20 @@ def lesson2(deck, T):
         "Watch",
         [("How PWM works, controlling a motor   (10:10)", 0),
          ("youtube.com/watch?v=5nwNKPs2gco", 1),
-         ("", 0),
          ("Arduino DC motor control   (11:44)", 0),
          ("youtube.com/watch?v=HtbCL2NruUY", 1),
-         ("", 0),
          ("Motor speed tutorial with PWM motors   (17:33)", 0),
          ("youtube.com/watch?v=UPTU6nYSaMo", 1),
-         ("", 0),
          ("Loops in C   (video)", 0),
          ("youtube.com/watch?v=b4DPj0XAfSg", 1)],
         "Read",
-        [("Loops in C, worked through properly", 0),
-         ("geeksforgeeks.org/c/c-loops/", 1),
-         ("", 0),
-         ("Control structures - loops and conditionals", 0),
+        [("If statements in C", 0),
          ("cplusplus.com/doc/tutorial/control/", 1),
-         ("", 0),
+         ("Loops in C, worked through properly", 0),
+         ("geeksforgeeks.org/c/c-loops/", 1),
          ("Functions", 0),
          ("cplusplus.com/doc/tutorial/functions/", 1),
-         ("", 0),
-         ("Everything above is optional and none of it is examined.", 0)],
+         ("All of this is optional and none of it is examined.", 0)],
         size=15,
         note="Watch the PWM video before Lesson 3 if today felt fast. It covers "
              "the same ground more slowly, and with an oscilloscope.",
@@ -2174,7 +2178,8 @@ def lesson3(deck, T):
     deck.bullets(
         "Where we got to last lesson",
         [("You know how an H-bridge reverses a motor, and how PWM sets its speed.", 0),
-         ("You measured your own vehicle's minimum turning speed.", 0),
+         ("You watched duty and speed change together on the Serial "
+          "Monitor.", 0),
          ("You drove a square you calculated, and found out why it did not "
           "close.", 0),
          ("", 0),
