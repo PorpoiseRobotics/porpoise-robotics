@@ -83,11 +83,18 @@ EMU_PER_PT = 12700
 # Consolas at 18pt; near enough for a fitting estimate, and pessimistic.
 CHAR_W = {CODE_FONT: 0.56, BODY_FONT: 0.50}
 
-# House rule: nothing a student has to READ is ever below 18pt. Code panels
-# are the one exception - a listing at 18pt monospace fits barely nineteen
-# lines, so they may go to 14pt to keep a whole function on one slide.
-# The footer strip (track, lesson, slide number) is chrome, not content, and
-# stays small.
+# House rule: 18pt is the TARGET for anything a student has to read, because
+# Kevin's experience is that 18pt is the size everybody in a room can read.
+# It is a target and not a law - Valentino, 2026-09-05: going under is fine
+# where it is the reasonable trade. The places that knowingly do:
+#
+#   code panels      down to MIN_CODE_PT, to keep a function on one slide
+#   dense tables     down to 9pt, because a clipped row is worse than small
+#                    type and a reference table gets photographed anyway
+#   chrome           the footer strip, the done/NOW tags, the KEY POINT label
+#   spacers          a blank line is not read, so it is set short
+#
+# Body text, bullets, notes and captions all hold the 18pt target.
 MIN_BODY_PT = 18.0     # Body text, bullets, tables, captions, diagram labels
 MIN_CODE_PT = 14.0     # Code listings only
 MIN_SMALL_PT = 18.0    # Captions and diagram labels are content too
@@ -229,6 +236,41 @@ def _set_fitted(frame, runs, *, width, height, size=18, floor=MIN_BODY_PT,
     _set_text(frame, runs, size=used, space_after=gap, font=font,
               line_spacing=line_spacing, **kwargs)
     return used
+
+
+def _page_code(lines, per_page):
+    """
+    Split a listing into pages of even length, breaking at a blank line where
+    one is close by.
+
+    Filling each page to the brim and spilling the rest leaves a "and now five
+    more lines" slide at the end - the same orphan problem _rebalance fixes
+    for bullets. Twenty-six lines over two pages is thirteen and thirteen, not
+    twenty-one and five.
+    """
+    if len(lines) <= per_page:
+        return [lines]
+
+    pages = int(math.ceil(len(lines) / float(per_page)))
+    target = int(math.ceil(len(lines) / float(pages)))
+
+    out = []
+    start = 0
+    while start < len(lines):
+        end = min(start + target, len(lines))
+        if end < len(lines):
+            # A blank line within two of the break is a better place to cut:
+            # it falls between functions rather than through one.
+            for offset in (0, -1, 1, -2, 2):
+                candidate = end + offset
+                if (start < candidate < len(lines)
+                        and candidate - start <= per_page
+                        and not lines[candidate - 1].strip()):
+                    end = candidate
+                    break
+        out.append(lines[start:end])
+        start = end
+    return out or [lines]
 
 
 def _share_columns(want, need, total):
@@ -1303,7 +1345,7 @@ class Deck:
             code_size -= 0.5
 
         per_page = max(int(avail_h_pt / (code_size * 1.22)), 4)
-        pages = [lines[i:i + per_page] for i in range(0, len(lines), per_page)]             or [lines]
+        pages = _page_code(lines, per_page)
 
         first = None
         made = []
