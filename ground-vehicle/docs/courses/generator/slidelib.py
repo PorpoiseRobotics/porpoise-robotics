@@ -1116,20 +1116,35 @@ class Deck:
         stays readable.
         """
         gap = Inches(0.5)
-        col_w = Emu(int((CONTENT_W - gap) / 2))
+        usable = CONTENT_W - gap
         note_h = self._note_height(note, note_kind) if note else Inches(0)
         body_h = BODY_H - note_h - Inches(0.5)
-
-        width_pt = col_w / EMU_PER_PT
         height_pt = body_h / EMU_PER_PT - 8.0
+
+        # Share the width by content rather than down the middle. A column
+        # with twice the text of its neighbour used to overflow and drag
+        # BOTH onto a continuation slide while the short one sat half
+        # empty. Clamped, so the pair still reads as a pair.
+        even_pt = (usable / 2) / EMU_PER_PT
+        want_l = measure_pt(left_items, even_pt, MIN_BODY_PT, space_after=5)
+        want_r = measure_pt(right_items, even_pt, MIN_BODY_PT, space_after=5)
+        share = want_l / max(want_l + want_r, 1.0)
+        share = min(max(share, 0.35), 0.65)
+
+        left_w = Emu(int(usable * share))
+        right_w = usable - left_w
+        widths = (left_w, right_w)
+
+        left_pt = left_w / EMU_PER_PT
+        right_pt = right_w / EMU_PER_PT
 
         # 18pt is a floor, not a target: start high and come down.
         start = max(size, MAX_BODY_PT)
 
-        left_used, _, left_fits = fit_size(left_items, width_pt, height_pt,
+        left_used, _, left_fits = fit_size(left_items, left_pt, height_pt,
                                            start, space_after=8)
-        right_used, _, right_fits = fit_size(right_items, width_pt, height_pt,
-                                             start, space_after=8)
+        right_used, _, right_fits = fit_size(right_items, right_pt,
+                                             height_pt, start, space_after=8)
         # One size across both columns, or the pair looks mismatched.
         shared = min(left_used, right_used)
 
@@ -1137,9 +1152,9 @@ class Deck:
             left_chunks = [_norm(left_items)]
             right_chunks = [_norm(right_items)]
         else:
-            left_chunks = _split_runs(left_items, width_pt, height_pt,
+            left_chunks = _split_runs(left_items, left_pt, height_pt,
                                       MIN_BODY_PT, space_after=5)
-            right_chunks = _split_runs(right_items, width_pt, height_pt,
+            right_chunks = _split_runs(right_items, right_pt, height_pt,
                                        MIN_BODY_PT, space_after=5)
 
         pages = max(len(left_chunks), len(right_chunks))
@@ -1160,7 +1175,8 @@ class Deck:
             for column, (heading, chunk) in enumerate(
                     ((left_heading, left_chunks[index]),
                      (right_heading, right_chunks[index]))):
-                left = MARGIN_L + (col_w + gap) * column
+                col_w = widths[column]
+                left = MARGIN_L + (widths[0] + gap if column else 0)
                 if not chunk and index > 0:
                     continue
 

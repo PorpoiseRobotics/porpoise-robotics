@@ -80,6 +80,14 @@ PS3 = {
     "read_button": "Ps3.data.button.square",
     "connected": "Ps3.isConnected()",
     "guard": "!Ps3.isConnected()",
+    "analog_extra": "The TRIGGERS are analog too, and so are the shoulder "
+                    "and face buttons - a Sixaxis reports how hard you "
+                    "press.",
+    "analog_speaker": "Kevin caught this in the 2026-09-05 review: the PS3 "
+                      "triggers are ANALOG, not digital. So are the shoulder "
+                      "and face buttons - a Sixaxis reports pressure on all "
+                      "of them. Almost every program reads them as digital "
+                      "anyway, which is why it is easy to get wrong.",
 }
 
 SWITCH = {
@@ -124,6 +132,12 @@ SWITCH = {
     "read_button": "myController->x()",
     "connected": "myController->isConnected()",
     "guard": "myController == nullptr || !myController->isConnected()",
+    "analog_extra": "The TRIGGERS are analog too. Bluepad32 reports them "
+                    "as brake() and throttle(), not as buttons.",
+    "analog_speaker": "The two triggers are ANALOG on this track as well. "
+                      "Bluepad32 gives them to you as brake() and "
+                      "throttle() with a range, not as pressed-or-not. The "
+                      "face buttons, unlike a PS3 pad, really are digital.",
 }
 
 
@@ -2262,8 +2276,7 @@ def lesson3(deck, T):
         [("An analog reading says HOW FAR, not just whether.", 0),
          ("Both thumbsticks, on two axes each, reading {}.".format(
              T["stick_range"]), 0),
-         ("On a PS3 pad the TRIGGERS are analog too, and so are the "
-          "shoulder and face buttons.", 0),
+         (T["analog_extra"], 0),
          ("Good for: speed, steering, aiming a servo.", 0),
          (T["read_x"] + "     // left/right", 1),
          (T["read_y"] + "     // up/down", 1)],
@@ -2274,14 +2287,10 @@ def lesson3(deck, T):
         speaker=[
             "Digital and analog is a distinction they will use for the rest "
             "of their lives. Two minutes, properly.",
-            "Kevin caught this in the 2026-09-05 review: the PS3 triggers "
-            "are ANALOG, not digital. So are the shoulder buttons and the "
-            "face buttons - a Sixaxis reports pressure on all of them. "
-            "Almost every program reads them as digital anyway, which is "
-            "why it is easy to get wrong.",
-            "A hard press on a trigger reads differently from a light one. "
-            "You can still read any of them as a plain yes or no, and mostly "
-            "we do, which is why it is easy to get wrong.",
+            T["analog_speaker"],
+            "A press can read differently from a light one, and you can "
+            "still treat any of them as a plain yes or no - which is "
+            "mostly what we do, and why it is easy to get wrong.",
             "If you have five spare minutes, have them squeeze a trigger "
             "slowly in l3a_controller_check and watch the number climb.",
             "The warning panel is the one to read out. Push a stick up and "

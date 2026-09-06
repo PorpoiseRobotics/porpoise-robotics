@@ -207,11 +207,10 @@ def lesson1(deck):
         "One binary, two vehicles",
         "The problem",
         [("Gen 2 vehicles have no current sensor. Gen 3 vehicles do.", 0),
-         ("Two separate builds means two things to keep in step, and somebody "
-          "eventually flashes the wrong one.", 0),
-         ("", 0),
-         ("The answer: DETECT the hardware at boot and switch behavior on what "
-          "is actually there.", 0)],
+         ("Two separate builds means two things to keep in step, and "
+          "somebody eventually flashes the wrong one.", 0),
+         ("The answer: DETECT the hardware at boot, and switch behavior "
+          "on what is actually there.", 0)],
         "How Op 12 does it",
         [("Wire.begin(SDA, SCL);", 1),
          ("if (is_ina219_present()) {", 1),
@@ -219,11 +218,10 @@ def lesson1(deck):
          ("} else {", 1),
          ("  capabilities = 0;", 1),
          ("}", 1),
-         ("", 0),
-         ("Bit FLAGS, not booleans, so one byte can carry several independent "
-          "capabilities and a test is a single & operation.", 0),
-         ("Every feature that needs the sensor checks its flag first and is a "
-          "no-op without it.", 0)],
+         ("Bit FLAGS, not booleans, so one byte carries several "
+          "independent capabilities and a test is a single &.", 0),
+         ("Every feature that needs the sensor checks its flag first, "
+          "and is a no-op without it.", 0)],
         size=14,
         note="Detect what is there rather than being told what is there. A "
              "configuration that can disagree with the hardware eventually will.",
@@ -242,22 +240,19 @@ def lesson1(deck):
     deck.bullets(
         "How Arduino tabs actually work",
         [("Every .ino file in the sketch folder is a tab in the IDE.", 0),
-         ("Before compiling, the IDE CONCATENATES them into one file - the one "
-          "named after the folder first, then the rest alphabetically - and "
-          "generates function prototypes at the top.", 0),
-         ("", 0),
+         ("Before compiling, the IDE CONCATENATES them into one file - "
+          "the one named after the folder first, then the rest "
+          "alphabetically - and generates prototypes at the top.", 0),
          ("Two consequences you have to know:", 0),
-         ("", 0),
-         ("Functions and globals are shared across tabs with NO header needed. "
-          "Lighting.ino can call strip and read NUM_LEDS with no include.", 1),
-         ("", 0),
-         ("TYPES are not. The generated prototypes go ABOVE your code, so a "
-          "prototype mentioning an enum or struct you declared in a tab will "
-          "not compile - the type is not defined yet at that point.", 1),
-         ("", 0),
-         ("That is precisely why Config.h is a real header rather than a ninth "
-          "tab. A header is #included by the main sketch, so everything in it "
-          "is defined before the generated prototypes appear.", 0)],
+         ("Functions and globals cross tabs with NO header needed. "
+          "Lighting.ino can call strip and read NUM_LEDS with no "
+          "include.", 1),
+         ("TYPES do not. The generated prototypes go ABOVE your code, "
+          "so a prototype mentioning an enum or struct you declared in "
+          "a tab will not compile - the type is not defined yet.", 1),
+         ("That is precisely why Config.h is a real header rather than "
+          "a ninth tab. It is #included by the main sketch, so it is "
+          "defined before the prototypes appear.", 0)],
         lead="Convenient, and exactly one trap",
         note="Op 12's Config.h opens with a paragraph saying this. Now you know "
              "what it is warning you about.",
@@ -531,25 +526,22 @@ def lesson1(deck):
 
     deck.bullets(
         "Reading a program you did not write",
-        [("You are about to be handed 1300 lines across eight files. Reading it "
-          "front to back is the slowest possible way in.", 0),
-         ("", 0),
-         ("A better order:", 0),
-         ("1.  The header comment. It tells you the hardware, the controls, "
-          "and - in this case - the change log.", 1),
-         ("2.  Config.h. Every number the program cares about, in one place. "
-          "You learn what it can do from what it lets you tune.", 1),
+        [("You are about to be handed 1300 lines across eight files. "
+          "Front to back is the slowest possible way in. A better "
+          "order:", 0),
+         ("1.  The header comment: the hardware, the controls, and in "
+          "this case the change log.", 1),
+         ("2.  Config.h. Every number the program cares about, in one "
+          "place. What it lets you tune tells you what it can do.", 1),
          ("3.  setup(). What has to be true before anything runs.", 1),
-         ("4.  loop(). The whole shape of the program in one screen.", 1),
+         ("4.  loop(). The whole shape, in one screen.", 1),
          ("5.  Only then, the subsystem that interests you.", 1),
-         ("", 0),
-         ("Notice what that order gives you: the vocabulary first, then the "
-          "skeleton, then the detail. Going the other way means reading "
-          "Lighting.ino with no idea what led_mode is or who sets it.", 0),
-         ("", 0),
-         ("EXERCISE, ten minutes. Open Pathfinder_Op_Program12, read in that "
-          "order, and write down three questions. We will answer them over the "
-          "next four lessons.", 0)],
+         ("Vocabulary first, then skeleton, then detail. The other way "
+          "round means reading Lighting.ino with no idea what led_mode "
+          "is or who sets it.", 0),
+         ("EXERCISE, ten minutes. Read Op 12 in that order and write "
+          "down three questions. We will answer them over the next four "
+          "lessons.", 0)],
         lead="Header, then Config.h, then setup(), then loop()",
         speaker=[
             "This is the most useful slide in the lesson for anybody who "
@@ -647,35 +639,37 @@ def lesson2(deck):
             "earns them; do not compress it.",
         ])
 
-    deck.bullets(
+    deck.two_columns(
         "The LEDC peripheral, and the trade you cannot avoid",
-        [("The ESP32 generates PWM in hardware. Sixteen channels, driven from "
-          "an 80 MHz clock.", 0),
-         ("", 0),
-         ("At N bits of resolution the duty range is 0 to 2^N - 1:", 0),
-         ("8 bits   ->  0..255      256 steps    0.39% per step", 1),
-         ("10 bits  ->  0..1023    1024 steps    0.098% per step", 1),
-         ("12 bits  ->  0..4095    4096 steps    0.024% per step", 1),
-         ("", 0),
-         ("More bits means finer control near the BOTTOM of the range, which is "
-          "exactly where a motor is hardest to drive smoothly. On a vehicle "
-          "that ramps its speed, that is the difference between a smooth start "
-          "and a visible staircase.", 0),
-         ("", 0),
-         ("It is not free. The counter has to run 2^N times per cycle:", 0),
+        "What the bits buy",
+        [("Sixteen hardware channels, from an 80 MHz clock. At N bits "
+          "the duty range is 0 to 2^N - 1.", 0),
+         ("8 bits    0..255      0.39% per step", 1),
+         ("10 bits   0..1023     0.098% per step", 1),
+         ("12 bits   0..4095     0.024% per step", 1),
+         ("Finer control at the BOTTOM of the range, which is where a "
+          "motor is hardest to drive smoothly.", 0)],
+        "What they cost",
+        [("The counter has to run 2^N times per cycle, so resolution "
+          "comes straight out of frequency:", 0),
          ("max frequency = 80,000,000 / 2^bits", 1),
-         ("8 bits -> 312 kHz     10 bits -> 78 kHz     12 bits -> 19.5 kHz", 1),
-         ("", 0),
-         ("Op 12 runs 10 bits at 30 kHz. Inside the limit, above hearing, and "
-          "four times the resolution of the beginner programs.", 0)],
-        lead="Bits cost frequency",
-        note="ledcSetup() returns the frequency it managed to configure, or 0 if "
-             "the combination is impossible. Check it. Silence is otherwise very "
-             "hard to debug.",
+         ("8 bits    312 kHz", 1),
+         ("10 bits   78 kHz", 1),
+         ("12 bits   19.5 kHz", 1),
+         ("Op 12 runs 10 bits at 30 kHz: inside the limit, above "
+          "hearing, four times the beginner resolution.", 0)],
+        note="ledcSetup() returns the frequency it managed, or 0 if the "
+             "combination is impossible. Check it.",
         note_kind="warn",
         speaker=[
             "This is a genuine engineering trade-off, so present it as one "
             "rather than as a fact to memorise.",
+            "Ten bits at the bottom of the range is the difference "
+            "between a smooth start and a visible staircase. Say that - "
+            "it is why the extra resolution was worth buying.",
+            "If ledcSetup() returns 0 you get silence and no error, "
+            "which is a horrible thing to debug. Tell them to check the "
+            "return value every time.",
             "More bits buys finer control at the BOTTOM of the range, which "
             "is exactly where a motor is hardest to drive smoothly.",
             "The cost is frequency: the counter has to run 2^N times per "
@@ -856,16 +850,16 @@ def lesson2(deck):
     deck.activity(
         "Do it now  -  decay modes and ramping",
         "a2b_coast_brake_hybrid",
-        [("1.  sign, then  go 100. Now pinch the tire gently.", 0),
-         ("2.  hybrid, then  go 100. Pinch it again. Which holds its speed?", 0),
-         ("3.  Find the lowest  go  value that turns the wheel in each mode.", 0),
-         ("4.  ramp off, then  go 1023  from a standstill. Then  ramp on  and "
-          "do it again. Listen to the difference.", 0),
-         ("5.  Set RAMP_FACTOR to 0.9, then 0.1. What does it change?", 0),
-         ("6.  DELETE the minimum-step line in ramp_towards, upload, and run "
-          "go 500. Watch where the printout stops.", 0)],
-        expect=[("Step 6: the ramp prints its way down to one count short of "
-                 "the target and then stops printing.", 0)],
+        [("1.  sign, then  go 100. Pinch the tire gently.", 0),
+         ("2.  hybrid, then  go 100. Pinch again. Which holds speed?", 0),
+         ("3.  Find the lowest  go  that turns the wheel in each mode.", 0),
+         ("4.  ramp off, then  go 1023  from a standstill. Then  ramp "
+          "on  and repeat. Listen to the difference.", 0),
+         ("5.  Set RAMP_FACTOR to 0.9, then 0.1. What changes?", 0),
+         ("6.  DELETE the minimum-step line in ramp_towards and run  go "
+          "500. Watch where the printout stops.", 0)],
+        expect=[("Step 6: the ramp prints down to one count short of the "
+                 "target, then stops.", 0)],
         questions=[("Why does fast decay hold speed better under load?", 0),
                    ("Why would a 0.1% speed error still be a real bug?", 0)],
         safety="Wheels off the ground. One motor, up to full power.",
@@ -1079,34 +1073,32 @@ def lesson3(deck):
 
     deck.bullets(
         "The allowlist, and the two ways to get it wrong",
-        [("A Switch pad in pairing mode connects to whichever host answers "
-          "first. Pairing alone does not give you one-vehicle-one-controller.", 0),
-         ("", 0),
+        [("A Switch pad in pairing mode connects to whichever host "
+          "answers first. Pairing alone does not give you "
+          "one-vehicle-one-controller.", 0),
          ("The allowlist is a guest list checked BEFORE a connection is "
           "accepted:", 0),
          ("uni_bt_allowlist_remove_all();", 1),
          ("uni_bt_allowlist_add_addr(address);", 1),
          ("uni_bt_allowlist_set_enabled(true);", 1),
-         ("", 0),
-         ("MISTAKE ONE: calling them before BP32.setup(). Setup is what brings "
-          "the Bluetooth stack up. Before that there is no list to add to, and "
-          "the calls do nothing at all - silently.", 0),
-         ("", 0),
-         ("MISTAKE TWO: adding to the list instead of rebuilding it. Rebuild "
-          "from scratch every boot and the sketch is always the single source "
-          "of truth. Add, and stale entries accumulate where nobody can see "
-          "them.", 0),
-         ("", 0),
-         ("Note that enableNewBluetoothConnections stays TRUE. The allowlist "
-          "keeps other people out; leaving new connections on means your own "
-          "pad can always get back in even if the bonding keys are lost.", 0)],
+         ("MISTAKE ONE: calling them before BP32.setup(), which is what "
+          "brings the stack up. Before that there is no list, and the "
+          "calls do nothing - silently.", 0),
+         ("MISTAKE TWO: adding to the list instead of rebuilding it. "
+          "Rebuild every boot and the sketch is the single source of "
+          "truth.", 0),
+         ("enableNewBluetoothConnections stays TRUE, so your own pad "
+          "can get back in if the bonding keys are lost.", 0)],
         lead="A guest list, checked at the door",
-        note="11.2 added addresses at runtime only. If those entries did not "
-             "survive a reboot, a vehicle could come back up with an empty "
-             "allowlist AND new connections disabled - and then refuse its own "
-             "controller with no way in.",
+        note="Rebuild the list every boot, and always AFTER "
+             "BP32.setup(). Both mistakes fail silently.",
         note_kind="warn",
         speaker=[
+            "The WATCH OUT used to carry this and it is worth saying out "
+            "loud: 11.2 added addresses at runtime only. If those entries "
+            "did not survive a reboot, a vehicle could come back up with "
+            "an empty allowlist AND new connections disabled, and then "
+            "refuse its own controller with no way in.",
             "Set the problem up first: pairing alone does not give you one "
             "vehicle per controller.",
             "Mistake one is the cruel one. Called before setup(), the "
@@ -1523,24 +1515,20 @@ def lesson4(deck):
 
     deck.bullets(
         "Non-blocking, as a rule with no exceptions",
-        [("Not one animation function in Op 12 calls delay(). Each checks the "
-          "clock, returns immediately if it is not time, and draws exactly ONE "
-          "frame when it is:", 0),
-         ("", 0),
+        [("Not one animation function in Op 12 calls delay(). Each "
+          "checks the clock, returns immediately if it is not time, and "
+          "draws exactly ONE frame when it is:", 0),
          ("if (now - last_update < INTERVAL) return;", 1),
          ("last_update = now;", 1),
          ("// ...draw one frame...", 1),
-         ("", 0),
-         ("That is what lets the vehicle drive, read its controller, watch its "
-          "current and animate all at the same time.", 0),
-         ("", 0),
-         ("The old System Test program did the opposite: a light pattern with "
-          "delay() in it froze the vehicle for two seconds, still holding "
-          "whatever motor command was last set. A vehicle that keeps driving "
-          "while it ignores you is not a cosmetic problem.", 0),
-         ("", 0),
-         ("The one legitimate delay() in the whole program is the startup light "
-          "show, because nothing else needs to happen yet.", 0)],
+         ("That is what lets the vehicle drive, read its controller, "
+          "watch its current and animate all at once.", 0),
+         ("The old System Test did the opposite: a pattern with delay() "
+          "in it froze the vehicle for two seconds, still holding the "
+          "last motor command. A vehicle that keeps driving while it "
+          "ignores you is not a cosmetic problem.", 0),
+         ("The one legitimate delay() is the startup light show, "
+          "because nothing else needs to happen yet.", 0)],
         lead="One frame per pass, never a loop that waits",
         note="\"Draw one frame and return\" is the same discipline a game engine "
              "uses. Once you see it, you will see it everywhere.",
@@ -1833,29 +1821,26 @@ def lesson4(deck):
             "by a flag rather than a clock.",
         ])
 
-    deck.bullets(
+    deck.two_columns(
         "Breathing, and an 8-bit sine",
-        [("The pairing animation fades the whole strip up and down smoothly. "
-          "Doing that with a straight line looks wrong - it appears to hover "
-          "at the ends and rush through the middle.", 0),
-         ("", 0),
-         ("A sine wave is what looks natural, because it slows at the "
-          "extremes. FastLED gave 11.2 a sin8() for this. Op 12 writes it out:", 0),
-         ("uint8_t sine8(uint8_t theta) {", 1),
+        "Why a sine",
+        [("The pairing animation fades the whole strip up and down. A "
+          "straight-line fade looks wrong: it hovers at the ends and "
+          "rushes through the middle.", 0),
+         ("A sine looks natural because it slows at the extremes - the "
+          "same perception argument as the color lesson.", 0),
+         ("FastLED gave 11.2 a sin8(). Op 12 writes its own, so the "
+          "library is not needed for one function.", 0)],
+        "How it is written",
+        [("uint8_t sine8(uint8_t theta) {", 1),
          ("  float radians = (theta / 256.0f) * 2.0f * PI;", 1),
          ("  return (uint8_t)(128.0f + 127.0f * sinf(radians));", 1),
          ("}", 1),
-         ("", 0),
-         ("Feed it 0..255 for one full turn, get 0..255 back with 128 as the "
-          "midpoint. No angles in degrees, no floating point in the caller.", 0),
-         ("", 0),
-         ("Then the phase comes from the clock rather than from a counter:", 0),
+         ("0..255 in for one full turn, 0..255 out with 128 as the "
+          "midpoint. No degrees, no floating point in the caller.", 0),
          ("phase = (now % BREATHE_PERIOD_MS) * 255 / BREATHE_PERIOD_MS;", 1),
-         ("", 0),
-         ("Deriving the phase from millis() rather than incrementing a variable "
-          "means the animation runs at the same speed no matter how often the "
-          "function gets called, and it cannot drift.", 0)],
-        lead="Why the fade is a sine and not a ramp",
+         ("Phase from the clock, not from a counter, so it runs at the "
+          "same speed however often it is called.", 0)],
         note="Compute animation state FROM the clock rather than stepping a "
              "counter. It is self-correcting, and it survives a slow pass of "
              "loop() without stuttering.",
@@ -1999,29 +1984,29 @@ def lesson5(deck):
 
     deck.bullets(
         "I2C in ten lines",
-        [("Two wires, SDA and SCL, shared by every device on the bus.", 0),
-         ("Each device answers to a 7-bit address. 0x00-0x07 and 0x78-0x7F are "
+        [("Two wires, SDA and SCL, shared by every device on the bus. "
+          "Each answers to a 7-bit address; 0x00-0x07 and 0x78-0x7F are "
           "reserved, leaving 0x08 to 0x77 to scan.", 0),
-         ("", 0),
-         ("To TEST an address you start a transmission to it and end it "
-          "immediately, sending no data. If a device is there it pulls SDA low "
-          "to acknowledge:", 0),
+         ("To TEST an address, start a transmission to it and end it "
+          "immediately, sending no data. A device that is there pulls "
+          "SDA low to acknowledge:", 0),
          ("0  acknowledged - something is there", 1),
-         ("2  no acknowledge for the address - nothing there", 1),
-         ("", 0),
-         ("PULL-UP RESISTORS. I2C devices can only pull a line DOWN. Something "
-          "has to pull it back up, and that is a pair of resistors to 3.3 V, "
-          "usually 4.7k. On the Pathfinder they are on the control board.", 0),
-         ("", 0),
-         ("A scan that returns absolutely nothing on EVERY address is the "
-          "classic symptom of a missing pull-up. That matters the moment you "
-          "add your own sensor on the breadboard.", 0)],
-        lead="Two wires, 120 possible devices",
-        note="On this board I2C is on GPIO 32 and 33, not the ESP32 defaults. "
-             "GPIO 34-39 are input-only and cannot drive a bus at all.",
+         ("2  no acknowledge - nothing there", 1),
+         ("PULL-UP RESISTORS. I2C devices can only pull a line DOWN, so "
+          "something has to pull it back up: a pair of resistors to "
+          "3.3 V, usually 4.7k. On the Pathfinder they are on the "
+          "control board.", 0),
+         ("Nothing at all on EVERY address is the classic missing "
+          "pull-up.", 0)],
+        note="On this board I2C is on GPIO 32 and 33, not the ESP32 "
+             "defaults.",
         speaker=[
             "Ten lines, and it covers what they need. Do not turn this into "
             "a bus protocol lecture.",
+            "Two facts that were on the slide and are now yours to say: "
+            "GPIO 34-39 are input-only and cannot drive a bus at all, and "
+            "the missing pull-up matters the moment they add their own "
+            "sensor on the breadboard.",
             "The acknowledge mechanism is the clever bit: address it, send "
             "nothing, and see whether anything pulls SDA low.",
             "The pull-up point is the one that will save them an afternoon. "
@@ -2153,20 +2138,17 @@ def lesson5(deck):
     deck.activity(
         "Do it now  -  what a motor costs",
         "a5b_ina219_current",
-        [("1.  baseline  with everything off. Now switch the headlights on and "
-          "take another. Where did the difference go?", 0),
-         ("2.  spin 0  with the wheel free. Then HOLD the wheel and do it "
-          "again. Compare peak and average.", 0),
-         ("3.  Unplug one motor and run  test. Which numbers give it away?", 0),
-         ("4.  regs  - read the raw registers and check them against the "
-          "datasheet values in the comments.", 0),
-         ("5.  Work out how long a 3300 mAh pack lasts at the average you "
-          "measured while driving.", 0),
-         ("6.  Compare that with the LED power budget from the beginner course. "
-          "Which dominates?", 0)],
-        expect=[("A clear spike then a settle for a healthy motor. Almost "
-                 "nothing for a disconnected one. A high draw that never "
-                 "settles for a jammed one.", 0)],
+        [("1.  baseline  with everything off, then with the headlights "
+          "on. Where did the difference go?", 0),
+         ("2.  spin 0  wheel free, then HOLD the wheel. Compare peak "
+          "and average.", 0),
+         ("3.  Unplug one motor and run  test. What gives it away?", 0),
+         ("4.  regs  - check them against the datasheet comments.", 0),
+         ("5.  How long does a 3300 mAh pack last at your average?", 0),
+         ("6.  Compare with the LED power budget. Which wins?", 0)],
+        expect=[("A spike then a settle for a healthy motor. Almost "
+                 "nothing for a disconnected one. A high draw that "
+                 "never settles for a jammed one.", 0)],
         questions=[("What is your vehicle's resting current?", 0),
                    ("How long will your battery last at your measured average?", 0)],
         safety="Wheels off the ground. The test drives every motor at full power.",
@@ -2211,23 +2193,17 @@ def lesson5(deck):
 
     deck.bullets(
         "The self-test as a state machine",
-        [("Jumper GPIO 34 high at boot. Each motor is driven forward then "
-          "reverse while the current sensor watches.", 0),
-         ("", 0),
+        [("Jumper GPIO 34 high at boot. Each motor is driven forward "
+          "then reverse while the current sensor watches.", 0),
          ("CHECK_TRIGGER   wait for the pin to settle, then decide", 1),
          ("BASELINE_CURRENT  measure the resting draw, motors off", 1),
          ("RUNNING_TESTS     eight steps: four motors, two directions", 1),
          ("TEST_RESULT       green blinks for pass, red for fail", 1),
          ("TEST_DISABLED     hand over to normal driving", 1),
-         ("", 0),
-         ("It is a state machine driven from loop(), not a blocking routine. So "
-          "the LEDs keep animating and the serial console keeps responding "
-          "throughout - and any button press clears the result screen.", 0),
-         ("", 0),
-         ("Note GPIO 34 is input-only and has NO internal pull resistors. The "
-          "board carries an external pull-down. Read a floating input-only pin "
-          "and you get whatever the room's electrical noise suggests.", 0)],
-        lead="Five states, no blocking",
+         ("Driven from loop(), not blocking, so the LEDs keep animating "
+          "and the console keeps responding throughout.", 0),
+         ("GPIO 34 is input-only with NO internal pulls, so the board "
+          "carries an external pull-down.", 0)],
         note="A test that freezes the machine while it runs is a test nobody "
              "will leave enabled.",
         speaker=[
@@ -2237,7 +2213,11 @@ def lesson5(deck):
             "while the test runs. Ask why that matters - because a machine "
             "that goes deaf during a self-test cannot be interrupted.",
             "The GPIO 34 note is a real hardware trap. Input-only, no "
-            "internal pulls, so the board carries an external pull-down.",
+            "internal pulls, so the board carries an external "
+            "pull-down.",
+            "Also worth saying, and no longer on the slide: any button "
+            "press clears the pass/fail screen and hands over to normal "
+            "driving.",
             "A floating input-only pin reads whatever the room's electrical "
             "noise says. Worth saying, because somebody will try this on a "
             "breadboard.",
@@ -2251,33 +2231,21 @@ def lesson5(deck):
          ("I-Avg  - mean current since the last report", 1),
          ("I-Max  - the largest positive spike", 1),
          ("I-Min  - the largest negative excursion", 1),
-         ("", 0),
-         ("Negative current is real. When you cut the throttle, a spinning "
-          "motor becomes a generator and pushes current BACK. That is why the "
-          "shunt register is signed.", 0),
-         ("", 0),
-         ("The tracking is reset after each report, so each line describes the "
-          "last five seconds rather than all of time.", 0)],
+         ("Negative current is real: cut the throttle and a spinning "
+          "motor becomes a generator. That is why the shunt register "
+          "is signed.", 0),
+        ],
         "Work it out for your vehicle",
         [("A 4S 3300 mAh pack holds 3.3 amp hours.", 0),
-         ("", 0),
-         ("runtime (hours) = 3.3 / average current in amps", 1),
-         ("", 0),
-         ("So at a measured 2.0 A average:", 0),
-         ("3.3 / 2.0 = 1.65 hours, about 99 minutes", 1),
-         ("", 0),
-         ("At 6.0 A of hard driving:", 0),
-         ("3.3 / 6.0 = 0.55 hours, about 33 minutes", 1),
-         ("", 0),
-         ("Now add the LEDs. 32 pixels at full white is nearly 2 A on its own - "
-          "and that is a constant drain whether you are moving or not.", 0),
-         ("", 0),
-         ("Measure yours. Then decide what LED brightness you can actually "
-          "afford for a two-hour class.", 0)],
+         ("hours = 3.3 / average current in amps", 1),
+         ("At 2.0 A:  3.3 / 2.0 = 1.65 h, 99 min", 1),
+         ("At 6.0 A:  3.3 / 6.0 = 0.55 h, 33 min", 1),
+         ("Now add the LEDs: 32 pixels at full white is nearly 2 A, "
+          "moving or not.", 0),
+         ("Measure yours, then decide what you can afford.", 0)],
         size=14,
-        note="Never run a lithium pack flat. Below about 3.0 V per cell - 12 V "
-             "for a 4S - you are damaging it. The vehicle knows its own voltage, "
-             "so a low-battery warning is a short job and a good exercise.",
+        note="Never run a lithium pack flat. Below about 3.0 V per cell - "
+             "12 V for a 4S - you are damaging it.",
         note_kind="safety",
         speaker=[
             "The negative current is the interesting column. A spinning "
@@ -2290,6 +2258,9 @@ def lesson5(deck):
             "measured average.",
             "Point out that the tracking resets after each report, so each "
             "line describes the last five seconds, not the whole session.",
+            "The vehicle knows its own voltage, so a low-battery warning "
+            "is a short job and a good exercise. Suggest it to anybody "
+            "looking for a project.",
         ])
 
     deck.bullets(
@@ -2369,19 +2340,16 @@ def lesson5(deck):
          ("Measure current at no load, then at stall", 1),
          ("Repeat for motors 2, 3 and 4, then reconnect", 1),
          ("Calibrate and test the I2C devices", 1),
-         ("", 0),
-         ("Accurate, and it needs a meter, a bench and a person.", 0)],
+         ("Accurate. Needs a meter, a bench and a person.", 0)],
         "The self-test in the program",
-        [("Jumper GPIO 34 high at boot and the vehicle does the same thing to "
+        [("Jumper GPIO 34 high at boot and the vehicle does the same to "
           "itself:", 0),
-         ("Measure the resting current with the motors off", 1),
+         ("Measure the resting current, motors off", 1),
          ("Drive each motor full throttle, both ways", 1),
-         ("Watch the peak and the average against that baseline", 1),
+         ("Watch peak and average against that baseline", 1),
          ("Blink green for pass, red for fail", 1),
-         ("", 0),
-         ("Less accurate than a meter. But it runs in ten seconds, in a "
-          "classroom, with no equipment and nobody who knows how to use a "
-          "multimeter.", 0)],
+         ("Less accurate. Runs in ten seconds, in a classroom, with no "
+          "equipment and nobody who can use a multimeter.", 0)],
         note="That is usually the trade with built-in test: you give up "
              "precision to get a check that will actually be run. A test that "
              "needs a bench is a test that happens once.",
