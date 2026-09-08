@@ -99,9 +99,10 @@ const int MOTOR_MAX      = 255;    // Full speed. This is as fast as the motors 
 const int MOTOR_MIN      = 0;
 
 // Steering strength. Driving forwards and backwards always gets the full
-// MOTOR_MAX, but turning is held to half of that by default, which makes the
-// vehicle much easier to aim. Click the left stick to switch between the two.
-const int TURN_MAX_NORMAL = (((MOTOR_MAX + 1) * 3) / 4) - 1;   // Gentle steering, and the default
+// MOTOR_MAX, but turning is held to three quarters of that by default, which
+// makes the vehicle easier to aim without making it feel slow. Click the left
+// stick to switch between the two.
+const int TURN_MAX_NORMAL = (MOTOR_MAX * 3) / 4;   // Gentle steering, and the default
 const int TURN_MAX_SHARP  = MOTOR_MAX;       // Full power turns, spins on the spot
 
 // --- Servos ----------------------------------------------------------

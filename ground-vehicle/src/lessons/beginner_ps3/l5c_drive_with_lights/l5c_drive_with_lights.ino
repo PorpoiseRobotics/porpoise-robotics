@@ -90,7 +90,7 @@ const int MOTOR_PWM_BITS = 8;
 const int MOTOR_MAX      = 255;
 const int MOTOR_MIN      = 0;
 
-const int turnMax = MOTOR_MAX / 2;
+const int turnMax = (MOTOR_MAX * 3) / 4;
 
 // --- Thumbsticks ---
 const int STICK_MAX      = 127;
