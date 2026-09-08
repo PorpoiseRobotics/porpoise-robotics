@@ -55,7 +55,7 @@
 
 #include <Ps3Controller.h>
 
-const char *PS3_MAC_ADDRESS = "02:02:03:04:05:08";
+const char *PS3_MAC_ADDRESS = "02:02:03:04:05:65";
 
 // --- Motors ---
 const int FRONT_LEFT_A  = 12, FRONT_LEFT_B  = 13;

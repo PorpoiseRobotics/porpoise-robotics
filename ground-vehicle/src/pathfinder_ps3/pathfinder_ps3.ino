@@ -62,7 +62,7 @@
 // ===================================================================
 
 // --- Bluetooth address this program answers to -----------------------
-const char *PS3_MAC_ADDRESS = "02:02:03:04:05:08"; // The first number in the MAC address needs to be even for the program to work
+const char *PS3_MAC_ADDRESS = "02:02:03:04:05:65"; // The first number in the MAC address needs to be even for the program to work
 
 // --- LED strip -------------------------------------------------------
 const int LED_PIN        = 5;    // GPIO 5 controls the LED strip
@@ -101,7 +101,7 @@ const int MOTOR_MIN      = 0;
 // Steering strength. Driving forwards and backwards always gets the full
 // MOTOR_MAX, but turning is held to half of that by default, which makes the
 // vehicle much easier to aim. Click the left stick to switch between the two.
-const int TURN_MAX_NORMAL = MOTOR_MAX / 2;   // Gentle steering, and the default
+const int TURN_MAX_NORMAL = (((MOTOR_MAX + 1) * 3) / 4) - 1;   // Gentle steering, and the default
 const int TURN_MAX_SHARP  = MOTOR_MAX;       // Full power turns, spins on the spot
 
 // --- Servos ----------------------------------------------------------
