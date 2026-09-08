@@ -124,4 +124,5 @@ cables, and hurt someone if it is heavy or fast enough. At minimum, decide and d
 - Indoor or outdoor — determines the whole hardware direction
 - ROS2 or a simpler custom stack
 - Level of autonomy for the first version
-- Whether this shares code with the submersible platform, and where that shared code lives
+- Whether this shares code with the submersible platform. Shared code now has a home:
+  [`shared/`](../shared/README.md).

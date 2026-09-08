@@ -26,6 +26,8 @@ find-the-target/
 ├── README.md
 ├── src/
 │   ├── FindTheTarget_v4/    current version
+│   ├── PorpoiseNet_Base/    fleet base station (PorpoiseNet radio)
+│   ├── PorpoiseNet_Vehicle/ rover for the multi-rover game
 │   └── legacy/              superseded versions, kept for reference
 ├── docs/                    slides, setup guide, design notes
 └── hardware/                wiring, bill of materials
@@ -33,6 +35,22 @@ find-the-target/
 
 Work on **v4**. Version 3 is kept in `src/legacy/` only so old builds can be looked up; do not
 start anything new from it. See [`src/legacy/README.md`](src/legacy/README.md).
+
+### Which sketches do I flash?
+
+There are two radio setups here, and they are not interchangeable. Pick by how many rovers you
+are running.
+
+| | Use when | How the radio works |
+|---|---|---|
+| **`FindTheTarget_v4/`** | One vehicle, one base, and you want the existing `base_station.py` dashboard. | The sender needs the receiver's MAC address pasted into it, so it only ever talks to one board. |
+| **`PorpoiseNet_Base/` + `PorpoiseNet_Vehicle/`** | The actual game, with several rovers on the field at once. | [PorpoiseNet](../shared/PorpoiseNet/README.md) broadcasts, so adding a fourth rover mid-session needs no re-flashing of anything else. Finds are acknowledged and retried, and a rover in the middle of the field relays for one at the far end. |
+
+The JSON telemetry keys are the same either way, so `base_station.py` and `dashboard.html` keep
+working unchanged.
+
+`PorpoiseNet_Base` reads its WiFi settings from a `secrets.h` that `.gitignore` blocks. Copy the
+`secrets.example.h` next to it, fill in your own values, and never commit the result.
 
 ## Status
 

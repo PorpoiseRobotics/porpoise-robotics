@@ -24,6 +24,14 @@ credentials.json
 secrets.json
 secrets.yaml
 secrets.yml
+
+# Arduino sketches keep their real WiFi passwords in secrets.h, next to the
+# .ino. The matching secrets.example.h has blank values and IS committed, so
+# the next person can see which settings exist without seeing what they are.
+secrets.h
+arduino_secrets.h
+!secrets.example.h
+!*.example.h
 config.local.*
 *_secret*
 *_secrets*
