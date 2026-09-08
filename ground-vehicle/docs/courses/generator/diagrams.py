@@ -1,12 +1,19 @@
 """
 diagrams.py - the drawn figures used in the Pathfinder course decks.
 
-Everything here is built from native PowerPoint autoshapes and text boxes, so
-each figure stays editable, scales without going fuzzy, and prints sharp in
-black and white. Nothing is a bitmap.
+Almost everything here is built from native PowerPoint autoshapes and text
+boxes, so each figure stays editable, scales without going fuzzy, and prints
+sharp in black and white.
+
+The two exceptions are Kevin's own figures - the H-bridge and the NeoPixel
+chain. He drew those, they are ours, and they go on the slides as he drew
+them. Redrawing somebody's teaching diagram to satisfy a rule about file
+formats is the wrong trade.
 
 Each function takes a Deck, adds one slide, and returns it.
 """
+
+import os
 
 from pptx.dml.color import RGBColor
 from pptx.enum.shapes import MSO_CONNECTOR, MSO_SHAPE
@@ -24,12 +31,11 @@ LIGHT_AMBER = RGBColor(0xFA, 0xE6, 0xC8)
 LIGHT_RED = RGBColor(0xF6, 0xD8, 0xD8)
 LIGHT_GREY = RGBColor(0xE8, 0xEC, 0xF0)
 
-# The three LEDs inside one NeoPixel, drawn in something close to the colors
-# they actually emit. Nothing depends on telling them apart in greyscale - the
-# caption says which is which - but on a projector they read instantly.
-PIX_RED = RGBColor(0xE0, 0x3C, 0x31)
-PIX_GREEN = RGBColor(0x3C, 0xA9, 0x5C)
-PIX_BLUE = RGBColor(0x2C, 0xA6, 0xDF)
+IMAGES = os.path.join(os.path.dirname(os.path.abspath(__file__)), "..", "images")
+
+
+def img(name):
+    return os.path.normpath(os.path.join(IMAGES, name))
 
 
 # ===================================================================
@@ -317,7 +323,9 @@ def pwm_duty(deck, title="Pulse width modulation: how a pin makes a half speed",
 
 def h_bridge(deck, title="The H-bridge: four switches, four things a motor can do", speaker=None):
     slide = deck.blank(title, speaker=speaker or [
-        "Four switches, and only the two diagonal pairs are useful. Trace each path with a finger on the projected slide.",
+        "Four boxes across the top: those are the four things the motor can be told to do. The picture underneath is ONE of them actually happening - the first one - drawn by Kevin.",
+        "Say that before anybody asks why they can only see two switches in the picture. The other two are the ones that are open.",
+        "Then trace the arrows with a finger on the projected slide, slowly, all the way round: in at + V, along the top, down the left, through the motor, back to GND. Have them do it too.",
         "Ask what happens if you close both switches on one side. Somebody will work out that it shorts the supply - which is exactly why the driver chip will not let you.",
         "Forward and reverse are the same circuit with the current running the other way. That is the whole trick, and it is why direction costs nothing extra in the program.",
         "Brake and coast are worth ten seconds each here; they come back properly in the advanced course.",
@@ -346,78 +354,20 @@ def h_bridge(deck, title="The H-bridge: four switches, four things a motor can d
         _label(slide, left, top + Inches(1.4), col_w, meaning.split("\n"),
                size=13, color=INK, align=PP_ALIGN.CENTER)
 
-    # The bridge itself, drawn once underneath, in the first of the four
-    # states above: IN1 closed to the supply and IN2 closed to ground, so
-    # current runs round the loop and the motor turns forwards.
-    #
-    # Kevin annotated this figure in the 2026-09-08 review. He added the two
-    # switches, the direction of the current round the loop, and the note
-    # that forward is clockwise; his marked-up copy is kept as
-    # images/kevin-archive/h-bridge-forward-current.png. It is redrawn here
-    # rather than pasted in, because every figure in this module is native
-    # shapes so it stays editable and prints sharp.
-    bx = MARGIN_L + Inches(3.4)
-    by = top + Inches(2.35)
-    bw = Inches(6.4)
-    bh = Inches(1.9)
+    # Kevin's own figure, as he drew it, showing the first of the four boxes
+    # above actually happening. Not redrawn: he drew it, it is ours, and a
+    # teaching diagram is worth more than a rule about file formats.
+    picture_top = top + Inches(2.15)
+    deck._place_image(slide, img("h-bridge-forward-current.png"),
+                      MARGIN_L, picture_top, CONTENT_W, Inches(2.35))
 
-    _plain_line(slide, bx, by, bx + bw, by, color=NAVY, width=2.0)
-    _plain_line(slide, bx, by + bh, bx + bw, by + bh, color=NAVY, width=2.0)
-    _plain_line(slide, bx, by, bx, by + bh, color=NAVY, width=2.0)
-    _plain_line(slide, bx + bw, by, bx + bw, by + bh, color=NAVY, width=2.0)
-
-    mid_y = by + Emu(int(bh / 2))
-
-    # Each motor lead stops short of its side rail, and a switch blade closes
-    # the gap. That is what IN1 and IN2 do: connect one end of the motor to
-    # the supply, and the other end to ground.
-    blade = Inches(0.62)
-    _plain_line(slide, bx + blade, mid_y, bx + Inches(2.4), mid_y,
-                color=NAVY, width=2.0)
-    _plain_line(slide, bx + bw - Inches(2.4), mid_y, bx + bw - blade, mid_y,
-                color=NAVY, width=2.0)
-
-    for hinge_x, blade_x in ((bx, bx + blade), (bx + bw, bx + bw - blade)):
-        _plain_line(slide, hinge_x, mid_y, blade_x, mid_y - Inches(0.30),
-                    color=TEAL, width=2.25)
-        _box(slide, hinge_x - Inches(0.07), mid_y - Inches(0.07),
-             Inches(0.14), Inches(0.14), "", fill=TEAL, edge=TEAL,
-             shape=MSO_SHAPE.OVAL, edge_w=0.75)
-
-    _box(slide, bx + Inches(2.4), mid_y - Inches(0.35), Inches(1.6), Inches(0.7),
-         "MOTOR", fill=WHITE, edge=NAVY, size=13, bold=True,
-         shape=MSO_SHAPE.OVAL)
-
-    # Which way the current goes, the whole way round: in at + V, left along
-    # the top, down the left side through IN1, right through the motor, out
-    # through IN2 and back along the bottom to ground.
-    _arrow(slide, bx + Inches(2.9), by, bx + Inches(1.3), by,
-           color=TEAL, width=1.5)
-    _arrow(slide, bx + Inches(5.1), by + bh, bx + Inches(3.7), by + bh,
-           color=TEAL, width=1.5)
-    _arrow(slide, bx + Inches(1.35), mid_y - Inches(0.32),
-           bx + Inches(2.25), mid_y - Inches(0.32), color=TEAL, width=1.5)
-    _label(slide, bx + Inches(1.15), mid_y - Inches(0.86), Inches(2.4),
-           "Forward   CW", size=12, bold=True, color=TEAL,
-           align=PP_ALIGN.CENTER)
-
-    _label(slide, bx - Inches(1.22), mid_y - Inches(0.5), Inches(1.0),
-           "IN1\n(pin A)", size=12, bold=True, color=TEAL, align=PP_ALIGN.RIGHT)
-    _label(slide, bx + bw + Inches(0.22), mid_y - Inches(0.5), Inches(1.1),
-           "IN2\n(pin B)", size=12, bold=True, color=TEAL)
-    _label(slide, bx + Inches(2.6), by - Inches(0.36), Inches(1.4), "+ V",
-           size=12, bold=True, color=GREY, align=PP_ALIGN.CENTER)
-    _label(slide, bx + Inches(2.6), by + bh + Inches(0.06), Inches(1.4), "GND",
-           size=12, bold=True, color=GREY, align=PP_ALIGN.CENTER)
-
-    _label(slide, MARGIN_L, by + bh + Inches(0.46), CONTENT_W,
-           "Drawn in the first state: IN1 closed to + V, IN2 closed to GND. "
-           "Reverse is the same picture with both switches thrown and the "
-           "arrows running the other way.",
+    _label(slide, MARGIN_L, picture_top + Inches(2.42), CONTENT_W,
+           "The arrows are the current: in at + V, along the top, down the "
+           "left, through the motor, back to GND. That is the FORWARD box "
+           "above. Turn pin B on instead of pin A and it all runs backwards.",
            size=12, color=GREY, align=PP_ALIGN.CENTER)
 
     return slide
-
 
 # ===================================================================
 # 5. the NeoPixel chain
@@ -427,101 +377,45 @@ def neopixel_chain(deck, title="One wire, thirty-two lights", speaker=None):
     """
     Eight pixels in a row: power and ground shared, data passed along.
 
-    Kevin drew this one in the 2026-09-08 review because the lesson said the
+    Kevin drew this for the 2026-09-08 review, because the lesson said the
     chain idea in words and then showed a photograph of a stick, which is not
-    the same thing as showing the wiring. His copy is kept as
-    images/kevin-archive/neopixel-chain-eight.png; this is it in native
-    shapes.
+    the same thing as showing the wiring.
     """
     slide = deck.blank(title, speaker=speaker or [
         "Draw this on the board before you show the slide. Three wires in at "
         "the left, three wires out at the right, and eight identical parts in "
         "between.",
-        "Power and ground go to every pixel the same way. Ask which of the "
-        "three wires is different, and why that one is drawn as a chain "
-        "rather than as a rail.",
+        "Ask which of the three wires is different from the other two, and "
+        "why. Power and ground go to every pixel the same way; the data wire "
+        "does not.",
         "Then walk a message along it with your finger: the first pixel keeps "
         "the first color and passes the rest out of DATA OUT, which is the "
         "next pixel's DATA IN.",
-        "That is the whole reason one GPIO can drive thirty-two lights, and "
+        "That is the whole reason one pin can drive thirty-two lights, and "
         "the reason the numbering runs in data order rather than in whatever "
         "order looks tidy from outside.",
-        "Worth saying out loud: unplug the data lead of pixel 4 and pixels 4 "
-        "to 31 all go dark, while 0 to 3 carry on. Power and ground are a "
-        "rail; data is a chain.",
+        "Worth saying out loud: unplug the data lead going into pixel 4 and "
+        "pixels 4 to 31 all go dark, while 0 to 3 carry on. Power and ground "
+        "are a rail; data is a chain.",
     ])
 
-    count = 8
-    label_w = Inches(1.20)
-    tail_w = Inches(1.48)
-    box_w = Inches(0.95)
-    gap = Inches(0.20)
-    box_h = Inches(1.30)
-    dia = Inches(0.28)
+    picture_top = BODY_TOP + Inches(0.70)
+    deck._place_image(slide, img("neopixel-chain-eight.png"),
+                      MARGIN_L, picture_top, CONTENT_W, Inches(2.10))
 
-    first_x = MARGIN_L + label_w + Inches(0.15)
-    top_rail = BODY_TOP + Inches(0.50)
-    box_top = top_rail + Inches(0.55)
-    mid_y = box_top + Emu(int(box_h / 2))
-    gnd_rail = box_top + box_h + Inches(0.55)
-
-    def box_left(index):
-        return first_x + (box_w + gap) * index
-
-    last_right = box_left(count - 1) + box_w
-
-    # Power and ground are rails: every pixel taps the same two wires.
-    for rail_y, stub_from, stub_to in ((top_rail, top_rail, box_top),
-                                       (gnd_rail, box_top + box_h, gnd_rail)):
-        _plain_line(slide, first_x - Inches(0.20), rail_y,
-                    last_right + Inches(0.20), rail_y, color=NAVY, width=1.75)
-        for index in range(count):
-            stub_x = box_left(index) + Inches(0.28)
-            _plain_line(slide, stub_x, stub_from, stub_x, stub_to,
-                        color=NAVY, width=1.75)
-
-    # Data is not a rail. It is a chain: out of one pixel, into the next.
-    _plain_line(slide, MARGIN_L + label_w + Inches(0.02), mid_y, first_x,
-                mid_y, color=NAVY, width=1.75)
-    for index in range(count - 1):
-        _plain_line(slide, box_left(index) + box_w, mid_y,
-                    box_left(index + 1), mid_y, color=NAVY, width=1.75)
-    _plain_line(slide, last_right, mid_y, last_right + Inches(0.35),
-                mid_y, color=NAVY, width=1.75)
-
-    for index in range(count):
-        left = box_left(index)
-        _box(slide, left, box_top, box_w, box_h, "", fill=WHITE, edge=NAVY,
-             shape=MSO_SHAPE.RECTANGLE, edge_w=1.0)
-
-        for cx, cy, fill in ((Inches(0.11), Inches(0.20), PIX_GREEN),
-                             (Inches(0.56), Inches(0.20), PIX_BLUE),
-                             (Inches(0.34), Inches(0.62), PIX_RED)):
-            _box(slide, left + cx, box_top + cy, dia, dia, "", fill=fill,
-                 edge=fill, shape=MSO_SHAPE.OVAL, edge_w=0.75)
-
-    _label(slide, MARGIN_L, top_rail - Inches(0.14), label_w - Inches(0.35),
-           "Power", size=12, bold=True, color=GREY, align=PP_ALIGN.RIGHT)
-    _label(slide, MARGIN_L, mid_y - Inches(0.14), label_w - Inches(0.35),
-           "Data In", size=12, bold=True, color=TEAL, align=PP_ALIGN.RIGHT)
-    _label(slide, MARGIN_L, gnd_rail - Inches(0.14), label_w - Inches(0.35),
-           "GND", size=12, bold=True, color=GREY, align=PP_ALIGN.RIGHT)
-    _label(slide, last_right + Inches(0.40), mid_y - Inches(0.14), tail_w,
-           "Data out", size=12, bold=True, color=TEAL)
-
-    _label(slide, MARGIN_L, gnd_rail + Inches(0.32), CONTENT_W,
-           "Inside each box: a controller chip and three LEDs. Eight are "
-           "drawn here; the vehicle has 32.",
+    _label(slide, MARGIN_L, picture_top + Inches(2.20), CONTENT_W,
+           "Each box is one NeoPixel: a controller chip and three LEDs, one "
+           "red, one green and one blue. Eight are drawn here; your vehicle "
+           "has 32.",
            size=12, color=GREY, align=PP_ALIGN.CENTER)
 
     deck._note(slide,
                "Power and ground are RAILS - every pixel taps the same two "
                "wires. Data is a CHAIN - each pixel keeps the first message "
-               "and passes the rest out to the next one. That is why one GPIO "
+               "and passes the rest out to the next one. That is why one pin "
                "drives the whole strip, and why a break in the data line puts "
                "out every pixel after it and none before it.", "info")
     return slide
-
 
 # ===================================================================
 # 6. the 32-LED loop

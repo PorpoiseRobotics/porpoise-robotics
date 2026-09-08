@@ -24,7 +24,6 @@ folder redraws figures like the Ohm's law triangles natively.
 | `dronecan-usb-adapter.png` | third-party | VimDrones DroneCAN USB adapter | L2 slide 13 |
 | `em-spectrum-wave.jpg` | third-party | Electromagnetic spectrum and a propagating wave | L4 slide 7 |
 | `engineering-to-mechatronics-full.png` | ours | Engineering -> mechatronics -> unmanned vehicles hierarchy, fuller than the one already in images/ | L1 slide 4 |
-| `h-bridge-forward-current.png` | ours | Our own H-bridge figure, marked up by Kevin: the two switches, the current running round the loop, and forward as clockwise | Handed over 2026-09-07, not from a deck |
 | `esp32-pinout-card.jpg` | third-party | ESP32 DevKit pinout card, 'cut on dotted line' | L1 slide 36 |
 | `esp32-voyager-board.png` | third-party | ESP32 Voyager carrier board with 18650 holders | L1 slide 12 |
 | `icon-360.png` | third-party | A 360-degree rotation icon | L5 slide 18 |
@@ -37,7 +36,6 @@ folder redraws figures like the Ohm's law triangles natively.
 | `mcp2515-can-module.png` | third-party | MCP2515 SPI-to-CAN module and its schematic | L2 slide 14 |
 | `motor-ab-drive-waveform.png` | ours | A against B motor drive traces, blue and red on black | L2 slide 7 |
 | `motor-driver-module.png` | third-party | Small H-bridge module | L2 slide 12 |
-| `neopixel-chain-eight.png` | ours | Eight NeoPixels in a row: power and ground shared, data in to data out. A redraw of `neopixel-chain-strip.png` | Handed over 2026-09-07, not from a deck |
 | `neopixel-chain-loop.png` | ours | NeoPixel chain wired as a loop, data in to data out | L4 slide 4 |
 | `neopixel-chain-strip.png` | ours | NeoPixel chain in a straight strip | L4 slide 3 |
 | `neopixel-pinout-block.png` | ours | One NeoPixel as a block: power, ground, data in, data out | L4 slide 3, 4 |
@@ -106,17 +104,20 @@ slide and cropped to the drawing. They are all Kevin's own work.
 
 ## In use, moved to the parent folder
 
-Three of these answered placeholders and are now slide assets, so they live in
-`images/` rather than here. Recorded so the provenance is not lost:
+Five of these are now slide assets, so they live in `images/` rather than
+here. Recorded so the provenance is not lost:
 
 | File | From | Used on |
 |---|---|---|
 | `ide-preferences-boards-url.png` | L1 slide 16 | Beginner L1 s24, PS3 track only - the box holds the espressif URL, so the Switch track still wants its own shot |
 | `ws2812b-stick-8.jpg` | L4 slide 30 | Beginner L4 s5 |
 | `rgb-additive-mixing.png` | L4 slide 5 | Beginner L4 s7, upscaled 4x from the 220px original because it was going onto a slide nearly five inches tall |
+| `h-bridge-forward-current.png` | not from a deck | Beginner L2 s6, under the four state boxes |
+| `neopixel-chain-eight.png` | not from a deck | Beginner L4 s6, the slide it is the whole of |
 
-The last two are vendor/third-party artwork, added on Valentino's instruction
-2026-09-05. They want a licence check before this goes anywhere public.
+`ws2812b-stick-8.jpg` and `rgb-additive-mixing.png` are vendor/third-party
+artwork, added on Valentino's instruction 2026-09-05. They want a licence check
+before this goes anywhere public.
 
 ---
 
@@ -124,12 +125,18 @@ The last two are vendor/third-party artwork, added on Valentino's instruction
 
 `h-bridge-forward-current.png` and `neopixel-chain-eight.png` did not come out
 of a deck. Kevin handed them over on 2026-09-07 with the notes from the slide
-review, and they are the only entries here that were made FOR the new course
-rather than salvaged from the old one.
+review, and they are the only images in this course that were made FOR it
+rather than salvaged from the old decks. Both are on slides, as he drew them.
 
-Neither is pasted onto a slide. Both were redrawn in `diagrams.py` -
-`h_bridge` gained his switches, current arrows and "Forward CW" label, and
-`neopixel_chain` is his chain figure in native shapes - because every figure in
-that module is built from autoshapes so it stays editable and prints sharp.
-They are kept here as the reference the redraws were made from, and as the
-thing to check against if either figure is ever changed.
+The H-bridge one is his mark-up of our own figure - he added the two switches,
+the current running round the loop, and "Forward CW". It goes on the slide
+untouched.
+
+The chain one had its background flattened to white, and nothing else. Kevin's
+export carried a very slightly grey paper colour, which showed as a visible
+panel behind the figure on a white slide. That is the paper, not the drawing;
+no line, label or colour in the figure was altered. Same kind of change as the
+4x upscale on `rgb-additive-mixing.png` above.
+
+These two are also the reason `diagrams.py` no longer claims that nothing in it
+is a bitmap. Everything else in that module is still native shapes.
