@@ -60,9 +60,22 @@ def const(rel, name):
     return value[:-1] if re.fullmatch(r"-?[\d.]+f", value) else value
 
 
-def number(rel, name):
-    """Same as const(), but evaluated so it can be used in arithmetic."""
+_ARITHMETIC = re.compile(r"^[0-9+\-*/() ]+$")
+
+
+def number(rel, name, **known):
+    """
+    Same as const(), but evaluated so it can be used in arithmetic.
+
+    A constant defined in terms of another one - turnMax is (MOTOR_MAX * 3) / 4
+    - is resolved by substituting the names passed in `known` and working out
+    what is left. Division truncates, the way it does in C, so the number on
+    the slide is the number the vehicle uses rather than a rounded-up cousin
+    of it.
+    """
     value = const(rel, name)
+    for other, replacement in known.items():
+        value = re.sub(r"\b%s\b" % re.escape(other), str(replacement), value)
     try:
         return int(value, 0)
     except ValueError:
@@ -70,8 +83,11 @@ def number(rel, name):
     try:
         return float(value)
     except ValueError:
-        raise SystemExit("srcfacts: %s in %s is not a number: %r"
-                         % (name, rel, value))
+        pass
+    if _ARITHMETIC.match(value):
+        return eval(value.replace("/", "//"), {"__builtins__": {}}, {})
+    raise SystemExit("srcfacts: %s in %s is not a number: %r"
+                     % (name, rel, value))
 
 
 def line_of(rel, needle):

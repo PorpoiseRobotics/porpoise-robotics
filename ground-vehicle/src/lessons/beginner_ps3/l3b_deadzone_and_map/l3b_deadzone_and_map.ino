@@ -60,9 +60,10 @@ const int STICK_DEADZONE = 20;    // About 16% of the travel
 const int MOTOR_MAX = 255;        // Full speed
 const int MOTOR_MIN = 0;          // Slowest speed given, just outside the deadzone
 
-// Steering is held to half power by default, which makes the vehicle much
-// easier to aim. The full program lets you toggle this with the stick click.
-const int turnMax = MOTOR_MAX / 2;
+// Steering is held to three quarters of full power by default, which makes the
+// vehicle easier to aim without making it feel slow. The full program lets you
+// toggle this with the stick click.
+const int turnMax = (MOTOR_MAX * 3) / 4;
 
 unsigned long lastPrint = 0;
 

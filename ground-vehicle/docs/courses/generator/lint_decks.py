@@ -3,8 +3,9 @@ lint_decks.py - static checks on the generated decks.
 
 Without a renderer installed we cannot look at the slides, so this estimates
 instead: it works out roughly how tall each block of text will be once it
-wraps, and reports anything that will not fit in the shape it was put in, or
-that runs off the edge of the slide.
+wraps, and reports anything that will not fit in the shape it was put in,
+runs off the edge of the slide, sits on top of another block of text, or
+grows down into the footer strip along the bottom.
 
 The estimate is deliberately pessimistic - it would rather warn about a slide
 that is fine than stay quiet about one that is not.
@@ -29,6 +30,15 @@ CHAR_W = {"Consolas": 0.55, "Calibri": 0.48, None: 0.48}
 
 # Tolerance before we complain, in points.
 SLOP_PT = 6.0
+
+# The strip along the bottom that belongs to the footer and the page number.
+FOOTER_BAND = Emu(500000)          # about 0.55 in
+
+# How far something has to reach into that strip before we say so. Small,
+# because a body box has no business touching it at all, but not zero - a
+# box whose edge grazes the strip by a hair is not what anybody sees.
+FOOTER_BITE_H = Emu(20000)         # about 0.02 in down
+FOOTER_BITE_W = Emu(300000)        # about 0.33 in across
 
 
 def estimate_height_pt(frame, width_pt):
@@ -107,13 +117,26 @@ def broken_words(frame, width_pt):
 
 def overlapping_text(shapes, slide_h):
     """
-    Pairs of text-bearing shapes that sit on top of each other.
+    Pairs of text-bearing shapes that sit on top of each other, as
+    (what kind of clash, which shapes) pairs.
 
     The height estimate above catches text that will not fit its own box. It
     says nothing about two boxes that each fit and are drawn in the same
     place - a note panel over a code panel, a heading over a row of labels -
     which is the other way a slide goes wrong. Only substantial overlaps are
     reported, so a caption tucked under a picture edge stays quiet.
+
+    The FOOTER is judged differently, and this is the case that got past an
+    earlier version of this file. Every slide carries a track-and-lesson
+    strip and a page number along the bottom, and body text that grows far
+    enough down to sit on top of them looks broken to anybody in the room -
+    but neither box overflows, because each one fits its own text perfectly.
+    So the footer is no longer skipped: it is compared like anything else,
+    with two changes. The two footer boxes are not compared against each
+    other, because they are meant to share that strip. And any real
+    intrusion into it is reported rather than waiting for the overlap to
+    reach the area fraction a body-on-body clash has to reach, because
+    nothing except the footer belongs down there at all.
     """
     boxes = []
     for shape in shapes:
@@ -129,24 +152,49 @@ def overlapping_text(shapes, slide_h):
             continue
         if None in (left, top, width, height) or width <= 0 or height <= 0:
             continue
-        # A footer strip runs the width of the slide by design.
-        if top > slide_h - Emu(500000):
+        # The title slide's credit block is chrome, sized and placed like a
+        # footer, and is allowed to sit below the body floor - the same
+        # exemption the height check makes for it further down.
+        if "Porpoise Robotics" in text and "President" in text:
             continue
-        boxes.append((left, top, width, height, text))
+        boxes.append((left, top, width, height, text,
+                      top > slide_h - FOOTER_BAND))
 
     found = []
+    # One report per intruder, not one per footer box it lands on - the
+    # lesson strip and the page number are both down there, and a wide
+    # caption reaches both.
+    into_footer = []
     for i in range(len(boxes)):
         for j in range(i + 1, len(boxes)):
-            ax, ay, aw, ah, atext = boxes[i]
-            bx, by, bw, bh, btext = boxes[j]
+            ax, ay, aw, ah, atext, a_footer = boxes[i]
+            bx, by, bw, bh, btext, b_footer = boxes[j]
+
+            # The lesson strip and the page number share the bottom of the
+            # slide on purpose, side by side.
+            if a_footer and b_footer:
+                continue
+
             over_w = min(ax + aw, bx + bw) - max(ax, bx)
             over_h = min(ay + ah, by + bh) - max(ay, by)
             if over_w <= 0 or over_h <= 0:
                 continue
+
+            if a_footer or b_footer:
+                if over_h > FOOTER_BITE_H and over_w > FOOTER_BITE_W:
+                    intruder = btext if a_footer else atext
+                    if intruder not in into_footer:
+                        into_footer.append(intruder)
+                continue
+
             area = over_w * over_h
             smaller = min(aw * ah, bw * bh)
             if smaller and area / smaller > 0.45:
-                found.append("{!r} over {!r}".format(atext[:26], btext[:26]))
+                found.append(("text shapes overlap",
+                              "{!r} over {!r}".format(atext[:26], btext[:26])))
+
+    for intruder in into_footer:
+        found.append(("text runs into the footer", repr(intruder[:44])))
     return found
 
 
@@ -157,8 +205,8 @@ def check_deck(path):
     slide_h = prs.slide_height
 
     for index, slide in enumerate(prs.slides, 1):
-        for clash in overlapping_text(slide.shapes, slide_h):
-            issues.append((index, "text shapes overlap", clash))
+        for kind, clash in overlapping_text(slide.shapes, slide_h):
+            issues.append((index, kind, clash))
 
         for shape in slide.shapes:
             name = shape.shape_type

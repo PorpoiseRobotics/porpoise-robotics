@@ -43,6 +43,7 @@ ground-vehicle/
 │   ├── pathfinder_find_controller/   setup tool: reads a controller's Bluetooth address
 │   ├── Pathfinder_Op_Program12/      advanced program
 │   ├── lessons/                      small follow-along sketches for the courses
+│   ├── projects/                     worked "take it further" projects, for instructors
 │   └── legacy/                       superseded programs, kept for reference
 ├── docs/          design notes, architecture, decisions
 │   └── courses/                      the lesson slides
@@ -79,6 +80,12 @@ Three courses, five three-hour lessons each, one per operating program.
 | Beginner, PS3 | [`docs/courses/beginner-ps3/`](docs/courses/beginner-ps3/) | [`src/lessons/beginner_ps3/`](src/lessons/beginner_ps3/) |
 | Beginner, Switch | [`docs/courses/beginner-switch/`](docs/courses/beginner-switch/) | [`src/lessons/beginner_switch/`](src/lessons/beginner_switch/) |
 | Advanced | [`docs/courses/advanced/`](docs/courses/advanced/) | [`src/lessons/advanced/`](src/lessons/advanced/) |
+
+Beginner Lesson 5 ends by suggesting five projects students can build on top of
+the program. Worked versions of all five are in
+[`src/projects/`](src/projects/) — **for instructors, not to hand out**. They
+exist so that whoever is teaching has already seen where a student is about to
+get stuck.
 
 The slides are editable PowerPoint files. The sketches are small programs students upload during
 the lesson — one idea each, heavily commented, each ending with things to change and see what

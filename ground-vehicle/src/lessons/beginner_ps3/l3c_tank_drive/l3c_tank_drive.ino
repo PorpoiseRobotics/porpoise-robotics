@@ -45,7 +45,8 @@
   WHAT TO TRY
   -----------
   1. Drive it. Then set turnMax to MOTOR_MAX and drive it again. Which is
-     easier to control? That is why the full program starts you on half.
+     easier to control? That is why the full program starts you on three
+     quarters rather than all of it.
   2. Swap the + and the - in the mixing lines. What happens when you steer?
   3. Change the mixing to  left = forward + turn  and  right = forward  only.
      Why is that a worse way to steer?
@@ -55,7 +56,7 @@
 
 #include <Ps3Controller.h>
 
-const char *PS3_MAC_ADDRESS = "02:02:03:04:05:08";
+const char *PS3_MAC_ADDRESS = "02:02:03:04:05:65";
 
 // --- Motors ---
 const int FRONT_LEFT_A  = 12, FRONT_LEFT_B  = 13;
@@ -68,7 +69,7 @@ const int MOTOR_PWM_BITS = 8;
 const int MOTOR_MAX      = 255;
 const int MOTOR_MIN      = 0;
 
-const int turnMax = MOTOR_MAX / 2;   // Steering held to half power
+const int turnMax = (MOTOR_MAX * 3) / 4;   // Steering held to three quarters
 
 // --- Thumbsticks ---
 const int STICK_MAX      = 127;

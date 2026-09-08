@@ -50,7 +50,7 @@ const float SCALE_MAX     = 1.2f;
 // Throttle modes are toggled with the left thumbstick button (L3).
 enum ThrottleMode { MODE_FAST, MODE_NORMAL };
 
-const float NORMAL_MODE_X_SCALE = 0.5f;  // Reduced steering authority
+const float NORMAL_MODE_X_SCALE = 0.75f;  // Reduced steering authority
 const float NORMAL_MODE_Y_SCALE = 1.0f;
 
 // ===================================================================

@@ -71,6 +71,7 @@ ALLOWED = {
 
     # the millis() pattern, written generically
     "unsigned long lastBlink = 0;",
+    "const unsigned long INTERVAL = 1000;",
     "if (millis() - lastBlink >= INTERVAL) {",
     "if (now - last_update < INTERVAL) return;",
     "last_update = now;",

@@ -1,29 +1,49 @@
 /*
-  l5c_drive_with_lights.ino
-  Porpoise Robotics - Pathfinder beginner course (Nintendo Switch track), Lesson 5
+  p1_low_battery_warning.ino
+  Porpoise Robotics - Pathfinder beginner course (Nintendo Switch track)
+  TAKE IT FURTHER project - see Lesson 5, "projects that fit on this vehicle"
 
   WHAT THIS PROGRAM DOES
   ----------------------
-  Drives the vehicle AND runs the lights at the same time: headlights at the
-  front, tail lights at the back, brake lights when you stop, white reversing
-  lights, and amber turn signals on whichever side you are steering toward.
+  Watches the battery while you drive, and says so before it is too late.
 
-  This is the last step before pathfinder_nintendoswitch.ino. Everything in
-  here you have already met in a smaller program:
+  Above 12 volts the vehicle behaves normally. Below 12 the whole strip
+  flashes yellow. Below 10 it flashes red, twice as fast. A 4S lithium
+  polymer pack that is run flat is damaged, and the vehicle notices the
+  sag long before you notice the vehicle getting slower.
 
-        Lesson 2   PWM, channels, two pins per motor, tank drive
-        Lesson 3   deadzone, map, mixing forward and turn, the allowlist
-        Lesson 4   the LED loop and the 31 - p mirror
-        Lesson 5a  millis() instead of delay()
-        Lesson 5b  edge detection with justPressed()
+  This is l5c_drive_with_lights with one thing added. Everything else in
+  the file you have already met. Open the two side by side and the
+  difference is the project.
 
-  All the full program adds on top of this is the servos, the KITT scanner,
-  and a startup light show.
+  WHAT YOU HAVE TO WIRE UP
+  ------------------------
+  One resistor divider, on the top plate breadboard.
+
+      pack +  ---[ 100k ]---+---[ 20k ]---  GND
+                            |
+                         GPIO 34
+
+  The ESP32 reads 0 to 3.3 volts and nothing else, so a 16.8 volt pack
+  has to be divided down first. This is Lesson 2's series circuit: the
+  same current flows through both resistors, so the voltage splits in
+  proportion to them, and GPIO 34 sees
+
+      Vpack x 20 / (100 + 20)  =  Vpack / 6
+
+  which is 2.8 volts at a full pack. GPIO 34 is INPUT ONLY, which is all
+  this needs.
+
+  Get the two resistors the right way round. 20k to ground. If you put
+  the 100k to ground instead, GPIO 34 sees 14 volts and the pin is gone.
+
+  Nothing wired up yet? The program says so on the serial monitor and
+  then drives normally, so it is safe to upload before you have built it.
 
   SAFETY
   ------
-  Wheels off the ground for the first upload. Motors stop by themselves if the
-  controller disconnects.
+  Wheels off the ground for the first upload, every time. Motors stop by
+  themselves if the controller disconnects.
 
   BEFORE YOU CAN COMPILE THIS
   ---------------------------
@@ -38,32 +58,39 @@
 
   CONTROLS
   --------
-    Left stick        Drive. Up = forward, down = reverse, left/right = turn.
-    LEFT face button  All lights on / off   (marked Y on most Switch pads)
-    D-pad UP          Headlights bright
-    D-pad DOWN        Headlights dim
+    Left stick          Drive. Up = forward, down = reverse, left/right = turn.
+    LEFT face button    All lights on / off
+    D-pad UP / DOWN     Headlights bright / dim
 
-  THE ONE NEW IDEA: DRAW ONLY WHEN SOMETHING CHANGED
-  --------------------------------------------------
-  Pushing 32 LEDs out to the strip takes about a millisecond, and loop() runs
-  tens of thousands of times a second. Redrawing every pass would waste most of
-  the vehicle's attention and make the lights flicker.
+    Most Switch pads mark the left face button Y, the top one
+    X and the right one A.
 
-  So the program keeps a flag called lightsChanged. Anything that would alter
-  the picture sets it to true, and the drawing code at the bottom of loop()
-  only runs when it is set - then clears it. The full program does exactly the
-  same thing.
+  THE IDEA
+  --------
+  Reading a battery is reading a voltage, and reading a voltage on a
+  microcontroller means two things: get it into range with a divider, and
+  average enough samples that one motor stalling does not trip the alarm.
+
+  The reading is taken twice a second, not every pass of loop(). Nothing
+  about a battery changes in a millisecond, and the ADC is slow enough to
+  be worth not asking.
+
+  The warning is drawn on its own millis() clock, on top of the driving
+  lights, which is the same layering the full program uses for the
+  scanner.
 
   WHAT TO TRY
   -----------
-  1. Drive it and watch the lights follow what you do with the stick.
-  2. Add a fifth pattern: make the vehicle flash all 32 LEDs red when both
-     forward and turn are zero for more than three seconds. (Hint: you will
-     need a millis() timer from Lesson 5a.)
-  3. Make the turn signals BLINK rather than stay on. Do it with millis(), not
-     delay(), or the vehicle will stutter.
-  4. Compare this file with pathfinder_nintendoswitch.ino side by side. Make a
-     list of everything the full program has that this one does not.
+  1. Charge the pack, note the reading, then drive it down and watch the
+     number fall on the serial monitor. Compare it with a multimeter.
+  2. Raise BATTERY_LOW_V to just under what your pack reads right now,
+     and watch the warning come on. Put it back afterwards.
+  3. Drive hard and watch the reading SAG while the motors pull, then
+     recover when you let go. That sag is why the average is over sixteen
+     samples and not one.
+  4. Make the vehicle refuse to drive forward at all below BATTERY_EMPTY_V,
+     the way the collision project refuses. Should it? Argue both sides.
+  5. Fold this into your copy of the full program.
 */
 
 #include <Bluepad32.h>
@@ -106,6 +133,22 @@ const int turnMax = (MOTOR_MAX * 3) / 4;
 const int STICK_MAX      = 511;
 const int STICK_DEADZONE = 60;
 
+
+// --- Battery monitor -------------------------------------------------
+// See the wiring note at the top. GPIO 34 reads the pack through a
+// divider, so the number here is a sixth of the real pack voltage until
+// we multiply it back up.
+const int   BATTERY_PIN     = 34;
+const float DIVIDER_RATIO   = 6.0f;    // (100k + 20k) / 20k
+const float BATTERY_LOW_V   = 12.0f;   // Flash yellow below this
+const float BATTERY_EMPTY_V = 10.0f;   // Flash red below this, twice as fast
+
+// A pack that reads under this is not a flat pack, it is a divider nobody
+// has built yet. Say so once, and then leave the driver alone.
+const float BATTERY_SENSE_MIN_V = 3.0f;
+
+const unsigned long BATTERY_READ_MS = 500;
+
 // --- State ---
 enum LightPattern { LIGHTS_STOPPED, LIGHTS_FORWARD, LIGHTS_REVERSE, LIGHTS_LEFT, LIGHTS_RIGHT };
 
@@ -119,6 +162,16 @@ bool lightsButtonWasDown = false;
 ControllerPtr myController = nullptr;
 bool addressIsSet = false;
 bool wasConnected = false;
+
+
+enum BatteryState { BATTERY_OK, BATTERY_LOW, BATTERY_EMPTY };
+
+BatteryState  batteryState     = BATTERY_OK;
+float         packVolts        = 0.0f;
+bool          batterySenseWired = true;
+unsigned long lastBatteryRead  = 0;
+unsigned long lastBatteryBlink = 0;
+bool          batteryBlinkOn   = false;
 
 bool justPressed(bool isDown, bool &wasDown) {
   bool isNewPress = isDown && !wasDown;
@@ -238,6 +291,40 @@ void showWaitingLights() {
   }
 }
 
+
+/*
+  The pack voltage, in volts, read through the divider.
+
+  analogReadMilliVolts() applies the chip's own ADC calibration, so this is
+  real millivolts at the PIN rather than a raw count. Multiplying by
+  DIVIDER_RATIO gets back to volts at the PACK.
+
+  Sixteen samples averaged, because a motor pulling current makes the pack sag
+  and a single sample lands wherever it happens to land. Sixteen reads take
+  well under a millisecond, and this only runs twice a second anyway.
+*/
+float readPackVolts() {
+  long total = 0;
+  for (int i = 0; i < 16; i++) {
+    total += analogReadMilliVolts(BATTERY_PIN);
+  }
+  return (total / 16.0f) * DIVIDER_RATIO / 1000.0f;
+}
+
+/*
+  The battery warning, which takes the whole strip.
+
+  Yellow for low, red for empty, blinking either way - a steady color would be
+  mistaken for a driving light, and this is not information you want anybody
+  to have to notice.
+*/
+void showBatteryWarning() {
+  uint32_t color = (batteryState == BATTERY_EMPTY) ? strip.Color(255, 0, 0)
+                                                   : strip.Color(255, 160, 0);
+  strip.fill(batteryBlinkOn ? color : strip.Color(0, 0, 0));
+  strip.show();
+}
+
 void setup() {
   Serial.begin(115200);
 
@@ -255,6 +342,20 @@ void setup() {
   attachMotorPwm(REAR_RIGHT_PIN_A,  REAR_RIGHT_CH_A);
   attachMotorPwm(REAR_RIGHT_PIN_B,  REAR_RIGHT_CH_B);
   drive(0, 0);
+
+  analogReadResolution(12);
+  packVolts = readPackVolts();
+  batterySenseWired = (packVolts >= BATTERY_SENSE_MIN_V);
+
+  if (batterySenseWired) {
+    Serial.print("Pack at startup: ");
+    Serial.print(packVolts, 2);
+    Serial.println(" V");
+  } else {
+    Serial.println("GPIO 34 reads almost nothing, so the divider is not built");
+    Serial.println("yet. Driving normally, with the battery warning switched");
+    Serial.println("off. See the wiring note at the top of this file.");
+  }
 
   for (int i = 0; i < 6; i++) {
     if (MY_CONTROLLER[i] != 0x00) {
@@ -349,8 +450,38 @@ void loop() {
     lightsChanged = true;
   }
 
-  // ---- Redraw, but only if something actually changed ----
-  if (lightsChanged) {
+  // ---- The battery, checked twice a second ----
+  if (batterySenseWired && millis() - lastBatteryRead >= BATTERY_READ_MS) {
+    lastBatteryRead = millis();
+    packVolts = readPackVolts();
+
+    BatteryState newState = BATTERY_OK;
+    if (packVolts < BATTERY_EMPTY_V)    newState = BATTERY_EMPTY;
+    else if (packVolts < BATTERY_LOW_V) newState = BATTERY_LOW;
+
+    if (newState != batteryState) {
+      batteryState = newState;
+      lightsChanged = true;
+      Serial.print("Battery ");
+      Serial.print(packVolts, 2);
+      if (newState == BATTERY_OK)        Serial.println(" V  -  OK");
+      else if (newState == BATTERY_LOW)  Serial.println(" V  -  LOW, bring it in");
+      else                               Serial.println(" V  -  EMPTY, stop now");
+    }
+  }
+
+  // ---- Redraw. The battery warning overrides the driving lights. ----
+  if (batteryState != BATTERY_OK) {
+    unsigned long blinkEvery = (batteryState == BATTERY_EMPTY) ? 200 : 500;
+    if (millis() - lastBatteryBlink >= blinkEvery) {
+      lastBatteryBlink = millis();
+      batteryBlinkOn = !batteryBlinkOn;
+      showBatteryWarning();
+    }
+    // Leave the flag set, so the driving lights come straight back when a
+    // fresh pack goes in.
+    lightsChanged = true;
+  } else if (lightsChanged) {
     lightsChanged = false;
     showDrivingLights();
   }

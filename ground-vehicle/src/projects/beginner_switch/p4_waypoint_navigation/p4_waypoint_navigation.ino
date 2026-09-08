@@ -1,29 +1,28 @@
 /*
-  l5c_drive_with_lights.ino
-  Porpoise Robotics - Pathfinder beginner course (Nintendo Switch track), Lesson 5
+  p4_waypoint_navigation.ino
+  Porpoise Robotics - Pathfinder beginner course (Nintendo Switch track)
+  TAKE IT FURTHER project - see Lesson 5, "projects that fit on this vehicle"
 
   WHAT THIS PROGRAM DOES
   ----------------------
-  Drives the vehicle AND runs the lights at the same time: headlights at the
-  front, tail lights at the back, brake lights when you stop, white reversing
-  lights, and amber turn signals on whichever side you are steering toward.
+  Drives a LIST of moves instead of one hard-coded square.
 
-  This is the last step before pathfinder_nintendoswitch.ino. Everything in
-  here you have already met in a smaller program:
+  Each leg of the route is a turn followed by a straight run. Press the
+  start button and the vehicle drives the whole list, then stops. Push
+  the stick at any point and it gives up and hands control back.
 
-        Lesson 2   PWM, channels, two pins per motor, tank drive
-        Lesson 3   deadzone, map, mixing forward and turn, the allowlist
-        Lesson 4   the LED loop and the 31 - p mirror
-        Lesson 5a  millis() instead of delay()
-        Lesson 5b  edge detection with justPressed()
+  This is Lesson 2's maneuver, grown up: the same dead reckoning, but the
+  route is data at the top of the file rather than code in the middle of
+  it. Change where it goes without touching the program.
 
-  All the full program adds on top of this is the servos, the KITT scanner,
-  and a startup light show.
+  This is l5c_drive_with_lights with one thing added. Everything else in
+  the file you have already met. Open the two side by side and the
+  difference is the project.
 
   SAFETY
   ------
-  Wheels off the ground for the first upload. Motors stop by themselves if the
-  controller disconnects.
+  Wheels off the ground for the first upload, every time. Motors stop by
+  themselves if the controller disconnects.
 
   BEFORE YOU CAN COMPILE THIS
   ---------------------------
@@ -38,32 +37,48 @@
 
   CONTROLS
   --------
-    Left stick        Drive. Up = forward, down = reverse, left/right = turn.
-    LEFT face button  All lights on / off   (marked Y on most Switch pads)
-    D-pad UP          Headlights bright
-    D-pad DOWN        Headlights dim
+    Left stick          Drive. Up = forward, down = reverse, left/right = turn.
+    LEFT face button    All lights on / off
+    TOP face button     Start the route, or stop it
+    Any stick push      Aborts a running route
 
-  THE ONE NEW IDEA: DRAW ONLY WHEN SOMETHING CHANGED
-  --------------------------------------------------
-  Pushing 32 LEDs out to the strip takes about a millisecond, and loop() runs
-  tens of thousands of times a second. Redrawing every pass would waste most of
-  the vehicle's attention and make the lights flicker.
+    Most Switch pads mark the left face button Y, the top one
+    X and the right one A.
 
-  So the program keeps a flag called lightsChanged. Anything that would alter
-  the picture sets it to true, and the drawing code at the bottom of loop()
-  only runs when it is set - then clears it. The full program does exactly the
-  same thing.
+  THE IDEA
+  --------
+  There is no new hardware here and no new sensor. What changes is where
+  the route LIVES.
+
+  l2c_maneuver_square hard-codes four drives and four turns in setup().
+  Adding a fifth leg means writing more code. Here the route is a table,
+  and the program is a state machine that walks it: turn, drive, next leg,
+  stop. A twenty-leg route is twenty lines of data and not one more line
+  of program.
+
+  It still cannot see. FEET_PER_SECOND and DEGREES_PER_SECOND are numbers
+  YOU measured on YOUR vehicle, on the floor you are driving on, with the
+  battery you have now. Change any of those and the route drifts. That is
+  not a bug in the program - it is what dead reckoning is, and it is why
+  every real vehicle eventually gets a sensor.
+
+  Note that pushing the stick aborts. Anything that drives itself needs a
+  way for a person to take it back, and it should be the control they
+  already have in their hand.
 
   WHAT TO TRY
   -----------
-  1. Drive it and watch the lights follow what you do with the stick.
-  2. Add a fifth pattern: make the vehicle flash all 32 LEDs red when both
-     forward and turn are zero for more than three seconds. (Hint: you will
-     need a millis() timer from Lesson 5a.)
-  3. Make the turn signals BLINK rather than stay on. Do it with millis(), not
-     delay(), or the vehicle will stutter.
-  4. Compare this file with pathfinder_nintendoswitch.ino side by side. Make a
-     list of everything the full program has that this one does not.
+  1. Run the route as it is. Mark where the vehicle stops with tape, then
+     run it again from the same spot. How far apart are the two marks?
+  2. Measure FEET_PER_SECOND and DEGREES_PER_SECOND properly, on the
+     floor you are on, at CRUISE_SPEED and SPIN_SPEED. Put your numbers
+     in. Does the drift get smaller?
+  3. Run it on carpet and then on tile. Same numbers, different route.
+  4. Add legs until the route is a pentagon. Only the table changes.
+  5. Run it on a nearly flat battery. What happens, and why?
+  6. Make the vehicle drive the route BACKWARDS at the end, and see
+     whether it gets home.
+  7. Fold this into your copy of the full program.
 */
 
 #include <Bluepad32.h>
@@ -106,6 +121,35 @@ const int turnMax = (MOTOR_MAX * 3) / 4;
 const int STICK_MAX      = 511;
 const int STICK_DEADZONE = 60;
 
+
+// --- The route -------------------------------------------------------
+// One line per leg: how far to turn first, then how far to run straight.
+// Positive degrees are a turn to the RIGHT, negative to the left, and 0
+// means carry straight on. Edit this table; the program below does not
+// change.
+struct Leg {
+  int   turnDegrees;
+  float feet;
+};
+
+const Leg ROUTE[] = {
+  {   0, 10.0f },   // Straight out
+  {  90,  6.0f },   // Right, then across
+  {  90, 10.0f },   // Right, then back
+  {  90,  6.0f },   // Right, then across again
+  {  90,  0.0f },   // Right, to finish pointing the way we started
+};
+const int ROUTE_LEGS = sizeof(ROUTE) / sizeof(ROUTE[0]);
+
+// --- Your vehicle's numbers ------------------------------------------
+// These are the two you measured in Lesson 2, and they are YOURS. They
+// change with the floor, with the battery, and with the vehicle. Measure
+// them again before you trust a long route.
+const int   CRUISE_SPEED       = 150;
+const int   SPIN_SPEED         = 130;
+const float FEET_PER_SECOND    = 3.34f;    // At CRUISE_SPEED
+const float DEGREES_PER_SECOND = 180.0f;   // Spinning on the spot at SPIN_SPEED
+
 // --- State ---
 enum LightPattern { LIGHTS_STOPPED, LIGHTS_FORWARD, LIGHTS_REVERSE, LIGHTS_LEFT, LIGHTS_RIGHT };
 
@@ -119,6 +163,15 @@ bool lightsButtonWasDown = false;
 ControllerPtr myController = nullptr;
 bool addressIsSet = false;
 bool wasConnected = false;
+
+
+enum RunState { RUN_IDLE, RUN_TURNING, RUN_DRIVING, RUN_DONE };
+
+RunState      runState     = RUN_IDLE;
+int           legIndex     = 0;
+unsigned long legStartedAt = 0;
+unsigned long legDuration  = 0;
+bool          startButtonWasDown = false;
 
 bool justPressed(bool isDown, bool &wasDown) {
   bool isNewPress = isDown && !wasDown;
@@ -238,6 +291,91 @@ void showWaitingLights() {
   }
 }
 
+
+/*
+  How long a move should take, from the numbers you measured.
+
+  Distance over speed, and degrees over degrees per second. That is the whole
+  of dead reckoning: the vehicle works out how long to drive and then never
+  finds out where it actually went.
+*/
+unsigned long millisForFeet(float feet) {
+  return (unsigned long)((feet / FEET_PER_SECOND) * 1000.0f);
+}
+
+unsigned long millisForDegrees(int degrees) {
+  return (unsigned long)((abs(degrees) / DEGREES_PER_SECOND) * 1000.0f);
+}
+
+void stopRoute(const char *why) {
+  runState = RUN_IDLE;
+  drive(0, 0);
+  lightsChanged = true;
+  Serial.println(why);
+}
+
+/*
+  Starts one leg: the turn first, then the straight run.
+
+  A leg with no turn goes straight to driving. A leg past the end of the table
+  finishes the route.
+*/
+void beginLeg(int index) {
+  legIndex = index;
+
+  if (index >= ROUTE_LEGS) {
+    runState = RUN_DONE;
+    drive(0, 0);
+    lightsChanged = true;
+    Serial.println("Route finished. Measure the gap between where it stopped");
+    Serial.println("and where it was supposed to stop. That gap is the drift.");
+    return;
+  }
+
+  legStartedAt = millis();
+  lightsChanged = true;
+
+  if (ROUTE[index].turnDegrees != 0) {
+    runState = RUN_TURNING;
+    legDuration = millisForDegrees(ROUTE[index].turnDegrees);
+  } else {
+    runState = RUN_DRIVING;
+    legDuration = millisForFeet(ROUTE[index].feet);
+  }
+
+  Serial.print("Leg ");
+  Serial.print(index + 1);
+  Serial.print(" of ");
+  Serial.println(ROUTE_LEGS);
+}
+
+/*
+  The turn is over, so run the straight; or the straight is over, so take the
+  next leg.
+*/
+void advanceRoute() {
+  if (runState == RUN_TURNING) {
+    runState = RUN_DRIVING;
+    legStartedAt = millis();
+    legDuration = millisForFeet(ROUTE[legIndex].feet);
+    lightsChanged = true;
+  } else {
+    beginLeg(legIndex + 1);
+  }
+}
+
+/*
+  What the vehicle is doing, in one color: amber while it turns, green while
+  it runs, blue when the route is finished.
+*/
+void showRouteLights() {
+  uint32_t color = strip.Color(0, 0, 180);
+  if (runState == RUN_TURNING)      color = strip.Color(255, 100, 0);
+  else if (runState == RUN_DRIVING) color = strip.Color(0, 180, 0);
+  strip.fill(color);
+  strip.show();
+}
+
 void setup() {
   Serial.begin(115200);
 
@@ -310,6 +448,16 @@ void loop() {
   }
 
   // ---- Buttons ----
+
+  if (justPressed(myController->y(), startButtonWasDown)) {
+    if (runState == RUN_TURNING || runState == RUN_DRIVING) {
+      stopRoute("Stopped.");
+    } else {
+      Serial.println("Running the route. Push the stick to abort.");
+      beginLeg(0);
+    }
+  }
+
   if (justPressed(myController->x(), lightsButtonWasDown)) {
     lightsOn = !lightsOn;
     lightsChanged = true;
@@ -335,7 +483,23 @@ void loop() {
 
   int leftSpeed  = constrain(forward + turn, -MOTOR_MAX, MOTOR_MAX);
   int rightSpeed = constrain(forward - turn, -MOTOR_MAX, MOTOR_MAX);
-  drive(leftSpeed, rightSpeed);
+  // ---- While a route is running, it drives - not the stick ----
+  if (runState == RUN_TURNING || runState == RUN_DRIVING) {
+    if (forward != 0 || turn != 0) {
+      // Anything that drives itself needs a way for a person to take it back,
+      // and it should be the control already in their hand.
+      stopRoute("Stick pushed. Route abandoned, you have it.");
+    } else if (millis() - legStartedAt >= legDuration) {
+      advanceRoute();
+    } else if (runState == RUN_TURNING) {
+      int side = (ROUTE[legIndex].turnDegrees > 0) ? 1 : -1;
+      drive(SPIN_SPEED * side, -SPIN_SPEED * side);
+    } else {
+      drive(CRUISE_SPEED, CRUISE_SPEED);
+    }
+  } else {
+    drive(leftSpeed, rightSpeed);
+  }
 
   // ---- Which lighting picture matches what we are doing? ----
   LightPattern newPattern = LIGHTS_STOPPED;
@@ -349,9 +513,13 @@ void loop() {
     lightsChanged = true;
   }
 
-  // ---- Redraw, but only if something actually changed ----
+  // ---- Redraw ----
   if (lightsChanged) {
     lightsChanged = false;
-    showDrivingLights();
+    if (runState == RUN_IDLE) {
+      showDrivingLights();
+    } else {
+      showRouteLights();
+    }
   }
 }

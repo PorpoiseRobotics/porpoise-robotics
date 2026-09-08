@@ -1,29 +1,43 @@
 /*
-  l5c_drive_with_lights.ino
-  Porpoise Robotics - Pathfinder beginner course (Nintendo Switch track), Lesson 5
+  p3_automatic_lights.ino
+  Porpoise Robotics - Pathfinder beginner course (Nintendo Switch track)
+  TAKE IT FURTHER project - see Lesson 5, "projects that fit on this vehicle"
 
   WHAT THIS PROGRAM DOES
   ----------------------
-  Drives the vehicle AND runs the lights at the same time: headlights at the
-  front, tail lights at the back, brake lights when you stop, white reversing
-  lights, and amber turn signals on whichever side you are steering toward.
+  Three pieces of lighting that decide for themselves.
 
-  This is the last step before pathfinder_nintendoswitch.ino. Everything in
-  here you have already met in a smaller program:
+    HEADLIGHTS ON DEMAND   The front bar lights only while the vehicle is
+                           actually moving. Stop, and it goes dark.
+    HAZARD LIGHTS          All four corners flashing amber, on a button,
+                           drawn on top of whatever else is lit.
+    REVERSING BEEP         A truck beep, from a buzzer, whenever the
+                           vehicle is going backwards.
 
-        Lesson 2   PWM, channels, two pins per motor, tank drive
-        Lesson 3   deadzone, map, mixing forward and turn, the allowlist
-        Lesson 4   the LED loop and the 31 - p mirror
-        Lesson 5a  millis() instead of delay()
-        Lesson 5b  edge detection with justPressed()
+  This is l5c_drive_with_lights with one thing added. Everything else in
+  the file you have already met. Open the two side by side and the
+  difference is the project.
 
-  All the full program adds on top of this is the servos, the KITT scanner,
-  and a startup light show.
+  WHAT YOU HAVE TO WIRE UP
+  ------------------------
+  One passive piezo buzzer, on the top plate breadboard.
+
+      buzzer +  ->  GPIO 33
+      buzzer -  ->  GND
+
+  It must be a PASSIVE buzzer. An active one has its own oscillator
+  inside and only wants on or off; a passive one is a tiny speaker and
+  needs a square wave fed to it. We already know how to make a square
+  wave - that is Lesson 2's PWM, run at a frequency you can hear instead
+  of one you cannot.
+
+  No buzzer? Everything else still works, and the pin sits there driving
+  nothing. Set BEEP_WHEN_REVERSING to false to switch it off entirely.
 
   SAFETY
   ------
-  Wheels off the ground for the first upload. Motors stop by themselves if the
-  controller disconnects.
+  Wheels off the ground for the first upload, every time. Motors stop by
+  themselves if the controller disconnects.
 
   BEFORE YOU CAN COMPILE THIS
   ---------------------------
@@ -38,32 +52,44 @@
 
   CONTROLS
   --------
-    Left stick        Drive. Up = forward, down = reverse, left/right = turn.
-    LEFT face button  All lights on / off   (marked Y on most Switch pads)
-    D-pad UP          Headlights bright
-    D-pad DOWN        Headlights dim
+    Left stick          Drive. Up = forward, down = reverse, left/right = turn.
+    LEFT face button    All lights on / off
+    D-pad UP / DOWN     Headlights bright / dim
+    TOP face button     Auto headlights on / off
+    RIGHT face button   Hazard lights on / off
 
-  THE ONE NEW IDEA: DRAW ONLY WHEN SOMETHING CHANGED
-  --------------------------------------------------
-  Pushing 32 LEDs out to the strip takes about a millisecond, and loop() runs
-  tens of thousands of times a second. Redrawing every pass would waste most of
-  the vehicle's attention and make the lights flicker.
+    Most Switch pads mark the left face button Y, the top one
+    X and the right one A.
 
-  So the program keeps a flag called lightsChanged. Anything that would alter
-  the picture sets it to true, and the drawing code at the bottom of loop()
-  only runs when it is set - then clears it. The full program does exactly the
-  same thing.
+  THE IDEA
+  --------
+  Every one of these three is the same shape: something the program
+  already knows - which way it is moving - drives something the program
+  already does. No new sensor, and no new maths.
+
+  The hazards are the interesting one. They are drawn AFTER the driving
+  lights, over the top, so the tail lights carry on underneath and the
+  corners flash on their own clock. That is exactly how the full program
+  runs the KITT scanner over the top of the driving lights.
+
+  The beep is two intervals, not one: 250 ms on, 400 ms off. A beep with
+  equal on and off sounds like an alarm; a real reversing beep is short
+  and spaced.
 
   WHAT TO TRY
   -----------
-  1. Drive it and watch the lights follow what you do with the stick.
-  2. Add a fifth pattern: make the vehicle flash all 32 LEDs red when both
-     forward and turn are zero for more than three seconds. (Hint: you will
-     need a millis() timer from Lesson 5a.)
-  3. Make the turn signals BLINK rather than stay on. Do it with millis(), not
-     delay(), or the vehicle will stutter.
-  4. Compare this file with pathfinder_nintendoswitch.ino side by side. Make a
-     list of everything the full program has that this one does not.
+  1. Turn auto headlights off and drive. Which do you prefer, and why?
+  2. Make the headlights come on when moving and go off two seconds
+     AFTER stopping, instead of immediately. You need one more millis()
+     timer.
+  3. Change BUZZER_FREQ. Find the pitch your buzzer is loudest at - it
+     has a resonant frequency, and it is usually near 2.7 kHz.
+  4. Make the hazards flash the two sides alternately instead of all four
+     corners together.
+  5. Make the beep faster the closer you are to something, using the
+     range finder from p2_collision_warning. That is a real reversing
+     sensor.
+  6. Fold the parts you like into your copy of the full program.
 */
 
 #include <Bluepad32.h>
@@ -106,6 +132,23 @@ const int turnMax = (MOTOR_MAX * 3) / 4;
 const int STICK_MAX      = 511;
 const int STICK_DEADZONE = 60;
 
+
+// --- Buzzer ----------------------------------------------------------
+// See the wiring note at the top. A passive piezo is a tiny speaker, so
+// it wants a square wave, which is what PWM is.
+const int BUZZER_PIN  = 33;
+const int BUZZER_CH   = 10;    // PWM channel, this track only
+const int BUZZER_FREQ = 2400;    // About the pitch of a reversing truck
+const int BUZZER_BITS = 8;
+
+const bool BEEP_WHEN_REVERSING = true;   // Set false if you have no buzzer
+
+const unsigned long BEEP_ON_MS  = 250;   // A real reversing beep is short
+const unsigned long BEEP_OFF_MS = 400;   // and generously spaced
+
+// --- Automatic lighting ----------------------------------------------
+const unsigned long HAZARD_BLINK_MS = 400;
+
 // --- State ---
 enum LightPattern { LIGHTS_STOPPED, LIGHTS_FORWARD, LIGHTS_REVERSE, LIGHTS_LEFT, LIGHTS_RIGHT };
 
@@ -119,6 +162,19 @@ bool lightsButtonWasDown = false;
 ControllerPtr myController = nullptr;
 bool addressIsSet = false;
 bool wasConnected = false;
+
+
+bool          autoHeadlights   = true;    // Front bar only while moving
+bool          headlightsLit    = false;
+bool          hazardsOn        = false;
+bool          hazardBlinkOn    = false;
+unsigned long lastHazardBlink  = 0;
+
+bool          beeping          = false;
+unsigned long lastBeepChange   = 0;
+
+bool autoButtonWasDown   = false;
+bool hazardButtonWasDown = false;
 
 bool justPressed(bool isDown, bool &wasDown) {
   bool isNewPress = isDown && !wasDown;
@@ -198,8 +254,10 @@ void showDrivingLights() {
     uint32_t reverseLight = strip.Color(200, 200, 200);
     uint32_t amber        = strip.Color(255, 100, 0);
 
-    for (int i = FRONT_FIRST; i <= FRONT_LAST; i++) {
-      strip.setPixelColor(i, headlight);
+    if (headlightsLit) {
+      for (int i = FRONT_FIRST; i <= FRONT_LAST; i++) {
+        strip.setPixelColor(i, headlight);
+      }
     }
 
     uint32_t rearColor = tailLight;
@@ -238,6 +296,33 @@ void showWaitingLights() {
   }
 }
 
+
+/*
+  On or off. The duty is half, which is as loud as a square wave gets - a
+  piezo cares about the edges, not the average.
+*/
+void setBuzzer(bool on) {
+  ledcWrite(BUZZER_CH, on ? 128 : 0);
+}
+
+/*
+  Hazards: the four corners, amber, blinking together.
+
+  Drawn on TOP of the driving lights rather than instead of them, so the tail
+  lights stay lit underneath. Remember the loop - the front bar runs 0 to 15
+  left to right, and the rear runs 16 to 31 right to left, so the four corners
+  are the two ends of each bar.
+*/
+void showHazards() {
+  uint32_t amber = hazardBlinkOn ? strip.Color(255, 100, 0)
+                                 : strip.Color(0, 0, 0);
+  for (int i = 0;  i <= 3;  i++) strip.setPixelColor(i, amber);   // Front left
+  for (int i = 12; i <= 15; i++) strip.setPixelColor(i, amber);   // Front right
+  for (int i = 16; i <= 19; i++) strip.setPixelColor(i, amber);   // Rear right
+  for (int i = 28; i <= 31; i++) strip.setPixelColor(i, amber);   // Rear left
+  strip.show();
+}
+
 void setup() {
   Serial.begin(115200);
 
@@ -255,6 +340,10 @@ void setup() {
   attachMotorPwm(REAR_RIGHT_PIN_A,  REAR_RIGHT_CH_A);
   attachMotorPwm(REAR_RIGHT_PIN_B,  REAR_RIGHT_CH_B);
   drive(0, 0);
+
+  ledcSetup(BUZZER_CH, BUZZER_FREQ, BUZZER_BITS);
+  ledcAttachPin(BUZZER_PIN, BUZZER_CH);
+  setBuzzer(false);
 
   for (int i = 0; i < 6; i++) {
     if (MY_CONTROLLER[i] != 0x00) {
@@ -310,6 +399,22 @@ void loop() {
   }
 
   // ---- Buttons ----
+
+  if (justPressed(myController->y(), autoButtonWasDown)) {
+    autoHeadlights = !autoHeadlights;
+    lightsChanged = true;
+    Serial.println(autoHeadlights ? "Headlights: AUTO  (on only while moving)"
+                                  : "Headlights: ALWAYS ON");
+  }
+
+  if (justPressed(myController->a(), hazardButtonWasDown)) {
+    hazardsOn = !hazardsOn;
+    hazardBlinkOn = hazardsOn;
+    lastHazardBlink = millis();
+    lightsChanged = true;
+    Serial.println(hazardsOn ? "Hazards ON" : "Hazards OFF");
+  }
+
   if (justPressed(myController->x(), lightsButtonWasDown)) {
     lightsOn = !lightsOn;
     lightsChanged = true;
@@ -349,9 +454,39 @@ void loop() {
     lightsChanged = true;
   }
 
-  // ---- Redraw, but only if something actually changed ----
+  // ---- Headlights only while we are moving, if auto mode is on ----
+  bool wantHeadlights = !autoHeadlights || (leftSpeed != 0 || rightSpeed != 0);
+  if (wantHeadlights != headlightsLit) {
+    headlightsLit = wantHeadlights;
+    lightsChanged = true;
+  }
+
+  // ---- Reversing beep ----
+  if (BEEP_WHEN_REVERSING && lightPattern == LIGHTS_REVERSE) {
+    unsigned long holdFor = beeping ? BEEP_ON_MS : BEEP_OFF_MS;
+    if (millis() - lastBeepChange >= holdFor) {
+      lastBeepChange = millis();
+      beeping = !beeping;
+      setBuzzer(beeping);
+    }
+  } else if (beeping) {
+    beeping = false;
+    setBuzzer(false);
+  }
+
+  // ---- Redraw. Hazards go on top, on their own clock. ----
   if (lightsChanged) {
     lightsChanged = false;
     showDrivingLights();
+    if (hazardsOn) {
+      showHazards();
+    }
+  }
+
+  if (hazardsOn && millis() - lastHazardBlink >= HAZARD_BLINK_MS) {
+    lastHazardBlink = millis();
+    hazardBlinkOn = !hazardBlinkOn;
+    showDrivingLights();
+    showHazards();
   }
 }

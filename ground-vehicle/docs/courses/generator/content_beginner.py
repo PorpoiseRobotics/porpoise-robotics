@@ -354,6 +354,10 @@ def lesson1(deck, T):
             "Come back to this slide in the last five minutes and ask them "
             "to score themselves against it. Anything nobody can do is what "
             "you open with next lesson.",
+            "Ask first, before any of this: hands up for anybody who has "
+            "met Arduino, the ESP-32, C++ or Ohm's law before. It changes "
+            "who you pair with whom, and it tells you which of the four "
+            "objectives is going to be the slow one.",
             "Objective four - saying why the resistor is there - is the one "
             "that separates following instructions from understanding. "
             "Watch for it.",
@@ -418,6 +422,8 @@ def lesson1(deck, T):
             "not out of the blink activity.",
             "If the whole room is installed and ready early, go straight to "
             "the breadboards. Never fill time.",
+            "Breaks are about every hour, or wherever the work reaches a "
+            "natural stop. Say so at the start, so nobody is wondering.",
         ])
 
     deck.bullets_image(
@@ -516,7 +522,7 @@ def lesson1(deck, T):
           "Wi-Fi built in. Your program runs here.", 0),
          ("Four brushed DC motors, each with its own DRV8871 H-bridge driver.", 0),
          ("32 WS2812B addressable LEDs, in two bars of 16.", 0),
-         ("Four servo outputs on the top plate.", 0),
+         ("Four servo outputs on the control board.", 0),
          ("A 4S 3300 mAh lithium polymer battery, about 16 volts charged.", 0),
          ("A top plate with a breadboard area, for the sensors you add later.", 0)],
         note="No steering rack. It turns by driving one side faster than the "
@@ -1378,19 +1384,18 @@ def _board_setup_slide(deck, T):
         [("The Arduino IDE does not know what an ESP32 is until you tell "
           "it.", 0),
          ("1.  File > Preferences.", 0),
-         ("2.  Paste this into \"Additional boards manager URLs\", one line, "
-          "no spaces:", 0),
+         ("2.  Paste this into \"Additional boards manager URLs\":", 0),
          (T["boards_url"], 1),
          ("3.  Click OK.", 0),
          ("4.  Tools > Board > Boards Manager. Search \"{}\".".format(
              T["boards_search"]), 0),
          ("The entry you want is  {}".format(T["board_pkg"]), 1),
-         ("5.  Choose version {} - NOT the latest - and click Install.".format(
+         ("5.  Choose version {}, NOT the latest. Install.".format(
              T["board_version"]), 0),
          ("6.  {}".format(T["board_menu"]), 0)],
         T["boards_screenshot"],
-        caption="It is the bottom row",
-        image_ratio=0.28,
+        caption="\"Additional board manager URLs\" is the bottom row",
+        image_ratio=0.32,
         note=T["board_note"],
         note_kind="warn",
         speaker=[
@@ -2581,12 +2586,13 @@ def lesson3(deck, T):
         "Mixing, and why steering has its own limit",
         [("left = forward + turn        right = forward - turn", 0),
          ("", 0),
-         ("Driving gets the full MOTOR_MAX of 255.", 0),
-         ("Steering gets turnMax, which is HALF of that by default.", 0),
+         ("Driving gets the full MOTOR_MAX of {}.".format(T["motor_max"]), 0),
+         ("Steering gets turnMax, which is {} of that by default - {}.".format(
+             T["turn_pct"], T["turn_max"]), 0),
          ("", 0),
          ("Why? Because at full power a small nudge sideways spins the vehicle "
-          "faster than anybody can correct for. Half-power steering makes it "
-          "controllable without making it slow.", 0),
+          "faster than anybody can correct for. Holding steering to {} makes it "
+          "controllable without making it slow.".format(T["turn_pct"]), 0),
          ("", 0),
          ("The full program lets you switch between the two with {}. Sharp mode "
           "is for spinning on the spot deliberately; normal mode is for actually "
@@ -2594,7 +2600,7 @@ def lesson3(deck, T):
          ("", 0),
          ("constrain() catches the overflow. forward 200 plus turn 60 is 260, "
           "which is more than a motor can take.", 0)],
-        lead="Full speed forwards, half speed steering",
+        lead="Full speed forwards, {} steering".format(T["turn_pct"]),
         speaker=[
             "Two lines of arithmetic. Write them on the board and work an "
             "example with the room before you show the slide.",
@@ -2639,7 +2645,7 @@ def lesson3(deck, T):
             "The minus sign in front of leftStickY is the up-is-negative "
             "fix from earlier. Point back at it.",
             "Ask which line sets speed and which sets steering, then which "
-            "one limits steering to half.",
+            "one limits steering to {}.".format(T["turn_pct"]),
             "This is the first program in the course they could plausibly "
             "have written themselves. Say so.",
         ])
@@ -2653,14 +2659,20 @@ def lesson3(deck, T):
         [("1.  Wheels off the ground. Upload. Check that up is forward and "
           "right is right BEFORE you put it down.", 0),
          ("2.  Put it on the floor in a clear space and drive.", 0),
-         ("3.  While driving, switch the pad off. What happens?", 0),
+         ("3.  Wheels off the ground, motors running. Carry the pad out "
+          "of range - round a corner, or thirty feet down the corridor - "
+          "and watch the wheels stop. Walk back and it picks up again.", 0),
+         ("Neither of these pads has an off switch, so out of range is how "
+          "you prove the failsafe. Power-cycling the VEHICLE shows the same "
+          "guard from the other side: the pad is on, the sticks work, and "
+          "nothing moves until it reconnects.", 1),
          ("4.  Set turnMax to MOTOR_MAX. Which is easier to aim?", 0),
          ("5.  Lines {} and {}: swap the + and the - and drive. What is "
           "wrong now?".format(mix_left_line, mix_right_line), 0),
          ("6.  Line {}: make it  rightSpeed = forward;  with no turn "
           "term. Why is that worse steering?".format(mix_right_line), 0)],
         expect=[("A vehicle that goes where you point it.", 0)],
-        questions=[("What happened when the controller switched off, and which "
+        questions=[("What happened when the pad went out of range, and which "
                     "four lines made that happen?", 0)],
         safety="Check the controls with the wheels off the ground first. Every "
                "time you upload a change.",
@@ -2668,8 +2680,16 @@ def lesson3(deck, T):
         speaker=[
             "Step 1 is not optional. Wheels off the ground, check up is "
             "forward and right is right, every single upload.",
-            "Step 3 is the failsafe demonstration. Have them do it "
-            "deliberately, somewhere safe, and watch the vehicle stop dead.",
+            "Step 3 is the failsafe demonstration, and it needs setting "
+            "up. Kevin caught this in the 2026-09-08 review: the slide used "
+            "to say switch the pad off, and neither of these controllers "
+            "CAN be switched off by hand. Walking out of range is the "
+            "demonstration that actually works.",
+            "Send one person down the corridor with the pad while the rest "
+            "of the group watches the wheels. Thirty feet, or one wall, is "
+            "usually enough. If the room is small, power-cycle the vehicle "
+            "instead and push the stick while it is disconnected - same "
+            "guard, seen from the other side.",
             "Steps 5 and 6 are deliberate breakages, and the line numbers "
             "on the slide are read out of the sketch when the deck is "
             "built, so they are right for the track in front of you.",
@@ -2685,8 +2705,9 @@ def lesson3(deck, T):
 
     deck.bullets(
         "Failsafe: what a robot does when it stops hearing you",
-        [("A radio link is not reliable. Batteries go flat, people walk between "
-          "the pad and the vehicle, controllers get switched off.", 0),
+        [("A radio link is not reliable. Batteries go flat, people walk "
+          "between the pad and the vehicle, and an operator walks further "
+          "than the radio reaches.", 0),
          ("", 0),
          ("The only safe behavior is to STOP. Not carry on with the last "
           "command, and not do something clever.", 0),
@@ -2758,7 +2779,8 @@ def lesson3(deck, T):
          ("4.  In your own words, what does map() do?", 0),
          ("5.  forward is 180 and turn is 100. What speed does each side get, "
           "before and after constrain()?", 0),
-         ("6.  Why is steering limited to half power by default?", 0),
+         ("6.  Why is steering limited to {} of full power by "
+          "default?".format(T["turn_pct"]), 0),
          ("7.  Write the three lines that stop the vehicle when the controller "
           "disconnects.", 0)],
         lead="Next lesson: the 32 LEDs, and what color actually is.",
@@ -2773,6 +2795,10 @@ def lesson3(deck, T):
             "constrain, then 255 and 80 after.",
             "For question 6: full-power steering is faster than a person "
             "can correct for.",
+            "The answer to question 7, in full:  "
+            "if (!Ps3.isConnected()) { drive(0, 0); return; }  - four lines "
+            "if you count the closing brace, and they go at the very top of "
+            "loop().",
             "Question 7 should be written out, not said. Check a few "
             "notebooks.",
         ])
@@ -3072,7 +3098,12 @@ def lesson4(deck, T):
             "pixel, and the back is worth pointing at: DI at one end, DO "
             "at the other, and 5 V and ground shared down the whole "
             "strip. That is the chain, in one picture.",
+            "The next slide is the same thing as a drawing, which is where "
+            "the wiring becomes obvious. Do not explain the chain twice - "
+            "say it here and prove it there.",
         ])
+
+    diagrams.neopixel_chain(deck)
 
     deck.table(
         "The whole NeoPixel API you need",
@@ -3117,6 +3148,47 @@ def lesson4(deck, T):
             "255, 255, 0 - and somebody will guess it.",
             "White costs three channels, which is the whole of the power "
             "budget slide two on from here.",
+            "Do not read the table on the next slide out. Put it up, give "
+            "them a minute, and ask for the two that surprise them.",
+        ])
+
+    deck.table(
+        "The colors, and what to write for each one",
+        ["Color", "The call", "Channels lit"],
+        [["Red", "strip.Color(255, 0, 0)", "1"],
+         ["Green", "strip.Color(0, 255, 0)", "1"],
+         ["Blue", "strip.Color(0, 0, 255)", "1"],
+         ["Yellow", "strip.Color(255, 255, 0)", "2"],
+         ["Cyan", "strip.Color(0, 255, 255)", "2"],
+         ["Magenta", "strip.Color(255, 0, 255)", "2"],
+         ["Orange", "strip.Color(255, 100, 0)", "2"],
+         ["Purple", "strip.Color(128, 0, 255)", "2"],
+         ["Pink", "strip.Color(255, 100, 100)", "3"],
+         ["White", "strip.Color(255, 255, 255)", "3"],
+         ["Warm white", "strip.Color(255, 160, 80)", "3"],
+         ["Off", "strip.Color(0, 0, 0)", "0"]],
+        lead="Start from these, then change one number at a time and watch "
+             "what it does. Nothing here is a magic value - every one is "
+             "three numbers between 0 and 255.",
+        col_widths=[3.0, 5.5, 2.5],
+        size=13,
+        note="The third column is the power budget in disguise. Orange costs "
+             "twice what red does, and white costs three times - which is why "
+             "a strip set to white is the one that browns out a battery.",
+        speaker=[
+            "These are the starting points, not the answer. Say that first, "
+            "or somebody will copy the table and never change a number.",
+            "Orange is the interesting row. Ask why it is not (255, 128, 0) "
+            "- it can be, and 100 just looks better on these LEDs. Color is "
+            "judged by eye, not calculated.",
+            "Purple and magenta are worth a moment. Neither is a wavelength; "
+            "they only exist as mixtures, which is the point of the "
+            "wavelength slide before this one.",
+            "The Channels lit column is the bridge to the power budget two "
+            "slides on. White costs three times what red costs, and that is "
+            "an ampere question, not an aesthetic one.",
+            "Warm white is the practical one for headlights. Straight white "
+            "looks blue-ish next to daylight.",
         ])
 
     deck.two_columns(
@@ -3617,6 +3689,7 @@ def lesson5(deck, T):
     deck.code(
         "The pattern, in four lines",
         ["unsigned long lastBlink = 0;",
+         "const unsigned long INTERVAL = 1000;",
          "",
          "void loop() {",
          "  if (millis() - lastBlink >= INTERVAL) {",
@@ -3911,8 +3984,10 @@ def lesson5(deck, T):
 
     deck.bullets_image(
         "What the servo outputs are for",
-        [("There are four servo headers on the top plate, and the full "
-          "program drives them from the RIGHT stick.", 0),
+        [("There are four servo headers on the MAIN CONTROL BOARD, under "
+          "the top plate, and the full program drives them from the RIGHT "
+          "stick. What you bolt on goes on the top plate; its leads come "
+          "down to the board through the cutout.", 0),
          ("", 0),
          ("Each servo owns one direction of the stick, so one stick aims "
           "four independent things and each sits centered when the stick is "
@@ -3931,6 +4006,10 @@ def lesson5(deck, T):
         speaker=[
             "Have the pan and tilt unit on the desk if you have one. It is "
             "much more convincing in the hand.",
+            "Point at the headers on a real board before you say anything "
+            "else. Kevin caught this in the 2026-09-08 review: the slide "
+            "used to put them on the top plate, and a student hunting for "
+            "them up there will not find them.",
             "The one-direction-per-servo scheme surprises people. Draw the "
             "stick on the board and mark which servo owns which push.",
             "The continuous-rotation warning is the practical one. Somebody "
@@ -3940,16 +4019,17 @@ def lesson5(deck, T):
         ])
 
     deck.bullets(
-        "The last two additions",
+        "The last three additions",
         [("THE KITT SCANNER, done properly.", 0),
          ("Lesson 4 used delay(), so the vehicle froze while it swept. "
           "The full program moves the dot every 40 ms off millis(), so "
           "you can drive with it running.", 1),
          ("Toggled with {}.".format(T["btn_scanner"]), 1),
          ("SHARP STEERING.", 0),
-         ("turnMax is normally MOTOR_MAX / 2, which makes it easy to "
-          "aim. {} flips it to full power, for spinning on the "
-          "spot.".format(T["btn_stickclick"]), 1),
+         ("turnMax is normally {0} of MOTOR_MAX - {1} of {2} - which "
+          "makes it easy to aim. {3} flips it to full power, for spinning "
+          "on the spot.".format(T["turn_pct"], T["turn_max"],
+                                T["motor_max"], T["btn_stickclick"]), 1),
          ("The bottom of the range is the same either way, so a gentle "
           "turn still breaks the wheels loose.", 1),
          ("THE STARTUP LIGHT SHOW.", 0),
@@ -3972,9 +4052,9 @@ def lesson5(deck, T):
         ])
 
     deck.table(
-        "Putting it all together  -  read {} in six passes".format(
+        "Putting it all together  -  read {} in six sections".format(
             T["full_program"]),
-        ["Pass", "What you are reading", "Ask yourself"],
+        ["Section", "What you are reading", "Ask yourself"],
         [["1", "The header comment and the #includes",
           "What does each library bring in, and which lesson met it?"],
          ["2", "The SETTINGS block",
@@ -3989,9 +4069,9 @@ def lesson5(deck, T):
          ["6", "loop(), top to bottom",
           "Find the failsafe, the button edges, the mixing, and the one "
           "place the lights are drawn."]],
-        lead="Six passes, ten minutes, in your groups. Do not start at line "
-             "one and read to the end - it is the slowest way in.",
-        col_widths=[0.8, 4.6, 5.6],
+        lead="Six sections, ten minutes, in your groups. Do not start at "
+             "line one and read to the end - it is the slowest way in.",
+        col_widths=[1.1, 4.5, 5.4],
         size=13,
         note="This is the same order you would use on any program you did "
              "not write: what it depends on, what it can be tuned to do, "
@@ -4000,12 +4080,14 @@ def lesson5(deck, T):
             "Give them the full ten minutes and stay quiet for most of it.",
             "The order matters. Vocabulary first, then the skeleton, then "
             "the detail - the same habit the advanced course opens with.",
-            "Pass 2 is the confidence builder. They will recognise "
+            "Section 2 is the confidence builder. They will recognise "
             "STICK_DEADZONE, MOTOR_MAX and the LED count as numbers they "
             "have already changed with their own hands.",
-            "Pass 6 is the assessment. Walk round and ask groups to point at "
-            "the failsafe. Anybody who can find it has understood Lesson 3.",
-            "Collect answers out loud before moving on, one pass per group.",
+            "Section 6 is the assessment. Walk round and ask groups to point "
+            "at the failsafe. Anybody who can find it has understood "
+            "Lesson 3.",
+            "Collect answers out loud before moving on, one section per "
+            "group.",
         ])
 
     deck.quiz(
@@ -4025,7 +4107,7 @@ def lesson5(deck, T):
         lead="You have written or read every one of these in an earlier "
              "lesson. This is the point where they are all in one file.",
         speaker=[
-            "Run this straight after the six passes, as a conversation.",
+            "Run this straight after the six sections, as a conversation.",
             "Answers: the NeoPixel protocol is fussy enough to be worth a "
             "library, whereas a motor is two pins and a duty value - "
             "ledcWrite is already in the core.",
@@ -4119,16 +4201,28 @@ def lesson5(deck, T):
          ("WAYPOINT NAVIGATION.  Give the program a LIST of moves - "
           "distance and heading - instead of one hard-coded square.", 0),
          ("SERVO PAN AND TILT.  Two servos and a bracket, aimed with the "
-          "right stick. The mount points are already there.", 0)],
+          "right stick. The headers are already on the board.", 0)],
         note="All five are within reach of what you learned in five lessons. "
-             "The range finder and the servos are the two the kit already has "
-             "parts for.",
+             "Two of them need nothing bought at all: the list of moves needs "
+             "no new parts, and the servo headers are already on the board.",
         speaker=[
             "These are real projects, not filler. Each one is a genuine "
             "addition to the program they now understand.",
-            "The range finder and the servos are the two the kit already "
-            "has parts for. Point that out - it is the difference between "
-            "an idea and a plan.",
+            "The waypoint list and the servos are the two that need nothing "
+            "bought. Point that out - it is the difference between an idea "
+            "and a plan.",
+            "FOR YOU, NOT FOR THEM: all five of these are written out in "
+            "full in src/projects/, one folder each, for both tracks. Each "
+            "one is l5c_drive_with_lights plus the one thing, so you can put "
+            "the two files side by side and the difference IS the project. "
+            "Kevin asked for these in the 2026-09-08 review, and the reason "
+            "was blunt: an instructor who cannot help a stuck student is not "
+            "acceptable.",
+            "Do not hand them out. Read the one a student has picked before "
+            "the session they start it in, and the questions they get stuck "
+            "on will be the ones you have already met. The header of each "
+            "file has a section called THE IDEA, which is the part worth "
+            "understanding rather than the feature.",
             "If anybody is staying on after the course, get them to pick "
             "one today while the enthusiasm is high.",
         ])
@@ -4136,7 +4230,8 @@ def lesson5(deck, T):
     deck.image_pair(
         "Two of those, already built",
         img("vehicle-with-arm.jpg"),
-        "A gripper arm on the top plate, driven from the servo headers",
+        "A gripper arm on the top plate, driven from the servo headers on "
+        "the board below it",
         img("robot-arm-6dof.jpg"),
         "The same idea taken further: six joints, six servos, one program",
         lead="Both of these are the same vehicle you have been driving, with "
@@ -4268,6 +4363,16 @@ def enrich(track):
     track["led_pin"] = srcfacts.number(led, "LED_PIN")
     track["led_count"] = srcfacts.number(led, "LED_COUNT")
     track["motor_pins"] = srcfacts.motor_pins(drive, track["pin_style"])
+
+    # turnMax is written in the sketches as a fraction of MOTOR_MAX, so it is
+    # read the same way. Kevin raised it from a half to three quarters in the
+    # 2026-09-08 review - a half was too slow - and the wording on every slide
+    # that mentions steering comes from these two lines rather than from
+    # somebody remembering to retype it.
+    track["turn_max"] = srcfacts.number(drive, "turnMax",
+                                        MOTOR_MAX=track["motor_max"])
+    track["turn_pct"] = "%d%%" % round(
+        100.0 * track["turn_max"] / track["motor_max"])
 
     percent = 100.0 * track["deadzone"] / track["stick_max"]
     track["deadzone_pct"] = "about %d%%" % round(percent)

@@ -12,7 +12,15 @@ knowing why each bug in the previous version was a bug.
 import os
 
 import diagrams
+import srcfacts
 from slidelib import Deck, Placeholder
+
+# Read out of Config.h rather than typed here, for the same reason the
+# beginner decks read theirs out of the sketches: Kevin raised the reduced
+# steering scale from 0.5 to 0.75 in the 2026-09-08 review, and a slide that
+# still said 0.5 would be teaching last month's vehicle.
+X_SCALE = srcfacts.const("Pathfinder_Op_Program12/Config.h",
+                         "NORMAL_MODE_X_SCALE")
 
 IMAGES = os.path.join(os.path.dirname(os.path.abspath(__file__)), "..", "images")
 
@@ -1028,7 +1036,8 @@ def lesson2(deck):
     deck.two_columns(
         "Throttle modes, and four servos on one stick",
         "Throttle modes  (L3 toggles)",
-        [("NORMAL - full forward speed, steering scaled to 0.5.", 0),
+        [("NORMAL - full forward speed, steering scaled to {}.".format(
+             X_SCALE), 0),
          ("FAST   - full forward speed, full steering authority.", 0),
          ("", 0),
          ("Only the STEERING scale changes. Top speed is the same in both.", 0),

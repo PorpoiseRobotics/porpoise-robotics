@@ -1,29 +1,51 @@
 /*
-  l5c_drive_with_lights.ino
-  Porpoise Robotics - Pathfinder beginner course (PS3 track), Lesson 5
+  p2_collision_warning.ino
+  Porpoise Robotics - Pathfinder beginner course (PS3 track)
+  TAKE IT FURTHER project - see Lesson 5, "projects that fit on this vehicle"
 
   WHAT THIS PROGRAM DOES
   ----------------------
-  Drives the vehicle AND runs the lights at the same time: headlights at the
-  front, tail lights at the back, brake lights when you stop, white reversing
-  lights, and amber turn signals on whichever side you are steering toward.
+  Stops the vehicle before it drives into something.
 
-  This is the last step before pathfinder_ps3.ino. Everything in here you have
-  already met in a smaller program:
+  An ultrasonic range finder looks straight ahead. Closer than 20 inches:
+  stop, flash the whole strip red, hold for three seconds, then let go.
+  Reverse still works the whole time - backing away is how you get out.
 
-        Lesson 2   PWM, two pins per motor, tank drive
-        Lesson 3   deadzone, map, mixing forward and turn
-        Lesson 4   the LED loop and the 31 - p mirror
-        Lesson 5a  millis() instead of delay()
-        Lesson 5b  edge detection with justPressed()
+  This is l5c_drive_with_lights with one thing added. Everything else in
+  the file you have already met. Open the two side by side and the
+  difference is the project.
 
-  All the full program adds on top of this is the servos, the KITT scanner,
-  and a startup light show.
+  WHAT YOU HAVE TO WIRE UP
+  ------------------------
+  An HC-SR04 range finder, facing forward, on the top plate.
+
+      HC-SR04 VCC   ->  5 V
+      HC-SR04 GND   ->  GND
+      HC-SR04 TRIG  ->  GPIO 32
+      HC-SR04 ECHO  ->  a divider, then GPIO 35
+
+  TRIG is safe to wire straight across: it is an INPUT to the sensor, and
+  3.3 volts is enough to trigger it.
+
+  ECHO is not. It is an OUTPUT from the sensor and it swings to FIVE
+  volts, which is more than an ESP32 pin will survive. So:
+
+      ECHO  ---[ 1k ]---+---[ 2k ]---  GND
+                        |
+                     GPIO 35
+
+      5 V x 2 / (1 + 2)  =  3.3 V
+
+  Lesson 2's divider again, doing the same job for a different reason.
+  GPIO 35 is INPUT ONLY, which is all ECHO needs.
+
+  No sensor connected? Nothing ever comes back, the program reads that as
+  "nothing is close", and the vehicle drives normally.
 
   SAFETY
   ------
-  Wheels off the ground for the first upload. Motors stop by themselves if the
-  controller disconnects.
+  Wheels off the ground for the first upload, every time. Motors stop by
+  themselves if the controller disconnects.
 
   BEFORE YOU CAN COMPILE THIS
   ---------------------------
@@ -34,32 +56,40 @@
 
   CONTROLS
   --------
-    Left stick        Drive. Up = forward, down = reverse, left/right = turn.
-    SQUARE            All lights on / off
-    D-pad UP          Headlights bright
-    D-pad DOWN        Headlights dim
+    Left stick          Drive. Up = forward, down = reverse, left/right = turn.
+    SQUARE              All lights on / off
+    D-pad UP / DOWN     Headlights bright / dim
 
-  THE ONE NEW IDEA: DRAW ONLY WHEN SOMETHING CHANGED
-  --------------------------------------------------
-  Pushing 32 LEDs out to the strip takes about a millisecond, and loop() runs
-  tens of thousands of times a second. Redrawing every pass would waste most of
-  the vehicle's attention and make the lights flicker.
+  THE IDEA
+  --------
+  Sound covers about 13,560 inches a second, so a ping takes 74
+  microseconds per inch to get there and another 74 to come back. Divide
+  the round trip by 148 and you have inches. That is the whole sensor.
 
-  So the program keeps a flag called lightsChanged. Anything that would alter
-  the picture sets it to true, and the drawing code at the bottom of loop()
-  only runs when it is set - then clears it. The full program does exactly the
-  same thing.
+  pulseIn() is the ONE blocking call in this program, and it is here
+  deliberately. The 12 millisecond timeout is the longest it can ever
+  take, it runs once every 60 milliseconds, and the advanced course does
+  the same job with an interrupt and blocks for nothing at all. Knowing
+  which compromises you have made is the point.
+
+  Note that STOP_INCHES and CLEAR_INCHES are different numbers. Stopping
+  at 20 and clearing at 20 would leave the vehicle chattering in and out
+  of the warning at exactly 20 inches. Two thresholds with a gap between
+  them is called HYSTERESIS, and you will meet it in every controller you
+  ever build.
 
   WHAT TO TRY
   -----------
-  1. Drive it and watch the lights follow what you do with the stick.
-  2. Add a fifth pattern: make the vehicle flash all 32 LEDs red when both
-     forward and turn are zero for more than three seconds. (Hint: you will
-     need a millis() timer from Lesson 5a.)
-  3. Make the turn signals BLINK rather than stay on. Do it with millis(), not
-     delay(), or the vehicle will stutter.
-  4. Compare this file with pathfinder_ps3.ino side by side. Make a list of
-     everything the full program has that this one does not.
+  1. Hold a book in front of it and watch the inches on the serial
+     monitor. Check them against a tape measure.
+  2. Point it at something soft - a jumper, a curtain. Ultrasound is bad
+     at soft things, and it is worth seeing that yourself.
+  3. Point it at a wall at a steep angle. Where did the ping go?
+  4. Make STOP_INCHES depend on speed, so the vehicle stops further out
+     when it is moving fast. That is what a real one does.
+  5. Set CLEAR_INCHES equal to STOP_INCHES and drive at a wall. Watch it
+     chatter. Put it back.
+  6. Fold this into your copy of the full program.
 */
 
 #include <Ps3Controller.h>
@@ -96,6 +126,21 @@ const int turnMax = (MOTOR_MAX * 3) / 4;
 const int STICK_MAX      = 127;
 const int STICK_DEADZONE = 20;
 
+
+// --- Range finder ----------------------------------------------------
+// See the wiring note at the top. ECHO goes through a divider; TRIG does
+// not need one.
+const int TRIG_PIN = 32;
+const int ECHO_PIN = 35;
+
+const float STOP_INCHES  = 20.0f;   // Closer than this and we stop
+const float CLEAR_INCHES = 26.0f;   // Further than this before we let go
+
+const unsigned long PING_EVERY_MS   = 60;
+const unsigned long STOP_HOLD_MS    = 3000;
+const unsigned long ECHO_TIMEOUT_US = 12000;   // About 6 feet, there and back
+const unsigned long WARN_BLINK_MS   = 150;
+
 // --- State ---
 enum LightPattern { LIGHTS_STOPPED, LIGHTS_FORWARD, LIGHTS_REVERSE, LIGHTS_LEFT, LIGHTS_RIGHT };
 
@@ -106,6 +151,16 @@ bool         lightsChanged  = true;
 
 bool squareWasDown = false;
 bool wasConnected  = false;
+
+
+enum RangeState { RANGE_CLEAR, RANGE_STOPPED, RANGE_BACKING_OFF };
+
+RangeState    rangeState     = RANGE_CLEAR;
+float         lastInches     = 999.0f;
+unsigned long lastPing       = 0;
+unsigned long stoppedAt      = 0;
+unsigned long lastWarnBlink  = 0;
+bool          warnBlinkOn    = false;
 
 bool justPressed(bool isDown, bool &wasDown) {
   bool isNewPress = isDown && !wasDown;
@@ -195,6 +250,40 @@ void showWaitingLights() {
   }
 }
 
+
+/*
+  One ping, and how far away the nearest thing in front of us is, in inches.
+
+  A 10 microsecond pulse on TRIG starts the ping. The sensor then holds ECHO
+  high for exactly as long as the sound was in the air, and pulseIn() measures
+  that. 148 microseconds per inch, because the sound has to get there AND back.
+
+  A timeout returns 0, which means nothing came back at all - so we report a
+  long way, not a short one. Getting that backwards makes a vehicle that
+  slams to a halt the moment the sensor is unplugged.
+*/
+float pingInches() {
+  digitalWrite(TRIG_PIN, LOW);
+  delayMicroseconds(2);
+  digitalWrite(TRIG_PIN, HIGH);
+  delayMicroseconds(10);
+  digitalWrite(TRIG_PIN, LOW);
+
+  unsigned long echoMicros = pulseIn(ECHO_PIN, HIGH, ECHO_TIMEOUT_US);
+  if (echoMicros == 0) {
+    return 999.0f;
+  }
+  return echoMicros / 148.0f;
+}
+
+/*
+  The collision warning: the whole strip, red, blinking fast.
+*/
+void showCollisionWarning() {
+  strip.fill(warnBlinkOn ? strip.Color(255, 0, 0) : strip.Color(0, 0, 0));
+  strip.show();
+}
+
 void setup() {
   Serial.begin(115200);
 
@@ -212,6 +301,10 @@ void setup() {
   ledcAttach(REAR_RIGHT_A,  MOTOR_PWM_FREQ, MOTOR_PWM_BITS);
   ledcAttach(REAR_RIGHT_B,  MOTOR_PWM_FREQ, MOTOR_PWM_BITS);
   drive(0, 0);
+
+  pinMode(TRIG_PIN, OUTPUT);
+  pinMode(ECHO_PIN, INPUT);
+  digitalWrite(TRIG_PIN, LOW);
 
   Ps3.begin(PS3_MAC_ADDRESS);
   Serial.println("Drive with lights. Waiting for the controller...");
@@ -261,6 +354,43 @@ void loop() {
 
   int leftSpeed  = constrain(forward + turn, -MOTOR_MAX, MOTOR_MAX);
   int rightSpeed = constrain(forward - turn, -MOTOR_MAX, MOTOR_MAX);
+  // ---- Ping, and decide whether we are allowed to go forward ----
+  if (millis() - lastPing >= PING_EVERY_MS) {
+    lastPing = millis();
+    lastInches = pingInches();
+
+    if (rangeState == RANGE_CLEAR && lastInches < STOP_INCHES) {
+      rangeState = RANGE_STOPPED;
+      stoppedAt = millis();
+      lightsChanged = true;
+      Serial.print("Something at ");
+      Serial.print(lastInches, 1);
+      Serial.println(" in. Stopping.");
+    }
+  }
+
+  if (rangeState == RANGE_STOPPED && millis() - stoppedAt >= STOP_HOLD_MS) {
+    rangeState = RANGE_BACKING_OFF;
+    lightsChanged = true;
+    Serial.println("Three seconds up. Reverse away, or steer around it.");
+  }
+
+  if (rangeState == RANGE_BACKING_OFF && lastInches > CLEAR_INCHES) {
+    rangeState = RANGE_CLEAR;
+    lightsChanged = true;
+    Serial.println("Clear.");
+  }
+
+  // While the warning is up, forward is refused and reverse is not. A vehicle
+  // you cannot back out of a corner is worse than one that hits the wall.
+  if (rangeState == RANGE_STOPPED) {
+    leftSpeed = 0;
+    rightSpeed = 0;
+  } else if (rangeState == RANGE_BACKING_OFF) {
+    if (leftSpeed > 0)  leftSpeed = 0;
+    if (rightSpeed > 0) rightSpeed = 0;
+  }
+
   drive(leftSpeed, rightSpeed);
 
   // ---- Which lighting picture matches what we are doing? ----
@@ -275,8 +405,15 @@ void loop() {
     lightsChanged = true;
   }
 
-  // ---- Redraw, but only if something actually changed ----
-  if (lightsChanged) {
+  // ---- Redraw. A collision warning takes the whole strip. ----
+  if (rangeState == RANGE_STOPPED) {
+    if (millis() - lastWarnBlink >= WARN_BLINK_MS) {
+      lastWarnBlink = millis();
+      warnBlinkOn = !warnBlinkOn;
+      showCollisionWarning();
+    }
+    lightsChanged = true;
+  } else if (lightsChanged) {
     lightsChanged = false;
     showDrivingLights();
   }

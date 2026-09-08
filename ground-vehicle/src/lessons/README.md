@@ -14,6 +14,10 @@ The slides that go with them are in
 
 ## Which folder
 
+After the course, Lesson 5 suggests five projects to build on top of the full
+program. Worked versions live in [`../projects/`](../projects/), for
+instructors rather than for students.
+
 | Folder | Course | Builds against |
 |---|---|---|
 | [`beginner_ps3/`](beginner_ps3/) | Pathfinder Beginner, PS3 track | `pathfinder_ps3` |

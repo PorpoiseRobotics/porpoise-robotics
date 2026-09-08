@@ -1,12 +1,19 @@
 """
 diagrams.py - the drawn figures used in the Pathfinder course decks.
 
-Everything here is built from native PowerPoint autoshapes and text boxes, so
-each figure stays editable, scales without going fuzzy, and prints sharp in
-black and white. Nothing is a bitmap.
+Almost everything here is built from native PowerPoint autoshapes and text
+boxes, so each figure stays editable, scales without going fuzzy, and prints
+sharp in black and white.
+
+The two exceptions are Kevin's own figures - the H-bridge and the NeoPixel
+chain. He drew those, they are ours, and they go on the slides as he drew
+them. Redrawing somebody's teaching diagram to satisfy a rule about file
+formats is the wrong trade.
 
 Each function takes a Deck, adds one slide, and returns it.
 """
+
+import os
 
 from pptx.dml.color import RGBColor
 from pptx.enum.shapes import MSO_CONNECTOR, MSO_SHAPE
@@ -23,6 +30,12 @@ LIGHT_TEAL = RGBColor(0xD6, 0xEC, 0xEE)
 LIGHT_AMBER = RGBColor(0xFA, 0xE6, 0xC8)
 LIGHT_RED = RGBColor(0xF6, 0xD8, 0xD8)
 LIGHT_GREY = RGBColor(0xE8, 0xEC, 0xF0)
+
+IMAGES = os.path.join(os.path.dirname(os.path.abspath(__file__)), "..", "images")
+
+
+def img(name):
+    return os.path.normpath(os.path.join(IMAGES, name))
 
 
 # ===================================================================
@@ -310,7 +323,9 @@ def pwm_duty(deck, title="Pulse width modulation: how a pin makes a half speed",
 
 def h_bridge(deck, title="The H-bridge: four switches, four things a motor can do", speaker=None):
     slide = deck.blank(title, speaker=speaker or [
-        "Four switches, and only the two diagonal pairs are useful. Trace each path with a finger on the projected slide.",
+        "Four boxes across the top: those are the four things the motor can be told to do. The picture underneath is ONE of them actually happening - the first one - drawn by Kevin.",
+        "Say that before anybody asks why they can only see two switches in the picture. The other two are the ones that are open.",
+        "Then trace the arrows with a finger on the projected slide, slowly, all the way round: in at + V, along the top, down the left, through the motor, back to GND. Have them do it too.",
         "Ask what happens if you close both switches on one side. Somebody will work out that it shorts the supply - which is exactly why the driver chip will not let you.",
         "Forward and reverse are the same circuit with the current running the other way. That is the whole trick, and it is why direction costs nothing extra in the program.",
         "Brake and coast are worth ten seconds each here; they come back properly in the advanced course.",
@@ -339,40 +354,71 @@ def h_bridge(deck, title="The H-bridge: four switches, four things a motor can d
         _label(slide, left, top + Inches(1.4), col_w, meaning.split("\n"),
                size=13, color=INK, align=PP_ALIGN.CENTER)
 
-    # The bridge itself, drawn once underneath.
-    bx = MARGIN_L + Inches(3.4)
-    by = top + Inches(2.35)
-    bw = Inches(6.4)
-    bh = Inches(1.9)
+    # Kevin's own figure, as he drew it, showing the first of the four boxes
+    # above actually happening. Not redrawn: he drew it, it is ours, and a
+    # teaching diagram is worth more than a rule about file formats.
+    picture_top = top + Inches(2.15)
+    deck._place_image(slide, img("h-bridge-forward-current.png"),
+                      MARGIN_L, picture_top, CONTENT_W, Inches(2.35))
 
-    _plain_line(slide, bx, by, bx + bw, by, color=NAVY, width=2.0)
-    _plain_line(slide, bx, by + bh, bx + bw, by + bh, color=NAVY, width=2.0)
-    _plain_line(slide, bx, by, bx, by + bh, color=NAVY, width=2.0)
-    _plain_line(slide, bx + bw, by, bx + bw, by + bh, color=NAVY, width=2.0)
-
-    mid_y = by + Emu(int(bh / 2))
-    _plain_line(slide, bx, mid_y, bx + Inches(2.4), mid_y, color=NAVY, width=2.0)
-    _plain_line(slide, bx + bw - Inches(2.4), mid_y, bx + bw, mid_y, color=NAVY,
-                width=2.0)
-
-    _box(slide, bx + Inches(2.4), mid_y - Inches(0.35), Inches(1.6), Inches(0.7),
-         "MOTOR", fill=WHITE, edge=NAVY, size=13, bold=True,
-         shape=MSO_SHAPE.OVAL)
-
-    _label(slide, bx - Inches(1.05), mid_y - Inches(0.5), Inches(1.0),
-           "IN1\n(pin A)", size=12, bold=True, color=TEAL, align=PP_ALIGN.RIGHT)
-    _label(slide, bx + bw + Inches(0.1), mid_y - Inches(0.5), Inches(1.1),
-           "IN2\n(pin B)", size=12, bold=True, color=TEAL)
-    _label(slide, bx + Inches(2.6), by - Inches(0.36), Inches(1.4), "+ V",
-           size=12, bold=True, color=GREY, align=PP_ALIGN.CENTER)
-    _label(slide, bx + Inches(2.6), by + bh + Inches(0.06), Inches(1.4), "GND",
-           size=12, bold=True, color=GREY, align=PP_ALIGN.CENTER)
+    _label(slide, MARGIN_L, picture_top + Inches(2.42), CONTENT_W,
+           "The arrows are the current: in at + V, along the top, down the "
+           "left, through the motor, back to GND. That is the FORWARD box "
+           "above. Turn pin B on instead of pin A and it all runs backwards.",
+           size=12, color=GREY, align=PP_ALIGN.CENTER)
 
     return slide
 
+# ===================================================================
+# 5. the NeoPixel chain
+# ===================================================================
+
+def neopixel_chain(deck, title="One wire, thirty-two lights", speaker=None):
+    """
+    Eight pixels in a row: power and ground shared, data passed along.
+
+    Kevin drew this for the 2026-09-08 review, because the lesson said the
+    chain idea in words and then showed a photograph of a stick, which is not
+    the same thing as showing the wiring.
+    """
+    slide = deck.blank(title, speaker=speaker or [
+        "Draw this on the board before you show the slide. Three wires in at "
+        "the left, three wires out at the right, and eight identical parts in "
+        "between.",
+        "Ask which of the three wires is different from the other two, and "
+        "why. Power and ground go to every pixel the same way; the data wire "
+        "does not.",
+        "Then walk a message along it with your finger: the first pixel keeps "
+        "the first color and passes the rest out of DATA OUT, which is the "
+        "next pixel's DATA IN.",
+        "That is the whole reason one pin can drive thirty-two lights, and "
+        "the reason the numbering runs in data order rather than in whatever "
+        "order looks tidy from outside.",
+        "Worth saying out loud: unplug the data lead going into pixel 4 and "
+        "pixels 4 to 31 all go dark, while 0 to 3 carry on. Power and ground "
+        "are a rail; data is a chain.",
+    ])
+
+    picture_top = BODY_TOP + Inches(0.70)
+    deck._place_image(slide, img("neopixel-chain-eight.png"),
+                      MARGIN_L, picture_top, CONTENT_W, Inches(2.10))
+
+    _label(slide, MARGIN_L, picture_top + Inches(2.20), CONTENT_W,
+           "Each box is one NeoPixel: a controller chip and three LEDs, one "
+           "red, one green and one blue. Eight are drawn here; your vehicle "
+           "has 32.",
+           size=12, color=GREY, align=PP_ALIGN.CENTER)
+
+    deck._note(slide,
+               "Power and ground are RAILS - every pixel taps the same two "
+               "wires. Data is a CHAIN - each pixel keeps the first message "
+               "and passes the rest out to the next one. That is why one pin "
+               "drives the whole strip, and why a break in the data line puts "
+               "out every pixel after it and none before it.", "info")
+    return slide
 
 # ===================================================================
-# 5. the 32-LED loop
+# 6. the 32-LED loop
 # ===================================================================
 
 def led_map(deck, title="Where every LED number is on the vehicle", speaker=None):
@@ -434,7 +480,7 @@ def led_map(deck, title="Where every LED number is on the vehicle", speaker=None
 
 
 # ===================================================================
-# 6. deadzone and map
+# 7. deadzone and map
 # ===================================================================
 
 def motor_signal_path(deck, title="How the ESP32 controls the motors",
@@ -601,7 +647,7 @@ def deadzone_map(deck, title="From thumbstick to motor speed", stick_max=127,
 
 
 # ===================================================================
-# 7. tank drive mixing
+# 8. tank drive mixing
 # ===================================================================
 
 def tank_mixing(deck, title="Mixing: one stick, two sides", speaker=None):
@@ -658,7 +704,7 @@ def tank_mixing(deck, title="Mixing: one stick, two sides", speaker=None):
 
 
 # ===================================================================
-# 8. delay vs millis
+# 9. delay vs millis
 # ===================================================================
 
 def millis_timeline(deck, title="Why the vehicle programs never call delay()", speaker=None):
@@ -736,7 +782,7 @@ def millis_timeline(deck, title="Why the vehicle programs never call delay()", s
 
 
 # ===================================================================
-# 9. dead reckoning square
+# 10. dead reckoning square
 # ===================================================================
 
 def square_path(deck, title="Dead reckoning: the vehicle has no idea where it is", speaker=None):
@@ -823,7 +869,7 @@ def square_path(deck, title="Dead reckoning: the vehicle has no idea where it is
 
 
 # ===================================================================
-# 10. RGB additive mixing
+# 11. RGB additive mixing
 # ===================================================================
 
 def rgb_mixing(deck, title="One pixel is three LEDs, and color is a mixture", speaker=None):
@@ -902,7 +948,7 @@ def rgb_mixing(deck, title="One pixel is three LEDs, and color is a mixture", sp
 
 
 # ===================================================================
-# 11. servo pulse widths
+# 12. servo pulse widths
 # ===================================================================
 
 def servo_pulse(deck, title="A servo listens to the LENGTH of a pulse", speaker=None):
@@ -956,7 +1002,7 @@ def servo_pulse(deck, title="A servo listens to the LENGTH of a pulse", speaker=
 
 
 # ===================================================================
-# 12. lighting state machine
+# 13. lighting state machine
 # ===================================================================
 
 def state_machine(deck, title="The lighting state machine", speaker=None):
@@ -1023,7 +1069,7 @@ def state_machine(deck, title="The lighting state machine", speaker=None):
 
 
 # ===================================================================
-# 13. current signature
+# 14. current signature
 # ===================================================================
 
 def current_signature(deck, title="What a healthy motor looks like to a current sensor", speaker=None):
@@ -1095,7 +1141,7 @@ def current_signature(deck, title="What a healthy motor looks like to a current 
 
 
 # ===================================================================
-# 14. Ohm's law and the power law
+# 15. Ohm's law and the power law
 # ===================================================================
 
 def ohms_and_power_law(deck,
@@ -1187,7 +1233,7 @@ def ohms_and_power_law(deck,
 
 
 # ===================================================================
-# 15. the LED circuit students wire in Lesson 1
+# 16. the LED circuit students wire in Lesson 1
 # ===================================================================
 
 def led_circuit(deck, title="The circuit you are about to build", speaker=None):
@@ -1322,7 +1368,7 @@ def led_circuit(deck, title="The circuit you are about to build", speaker=None):
 
 
 # ===================================================================
-# 16. series and parallel
+# 17. series and parallel
 # ===================================================================
 
 def series_parallel(deck, title="Series and parallel: two ways to wire two loads", speaker=None):
@@ -1403,7 +1449,7 @@ def series_parallel(deck, title="Series and parallel: two ways to wire two loads
 
 
 # ===================================================================
-# 17. six degrees of freedom
+# 18. six degrees of freedom
 # ===================================================================
 
 def six_dof(deck, title="Six degrees of freedom, and the two your rover has",
@@ -1492,7 +1538,7 @@ def six_dof(deck, title="Six degrees of freedom, and the two your rover has",
 
 
 # ===================================================================
-# 18. plotting a maneuver from bearings
+# 19. plotting a maneuver from bearings
 # ===================================================================
 
 def bearing_plot(deck, title="Plotting where a maneuver ends up", speaker=None):
@@ -1598,7 +1644,10 @@ def bearing_plot(deck, title="Plotting where a maneuver ends up", speaker=None):
             x += widths[index]
 
     _label(slide, tx, head_top + row_h * (len(rows) + 1) + Inches(0.12), tw,
-           "At 3.34 ft/s a 10 s leg is 33.4 ft, and sin(45) = cos(45) = 0.707.",
+           ["At 3.34 ft/s a 10 s leg is 33.4 ft, and sin(45) = cos(45) "
+            "= 0.707.",
+            "In Excel:  =SIN(RADIANS(45))  or  =SIN(45*(3.14/180))  =  "
+            "0.707"],
            size=14, color=GREY)
 
     deck._note(slide,
@@ -1609,7 +1658,7 @@ def bearing_plot(deck, title="Plotting where a maneuver ends up", speaker=None):
 
 
 # ===================================================================
-# 19. the pins this vehicle uses
+# 20. the pins this vehicle uses
 # ===================================================================
 
 def pin_reference(deck, title="The ESP32 pins this vehicle actually uses",
@@ -1634,7 +1683,6 @@ def pin_reference(deck, title="The ESP32 pins this vehicle actually uses",
         "The two facts worth saying out loud: GPIO 34 to 39 are INPUT ONLY "
         "and have no internal pull-up, and GPIO 0 is the BOOT button, so "
         "holding it down at reset does something special.",
-        "Worth printing and taping inside the lid of the parts box.",
     ])
 
     # srcfacts hands these back as numbers; every label on a slide is text.
