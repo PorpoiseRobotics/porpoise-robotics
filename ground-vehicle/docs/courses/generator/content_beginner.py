@@ -4201,16 +4201,28 @@ def lesson5(deck, T):
          ("WAYPOINT NAVIGATION.  Give the program a LIST of moves - "
           "distance and heading - instead of one hard-coded square.", 0),
          ("SERVO PAN AND TILT.  Two servos and a bracket, aimed with the "
-          "right stick. The mount points are already there.", 0)],
+          "right stick. The headers are already on the board.", 0)],
         note="All five are within reach of what you learned in five lessons. "
-             "The range finder and the servos are the two the kit already has "
-             "parts for.",
+             "Two of them need nothing bought at all: the list of moves needs "
+             "no new parts, and the servo headers are already on the board.",
         speaker=[
             "These are real projects, not filler. Each one is a genuine "
             "addition to the program they now understand.",
-            "The range finder and the servos are the two the kit already "
-            "has parts for. Point that out - it is the difference between "
-            "an idea and a plan.",
+            "The waypoint list and the servos are the two that need nothing "
+            "bought. Point that out - it is the difference between an idea "
+            "and a plan.",
+            "FOR YOU, NOT FOR THEM: all five of these are written out in "
+            "full in src/projects/, one folder each, for both tracks. Each "
+            "one is l5c_drive_with_lights plus the one thing, so you can put "
+            "the two files side by side and the difference IS the project. "
+            "Kevin asked for these in the 2026-09-08 review, and the reason "
+            "was blunt: an instructor who cannot help a stuck student is not "
+            "acceptable.",
+            "Do not hand them out. Read the one a student has picked before "
+            "the session they start it in, and the questions they get stuck "
+            "on will be the ones you have already met. The header of each "
+            "file has a section called THE IDEA, which is the part worth "
+            "understanding rather than the feature.",
             "If anybody is staying on after the course, get them to pick "
             "one today while the enthusiasm is high.",
         ])

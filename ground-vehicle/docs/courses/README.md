@@ -49,6 +49,13 @@ students about the two identical "ESP32 Dev Module" entries in the board menu.
 | `l4_lighting_state_machine.pptx` | State machines, non-blocking animation, dirty flags | `a4a_led_state_machine`, `a4b_turn_signal_larson` |
 | `l5_sensors_and_self_test.pptx` | I2C, current sensing, self-test, diagnostics | `a5a_i2c_scan`, `a5b_ina219_current` |
 
+Beginner Lesson 5 finishes by suggesting five projects students can build on
+top of the full program. All five are written out in
+[`../../src/projects/`](../../src/projects/), one folder per project per track.
+They are **for instructors**: each one is `l5c_drive_with_lights` plus the one
+new thing, so you can put the two files side by side and read the difference.
+Do not hand them to a student who is about to build one.
+
 Every lesson ends with a short quiz slide. Every hands-on block is a
 distinctively formatted "Do it now" slide naming the sketch, the steps, what
 students should see, and the questions to answer.
