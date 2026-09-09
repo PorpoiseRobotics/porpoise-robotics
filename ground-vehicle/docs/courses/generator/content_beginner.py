@@ -133,14 +133,9 @@ SWITCH = {
     "read_button": "myController->x()",
     "connected": "myController->isConnected()",
     "guard": "myController == nullptr || !myController->isConnected()",
-    # Kevin's screenshot has the espressif url in the box, which is the
-    # wrong one for this track, so this stays a placeholder until somebody
-    # takes the same shot with the bluepad32 url in it.
-    "boards_screenshot": Placeholder(
-        "SCREENSHOT: Arduino IDE Preferences",
-        "File > Preferences with the bluepad32 URL above pasted into the "
-        "\"Additional boards manager URLs\" box. Kevin's screenshot shows "
-        "the espressif URL, which is the PS3 track's."),
+    # Its own shot, with the bluepad32 url in the box. Kevin's screenshot
+    # has the espressif url, which is the PS3 track's.
+    "boards_screenshot": img("ide-preferences-boards-url-switch.png"),
     "analog_extra": "The TRIGGERS are analog too. Bluepad32 reports them "
                     "as brake() and throttle(), not as buttons.",
     "analog_speaker": "The two triggers are ANALOG on this track as well. "
@@ -581,10 +576,7 @@ def lesson1(deck, T):
 
     deck.image_pair(
         "Three generations of Pathfinder",
-        Placeholder(
-            "PHOTO: Gen 1 and Gen 2 together",
-            "Gen 1 beside a Gen 2, same angle, so the change in the "
-            "frame and the electronics is obvious."),
+        img("vehicle-gen1-and-gen2.jpg"),
         "Gen 1 and Gen 2  -  an open chassis, board and battery on top",
         img("vehicle-gen3-top.jpg"),
         "Gen 3  -  one piece, everything inside, a clear top plate to build on",
@@ -635,11 +627,9 @@ def lesson1(deck, T):
         img("vehicle-gen3-top.jpg"),
         "Looking down through the lexan top plate: board, battery, and the "
         "four motors inside the frame",
-        Placeholder(
-            "PHOTO: a Gen 3 driving upside down",
-            "Wheels are at the vehicle's vertical center, so it runs either "
-            "way up. Taken from floor level, mid-drive."),
-        "Flip it over and it keeps going",
+        img("vehicle-gen3-upside-down.jpg"),
+        "Flip it over and it keeps going  -  the wheels reach past the "
+        "frame on both sides",
         lead="The two things that make a Gen 3 different are easiest to "
              "show rather than describe.",
         speaker=[
@@ -648,8 +638,9 @@ def lesson1(deck, T):
             "The upside-down trick is the one they will remember. If you "
             "have a Gen 3 to hand, do it live rather than showing a "
             "picture.",
-            "The placeholder is a photograph we still owe this deck. Until "
-            "it arrives, demonstrate it instead.",
+            "The photograph is the vehicle sitting on its back. What it "
+            "shows is why it works: the wheels stand proud of the frame on "
+            "both faces, so there is no wrong way up.",
         ])
 
     deck.two_columns(
@@ -694,10 +685,7 @@ def lesson1(deck, T):
 
     deck.image_slide(
         "The Gen 3 control board, drawn out",
-        Placeholder(
-            "SCHEMATIC: Gen 3 control board",
-            "The full circuit diagram, exported as an image. A reference "
-            "page - nobody is asked to read it today."),
+        img("control-board-schematic.jpg"),
         caption="You are not expected to read this today. It is here so "
                 "you know it exists, and so you can come back to it.",
         speaker=[
@@ -996,10 +984,7 @@ def lesson1(deck, T):
          ("", 0),
          ("A pin supplies about 12 mA safely. Plenty for one LED through "
           "220 ohms, and the reason you never drive a motor off a pin.", 0)],
-        Placeholder(
-            "PHOTO: our own breadboard wired to GPIO 2 and GND",
-            "Same circuit as the previous slide, powered from the vehicle "
-            "through the top-plate cutout, LED lit."),
+        img("breadboard-powered-from-vehicle.jpg"),
         caption="What yours should look like",
         image_ratio=0.44,
         note="Any GND pin will do - there are several, and they are all the "
@@ -1012,8 +997,9 @@ def lesson1(deck, T):
             "The 12 milliamp figure is worth saying: it is why an LED is fine "
             "straight off a pin and a motor never is. That is what the "
             "H-bridge in Lesson 2 is for.",
-            "The photograph here is still to be taken. Until it arrives, wire "
-            "one up on the desk and hold it where people can see.",
+            "Walk the photograph with them: red into pin 2 on the dev "
+            "module, yellow into a GND socket on the expansion header. Two "
+            "wires, and the breadboard is running off the vehicle.",
         ])
 
     deck.code(

@@ -36,7 +36,7 @@ students about the two identical "ESP32 Dev Module" entries in the board menu.
 | `l1_introduction.pptx` | Mechatronics, the vehicle, the Arduino IDE, first programs | `l1a_blink`, `l1b_serial_monitor`, `l1c_first_pixel` |
 | `l2_motor_control.pptx` | H-bridges, PWM, tank drive, dead reckoning | `l2a_one_motor`, `l2b_speed_ramp`, `l2c_maneuver_square` |
 | `l3_controller_programming.pptx` | Bluetooth, deadzones, mapping, mixing, failsafe | `l3a_controller_check`, `l3b_deadzone_and_map`, `l3c_tank_drive` |
-| `l4_neopixel_leds.pptx` | Addressable LEDs, colour, power budget, patterns | `l4a_all_one_colour`, `l4b_led_map`, `l4c_patterns` |
+| `l4_neopixel_leds.pptx` | Addressable LEDs, colour, power budget, patterns | `l4a_all_one_color`, `l4b_led_map`, `l4c_patterns` |
 | `l5_maneuvers_with_lights.pptx` | Non-blocking timing, edge detection, the full program | `l5a_millis_not_delay`, `l5b_button_toggle`, `l5c_drive_with_lights` |
 
 ### Advanced

@@ -2272,11 +2272,9 @@ def lesson5(deck):
         "Where the current sensor actually is",
         img("vehicle-gen3-top.jpg"),
         "A Gen 3, looking down through the lexan top plate",
-        Placeholder(
-            "PHOTO: the INA219 on a Gen 3 board, close up",
-            "Close enough to read the part, with the shunt and the two I2C "
-            "wires to GPIO 32 and 33 visible."),
-        "The INA219, and the shunt it measures across",
+        img("control-board-ina219.jpg"),
+        "Circled: the INA219. Beside it, R7 and R8  -  the shunt it "
+        "measures across",
         lead="Everything in this lesson depends on one small part that only "
              "Gen 3 vehicles carry. Find it before you write code that "
              "assumes it.",
@@ -2287,8 +2285,9 @@ def lesson5(deck):
             "what the whole measurement happens across.",
             "Two wires to GPIO 32 and 33 is the entire electrical interface. "
             "Everything else is I2C protocol.",
-            "The close-up photograph is still outstanding for this deck. "
-            "Until it arrives, pass a board round.",
+            "In the photograph the shunt is the pair marked R005 immediately "
+            "right of the circled part. Point at them - a five-milliohm "
+            "resistor looks like nothing, and that is the point.",
         ])
 
     diagrams.current_signature(deck)
