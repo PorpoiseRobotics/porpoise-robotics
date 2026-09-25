@@ -2,8 +2,27 @@
 
 > A security camera system built for deployment at a school.
 
-**Status: scaffold only.** No code has been written yet. Everything marked TBD is waiting on the
-team.
+**Status: first code landed, nothing deployed.** Two sketches now live in [`src/`](src/) — a
+sensor node and a camera node, both talking over
+[PorpoiseNet](../shared/PorpoiseNet/README.md). Neither has been flashed to a board yet, and the
+privacy questions below still block any deployment. Everything marked TBD is waiting on the team.
+
+### What is in `src/`
+
+| Sketch | What it does |
+|---|---|
+| [`PorpoiseNet_Sensor/`](src/PorpoiseNet_Sensor/) | PIR motion sensor and door switch. Broadcasts one alert when tripped, and listens so the base can arm and disarm it. |
+| [`PorpoiseNet_CameraNode/`](src/PorpoiseNet_CameraNode/) | Hears an alert, captures a frame, writes it to SD, optionally uploads it over WiFi, then broadcasts a receipt saying what it saved. |
+
+**Images never travel over the radio.** An ESP-NOW frame holds 250 bytes; a small JPEG is around
+fifteen thousand. The radio carries the *event* ("zone 3, motion") and the *receipt* ("saved
+`n21_000007.jpg`, 18 kB"). The picture goes to the SD card, or to a server over real WiFi. That
+split is deliberate, and it is also a privacy property: nothing recognisable is ever broadcast
+over an unencrypted link.
+
+Both sketches read their WiFi settings from a `secrets.h` that `.gitignore` blocks. Copy the
+`secrets.example.h` sitting next to the sketch, fill in your own values, and never commit the
+result.
 
 ---
 
