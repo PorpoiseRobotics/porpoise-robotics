@@ -10,7 +10,7 @@ serving students and educators. Learn more at
 [porpoiserobotics.org](https://www.porpoiserobotics.org/).
 
 This repository is where the engineering work lives: source code, design documents, and build
-notes for three projects.
+notes for four projects — plus one folder holding code they share.
 
 ---
 
@@ -39,7 +39,8 @@ Four projects, each in its own top-level folder:
 ### [`homeland-security-camera/`](homeland-security-camera/README.md)
 A security camera system intended for **deployment at a school**. Because it involves a camera
 system on a campus, this project has stricter rules about what may be written down here — see
-its README before contributing.
+its README before contributing. It now has its first code: a camera node and a perimeter sensor
+node that talk to each other over radio, with no router or server between them.
 
 ### [`ground-vehicle/`](ground-vehicle/README.md)
 A ground-based unmanned vehicle platform — a rover that drives on land. This is where the
@@ -53,9 +54,16 @@ the project README.
 
 ### [`find-the-target/`](find-the-target/README.md)
 A STEM mission activity built from an ESP32-CAM, a pair of ESP-NOW radios, and a laptop base
-station, with the slides and setup guide students follow.
+station, with the slides and setup guide students follow. Now has two variants: the original
+one-way telemetry link, and a two-way mesh (`PorpoiseNet_Vehicle` + `PorpoiseNet_Base`) where a
+rover that spots the target tells every other rover on the field, not just the base.
 
-Every project folder has the same starter layout:
+### [`shared/`](shared/README.md)
+Not a project — code that more than one project uses, so a fix made once is a fix everywhere.
+Today that is [**PorpoiseNet**](shared/PorpoiseNet/README.md), the two-way ESP-NOW radio layer
+that both the Find the Target mesh variant and the security camera system run on.
+
+Every *project* folder has the same starter layout:
 
 ```
 project-name/
@@ -89,8 +97,11 @@ Details and the safe way to handle configuration are in
 
 ## Status
 
-This repository is a fresh scaffold. It contains structure and documentation only — no source
-code has been written yet. Sections marked **TBD** are waiting on the team to fill in.
+`ground-vehicle/` holds the team's existing Pathfinder and Find the Target code, moved in from a
+OneDrive export, now with a two-way PorpoiseNet mesh option alongside the original telemetry link.
+`homeland-security-camera/` has its radio layer and nothing above it — and its privacy questions
+are still unanswered, which blocks any actual deployment. `submersible-vehicle/` is still
+structure and documentation only. Sections marked **TBD** are waiting on the team.
 
 ## License
 

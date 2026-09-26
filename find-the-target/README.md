@@ -7,12 +7,22 @@
 
 ## What this project is
 
-A classroom mission rather than a vehicle platform. It combines three pieces of hardware and a
-laptop:
+A classroom mission rather than a vehicle platform. There are now two ways to run it, sharing the
+same camera and base station idea but different radios:
+
+- **`FindTheTarget_v4`** (and the earlier `legacy` versions) — **one-way** telemetry. A vehicle
+  ESP32 pushes sensor and GPS data to a base-station ESP32 over ESP-NOW; the base station only
+  listens.
+- **`PorpoiseNet_Vehicle` + `PorpoiseNet_Base`** — **two-way** mesh, built on
+  [`shared/PorpoiseNet/`](../shared/PorpoiseNet/README.md). A rover that spots the target
+  announces it to every other rover on the field, not just the base, and the base can send
+  commands back (e.g. "recall") instead of only printing what it hears.
+
+Both variants use the same three pieces of hardware and a laptop:
 
 - **CameraWebServer** — an ESP32-CAM streaming video over WiFi.
-- **ESPNow_Sender / ESPNow_Receiver** — a pair of ESP32 boards passing data over ESP-NOW, which
-  is a low-latency radio protocol that does not need a WiFi network.
+- A pair (or fleet) of ESP32 boards passing data over ESP-NOW, a low-latency radio protocol that
+  does not need a WiFi network.
 - **BaseStation** — a Python program with an HTML dashboard, run on a laptop, that reads waypoints
   from a spreadsheet and shows what the vehicle is doing.
 
@@ -25,19 +35,24 @@ guide students follow.
 find-the-target/
 ├── README.md
 ├── src/
-│   ├── FindTheTarget_v4/    current version
-│   └── legacy/              superseded versions, kept for reference
-├── docs/                    slides, setup guide, design notes
-└── hardware/                wiring, bill of materials
+│   ├── FindTheTarget_v4/      current one-way version
+│   ├── PorpoiseNet_Vehicle/   two-way mesh: rover
+│   ├── PorpoiseNet_Base/      two-way mesh: base station
+│   └── legacy/                superseded versions, kept for reference
+├── docs/                      slides, setup guide, design notes
+└── hardware/                  wiring, bill of materials
 ```
 
-Work on **v4**. Version 3 is kept in `src/legacy/` only so old builds can be looked up; do not
-start anything new from it. See [`src/legacy/README.md`](src/legacy/README.md).
+Version 3 is kept in `src/legacy/` only so old builds can be looked up; do not start anything new
+from it. See [`src/legacy/README.md`](src/legacy/README.md).
 
 ## Status
 
-Moved here from `dump/` during a repository tidy-up. The code arrived as-is and has not been
-reviewed or documented beyond the README that came with each version. Open questions worth
+`FindTheTarget_v4` moved here from `dump/` during a repository tidy-up, arrived as-is, and has not
+been reviewed or documented beyond the README that came with it. `PorpoiseNet_Vehicle` and
+`PorpoiseNet_Base` are new: a two-way mesh built on the shared ESP-NOW layer that the security
+camera project also runs on — see [`shared/PorpoiseNet/README.md`](../shared/PorpoiseNet/README.md)
+for the protocol and the three settings that must match on every board. Open questions worth
 recording here as they are answered:
 
 - Which vehicle the mission runs on — the [ground vehicle](../ground-vehicle/README.md), or
@@ -45,6 +60,8 @@ recording here as they are answered:
 - Whether the base station is expected to run on a school laptop, and what has to be installed
   on it first.
 - What the WiFi and ESP-NOW setup assumes about the network it is used on.
+- Whether the team standardizes on v4 (one-way) or the PorpoiseNet mesh (two-way) going forward,
+  or keeps both.
 
 ## Safety and privacy
 
