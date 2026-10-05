@@ -544,8 +544,9 @@ Adafruit NeoPixel.
   If something has to give, give the quiz, never the pack-up.
 - **The questionnaires have not been used with students yet.** The tracker's
   formulas were checked against a set of made-up answers worked out by hand,
-  recalculated in LibreOffice. They have not been opened in Excel or Google
-  Sheets yet.
+  recalculated in LibreOffice. The blank tracker has also been opened in
+  Excel, which calculated every formula with no errors. It has not been tried
+  in Google Sheets yet.
 - **Twelve pictures are outstanding** (table above).
 - The letter to families has blanks for dates, place and contacts, and a
   photo-permission slip to delete if your organization has its own.
