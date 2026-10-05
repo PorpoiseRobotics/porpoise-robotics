@@ -1,6 +1,8 @@
 # Pathfinder course slides
 
-Three courses, five three-hour lessons each, as editable PowerPoint files.
+Four courses, as editable PowerPoint files: three of five three-hour lessons
+each, and **Pathfinder Explorers**, twelve one-hour lessons for students aged 9
+to 13.
 
 Each course teaches one of the Pathfinder operating programs in
 [`../../src/`](../../src/). The follow-along sketches students upload during
@@ -15,6 +17,7 @@ the lessons live in [`../../src/lessons/`](../../src/lessons/).
 | [`beginner-ps3/`](beginner-ps3/) | Pathfinder Beginner, PS3 | `pathfinder_ps3` | New to robotics, driving with a PS3 controller |
 | [`beginner-switch/`](beginner-switch/) | Pathfinder Beginner, Switch | `pathfinder_nintendoswitch` | New to robotics, driving with a Nintendo Switch controller |
 | [`advanced/`](advanced/) | Pathfinder Advanced | `Pathfinder_Op_Program12` | Students who have finished a beginner course and can read C++ |
+| [`explorers/`](explorers/) | Pathfinder Explorers (draft) | its own short sketches, Switch track | Ages 9 to 13, no experience. Twelve one-hour lessons. |
 
 The two beginner courses are the **same course**. They differ only where the
 hardware forces them to: the controller, the board package, the stick range,
@@ -48,6 +51,15 @@ students about the two identical "ESP32 Dev Module" entries in the board menu.
 | `l3_bluetooth_and_storage.pptx` | Callbacks, the allowlist, EEPROM that is not EEPROM | `a3a_controller_address`, `a3b_eeprom_settings` |
 | `l4_lighting_state_machine.pptx` | State machines, non-blocking animation, dirty flags | `a4a_led_state_machine`, `a4b_turn_signal_larson` |
 | `l5_sensors_and_self_test.pptx` | I2C, current sensing, self-test, diagnostics | `a5a_i2c_scan`, `a5b_ina219_current` |
+
+### Explorers (ages 9 to 13)
+
+Twelve one-hour decks, `l01_meet_pathfinder.pptx` to `l12_mission_day.pptx`,
+with a student workbook, a letter to families and a certificate in
+[`explorers/handouts/`](explorers/handouts/), plus three questionnaires and a tracker for
+seeing how each cohort grows. It has its own instructor guide,
+covering setup, materials, safety and the photographs still owed:
+[`explorers/README.md`](explorers/README.md).
 
 Beginner Lesson 5 finishes by suggesting five projects students can build on
 top of the full program. All five are written out in
@@ -96,6 +108,9 @@ colour — can be made in one place before anybody has started editing.
 python ground-vehicle/docs/courses/generator/build_decks.py
 ```
 
+Name a course to build only that one - `build_decks.py explorers` - and do so
+whenever a deck in another course has been edited by hand.
+
 It needs `python-pptx` (`pip install python-pptx`). Files in
 [`generator/`](generator/):
 
@@ -106,6 +121,12 @@ It needs `python-pptx` (`pip install python-pptx`). Files in
 | `diagrams.py` | The nineteen drawn figures, as native shapes |
 | `content_beginner.py` | The five beginner lessons, parameterised by track |
 | `content_advanced.py` | The five advanced lessons |
+| `content_explorers.py` | The twelve Explorers lessons |
+| `diagrams_explorers.py` | The Explorers figures, drawn for younger students |
+| `build_handouts.py` | The Explorers Mission Log, family letter, certificate, questionnaires and questionnaire tracker |
+| `questionnaires.py` | The Explorers questionnaire wording, in one place for the forms and the tracker |
+| `docxlite.py` | A small Word writer for the handouts, standard library only |
+| `sync_explorer_h.py` | Copies the Explorers `explorer.h` into every sketch, or checks the copies agree |
 | `srcfacts.py` | Reads constants out of the `.ino` files so slides cannot quote stale numbers |
 | `lint_decks.py` | Checks every deck for text overflow, overlapping text and off-slide shapes |
 | `check_code.py` | Checks every code listing still matches the source it came from |
