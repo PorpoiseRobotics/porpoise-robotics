@@ -23,6 +23,7 @@ instructors rather than for students.
 | [`beginner_ps3/`](beginner_ps3/) | Pathfinder Beginner, PS3 track | `pathfinder_ps3` |
 | [`beginner_switch/`](beginner_switch/) | Pathfinder Beginner, Switch track | `pathfinder_nintendoswitch` |
 | [`advanced/`](advanced/) | Pathfinder Advanced | `Pathfinder_Op_Program12` |
+| [`explorers/`](explorers/) | Pathfinder Explorers, ages 9 to 13 (draft) | its own helper tab, `explorer.h` |
 
 **Every sketch uses the same Arduino IDE settings as the full program for its
 track.** That is the whole reason the beginner sketches exist twice: a student
@@ -33,6 +34,7 @@ sets their board package up once in Lesson 1 and never touches it again.
 | `beginner_ps3` | esp32 by Espressif Systems, **3.0.7** | Tools > Board > esp32 > ESP32 Dev Module | PS3 Controller Host, Adafruit NeoPixel |
 | `beginner_switch` | esp32_bluepad32 by Ricardo Quesada, **4.1.0** | Tools > Board > esp32_bluepad32 > ESP32 Dev Module | Adafruit NeoPixel |
 | `advanced` | esp32_bluepad32 by Ricardo Quesada, **4.1.0** | Tools > Board > esp32_bluepad32 > ESP32 Dev Module | Adafruit NeoPixel |
+| `explorers` | esp32_bluepad32 by Ricardo Quesada, **4.1.0** | Tools > Board > esp32_bluepad32 > ESP32 Dev Module | Adafruit NeoPixel |
 
 The two board packages are **mutually exclusive** and both add an entry called
 "ESP32 Dev Module" to the board menu. A pile of errors that make no sense is
@@ -93,6 +95,36 @@ register hundreds of times. Do not "fix" it.
 `a1a_tabs_and_config` is three files on purpose — the sketch, `Config.h` and
 `Blinker.ino` — so students can see the tab mechanism and break it.
 
+## The Explorers sketches
+
+For students aged 9 to 13. Every folder carries a copy of `explorer.h`, a
+helper tab that handles the motors, the lights and the controller, so each
+student program fits on one screen. The master copy is
+[`explorers/explorer.h`](explorers/explorer.h); edit that one and run
+`docs/courses/generator/sync_explorer_h.py` to copy it into every sketch.
+
+| Sketch | Lesson | The one idea |
+|---|---|---|
+| `e00_claim_controller` | setup | **Instructors only.** Saves which controller belongs to a vehicle, in the vehicle's own memory |
+| `e01a_learner_drive` | 1 | The whole thing, preloaded, at the learner speed limit |
+| `e02a_hello_rover` | 2 | `setup()` runs once, `loop()` runs forever |
+| `e02b_bug_hunt` | 2 | Three **deliberate** bugs. It does not compile until they are fixed. |
+| `e03a_color_lab` | 3 | Mixing red, green and blue light |
+| `e03b_light_map` | 3 | Where each of the 32 lights is |
+| `e04a_light_show` | 4 | `for` loops and animation |
+| `e05a_motor_lab` | 5 | Two sides, forward, backward, spin. Wheels up. |
+| `e06a_drive_a_square` | 6 | Autopilot by the clock, and tuning |
+| `e07a_mission_planner` | 7 | Functions: moves you invent |
+| `e08a_button_lab` | 8 | `if`/`else`, held and tapped buttons |
+| `e09a_joystick_drive` | 9 | Stick numbers, the wobble zone, mixing |
+| `e10a_smart_lights` | 10 | Lights that follow the driving, blinking without `delay()` |
+| `e11a_my_upgrade` | 11 | A starting point with marked zones for a team's own upgrade |
+| `e12a_mission_day` | 12 | A known-good program with an autopilot button, for Mission Day |
+
+Every sketch that moves starts at `SPEED_LIMIT = 50`, the learner level;
+students raise it when they earn a license. The course guide is
+[`../../docs/courses/explorers/README.md`](../../docs/courses/explorers/README.md).
+
 ---
 
 ## Safety
@@ -108,8 +140,9 @@ Anything that drives a motor says so in its header. The rule in class:
 
 ## Building and checking them
 
-All forty sketch folders compile clean. To verify after a change, using
-the `arduino-cli` bundled with the Arduino IDE:
+The forty beginner and advanced sketch folders compile clean, and so do the
+fifteen Explorers folders - except `e02b_bug_hunt`, which fails on purpose. To
+verify after a change, using the `arduino-cli` bundled with the Arduino IDE:
 
 ```bash
 arduino-cli compile --fqbn esp32:esp32:esp32 --warnings all beginner_ps3/l2a_one_motor
