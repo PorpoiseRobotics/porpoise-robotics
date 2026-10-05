@@ -73,13 +73,16 @@ programs.
 
 ## Teaching with these
 
-Three courses, five three-hour lessons each, one per operating program.
+Three courses of five three-hour lessons, one per operating program, plus
+**Pathfinder Explorers**: a draft course of twelve one-hour lessons for ages 9
+to 13.
 
 | | Slides | Follow-along sketches |
 |---|---|---|
 | Beginner, PS3 | [`docs/courses/beginner-ps3/`](docs/courses/beginner-ps3/) | [`src/lessons/beginner_ps3/`](src/lessons/beginner_ps3/) |
 | Beginner, Switch | [`docs/courses/beginner-switch/`](docs/courses/beginner-switch/) | [`src/lessons/beginner_switch/`](src/lessons/beginner_switch/) |
 | Advanced | [`docs/courses/advanced/`](docs/courses/advanced/) | [`src/lessons/advanced/`](src/lessons/advanced/) |
+| Explorers, ages 9 to 13 (draft) | [`docs/courses/explorers/`](docs/courses/explorers/) | [`src/lessons/explorers/`](src/lessons/explorers/) |
 
 Beginner Lesson 5 ends by suggesting five projects students can build on top of
 the program. Worked versions of all five are in

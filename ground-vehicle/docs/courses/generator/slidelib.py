@@ -867,7 +867,8 @@ class Deck:
         return slide
 
     def objectives(self, items, title="What you will be able to do by the end",
-                   speaker=None):
+                   speaker=None,
+                   lead="By the end of this lesson you will be able to:"):
         """
         The learning objectives for the lesson, stated as things the student
         will be able to DO. Shown near the front and worth returning to at the
@@ -876,8 +877,7 @@ class Deck:
         slide = self._new(title=title)
 
         box = self._textbox(slide, MARGIN_L, BODY_TOP, CONTENT_W, Inches(0.55))
-        _set_fitted(box.text_frame, ["By the end of this lesson you will be "
-                                     "able to:"], width=CONTENT_W,
+        _set_fitted(box.text_frame, [lead], width=CONTENT_W,
                     height=Inches(0.55), size=19, bold=True, color=TEAL)
 
         numbered = [("%d.   %s" % (i + 1, text), 0)
@@ -1520,11 +1520,17 @@ class Deck:
         return slide
 
     def activity(self, title, sketch, steps, expect=None, questions=None,
-                 minutes=None, safety=None, speaker=None):
+                 minutes=None, safety=None, speaker=None,
+                 label="UPLOAD AND RUN:   ", sketch_is_code=True):
         """
         A 'stop and do this' slide, deliberately different from the rest.
         Long step lists spill onto a continuation slide; what students should
         see and the questions stay with the first one.
+
+        `label` is the tag in the teal header. An activity with no sketch -
+        an unplugged game, a floor test - passes its own label and
+        sketch_is_code=False, so its name is set in the body font rather
+        than looking like a file name.
         """
         gap = Inches(0.45)
         has_right = bool(expect or questions)
@@ -1584,7 +1590,7 @@ class Deck:
             para = frame.paragraphs[0]
 
             run = para.add_run()
-            run.text = "UPLOAD AND RUN:   "
+            run.text = label
             run.font.size = Pt(13)
             run.font.bold = True
             run.font.color.rgb = WHITE
@@ -1595,7 +1601,7 @@ class Deck:
             run.font.size = Pt(15)
             run.font.bold = True
             run.font.color.rgb = WHITE
-            run.font.name = CODE_FONT
+            run.font.name = CODE_FONT if sketch_is_code else BODY_FONT
 
             if minutes and index == 0:
                 run = para.add_run()
