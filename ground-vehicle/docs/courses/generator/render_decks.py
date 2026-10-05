@@ -31,7 +31,7 @@ HERE = os.path.dirname(os.path.abspath(__file__))
 COURSES = os.path.normpath(os.path.join(HERE, ".."))
 OUT = os.path.join(COURSES, "pdf")
 
-TRACKS = ("beginner-ps3", "beginner-switch", "advanced")
+TRACKS = ("beginner-ps3", "beginner-switch", "advanced", "explorers")
 
 CANDIDATES = [
     os.environ.get("SOFFICE"),
