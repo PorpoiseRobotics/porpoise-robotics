@@ -16,7 +16,7 @@
  *
  * BOARD / IDE SETTINGS
  *   Board:  "ESP32 Dev Module"
- *   Core:   esp32 by Espressif Systems, v3.0.7
+ *   Core:   esp32 by Espressif Systems, v3.3.12
  *   Serial monitor: 115200 baud
  *   No external libraries required.
  *

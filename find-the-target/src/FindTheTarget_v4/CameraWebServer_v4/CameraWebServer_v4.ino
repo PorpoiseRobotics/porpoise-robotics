@@ -9,11 +9,12 @@
  *
  * BOARD / IDE SETTINGS
  *   Board:            "ESP32 Wrover Module"
- *   Core:             esp32 by Espressif Systems, v3.0.7
+ *   Core:             esp32 by Espressif Systems, v3.3.12
  *   Partition Scheme: "Huge APP (3MB No OTA/1MB SPIFFS)"
  *   Serial monitor:   115200 baud
  *   Sketch folder must also contain: app_httpd.cpp, camera_index.h,
- *   camera_pins.h (these are the stock Espressif files, unchanged).
+ *   camera_pins.h (these are the stock Espressif files from the core
+ *   3.0.7 CameraWebServer example, unchanged; they build as-is on 3.3.12).
  *
  * WIFI: EDIT THE NETWORKS[] LIST BELOW
  *   Add every network the camera might use (home, school, hotspot...).
@@ -94,7 +95,7 @@ void printWifiScan() {
   }
   for (int i = 0; i < n; i++) {
     Serial.printf("  %2d: %-28s  %4d dBm  ch %d\n",
-                  i + 1, WiFi.SSID(i).c_str(), WiFi.RSSI(i), WiFi.channel(i));
+                  i + 1, WiFi.SSID(i).c_str(), (int)WiFi.RSSI(i), (int)WiFi.channel(i));
   }
   WiFi.scanDelete();
 }

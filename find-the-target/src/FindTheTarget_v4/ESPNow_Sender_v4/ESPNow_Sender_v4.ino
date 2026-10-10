@@ -25,7 +25,7 @@
  *
  * BOARD / IDE SETTINGS
  *   Board:  "ESP32 Dev Module"
- *   Core:   esp32 by Espressif Systems, v3.0.7
+ *   Core:   esp32 by Espressif Systems, v3.3.12 (3.3.0 or newer)
  *   Serial monitor: 115200 baud
  *
  * LIBRARIES (Library Manager)
@@ -46,7 +46,7 @@
  *             SCL -> GPIO22, SDA -> GPIO21  (compass shares the BMP280's
  *             I2C bus - three devices on two wires is what I2C is for)
  *             The UART is 3.3 V TTL, so NO voltage divider is needed.
- *   NeoPixel: DATA -> GPIO15, 16 LEDs
+ *   NeoPixel: DATA -> GPIO13, 16 LEDs
  *
  * BEFORE UPLOADING
  *   Flash ESPNow_Receiver_v4 first, open its serial monitor, copy the
@@ -69,6 +69,13 @@
 #include <Adafruit_NeoPixel.h>
 #include <TinyGPSPlus.h>
 
+// The ESP-NOW "sent" callback (onSent, below) changed shape in board
+// package 3.3. On an older package the compiler gives a confusing type
+// error, so stop early with a plain-English one instead.
+#if ESP_ARDUINO_VERSION < ESP_ARDUINO_VERSION_VAL(3, 3, 0)
+#error "Update the esp32 board package to 3.3.12: Tools > Board > Boards Manager"
+#endif
+
 // ============================== Pins =================================
 #define TRIG_PIN    32   // HC-SR04 trigger (3.3 V output is fine)
 #define ECHO_PIN    25   // HC-SR04 echo, MUST come through a divider
@@ -76,7 +83,7 @@
 #define I2C_SCL     22   // BMP280 + QMC5883L clock
 #define GPS_RX_PIN  16   // ESP32 RX  <- FK-A1 Tx
 #define GPS_TX_PIN  18   // ESP32 TX  -> FK-A1 Rx
-#define LED_PIN     15   // NeoPixel data in
+#define LED_PIN     13   // NeoPixel data in (sender PCB routes it to IO13)
 
 // ============================= Config ================================
 #define NUM_LEDS          16    // full 16-LED strip
@@ -230,15 +237,25 @@ float readHeadingDeg() {
   if (Wire.endTransmission(false) != 0) return -1.0f;
   if (Wire.requestFrom((uint8_t)QMC_ADDR, (uint8_t)6) != 6) return -1.0f;
 
-  int16_t x = Wire.read() | (Wire.read() << 8);   // low byte first
-  int16_t y = Wire.read() | (Wire.read() << 8);
-  (void)(Wire.read() | (Wire.read() << 8));       // Z: read but unused
+  // Low byte first. One read per statement: in "Wire.read() | Wire.read() << 8"
+  // C++ does not promise which read happens first, so the bytes could swap.
+  uint8_t xl = Wire.read(), xh = Wire.read();
+  uint8_t yl = Wire.read(), yh = Wire.read();
+  Wire.read(); Wire.read();                       // Z: read but unused
+  int16_t x = (int16_t)(xl | (xh << 8));
+  int16_t y = (int16_t)(yl | (yh << 8));
 
+  // The FK-A1 carries the compass chip on its underside, so with the
+  // antenna facing the sky the chip is upside down and sees the world
+  // mirrored - turning clockwise would make the heading go DOWN. Negating
+  // Y un-mirrors it. (HEADING_OFFSET_DEG fixes a rotation, never a mirror.
+  // If the module is ever mounted antenna-DOWN, use +y here instead.)
+  //
   // atan2 gives the field angle in radians; convert to 0-360 compass
   // degrees and apply the mounting correction. (This is MAGNETIC north;
   // true north differs by your local declination, ~11 deg E in San Diego -
   // fine to ignore for finding a target on a soccer field.)
-  float deg = atan2f((float)y, (float)x) * 180.0f / PI + HEADING_OFFSET_DEG;
+  float deg = atan2f(-(float)y, (float)x) * 180.0f / PI + HEADING_OFFSET_DEG;
   while (deg < 0)      deg += 360.0f;
   while (deg >= 360.0f) deg -= 360.0f;
   return deg;
@@ -273,8 +290,9 @@ void updateLeds(float inches) {
 // ============================= ESP-NOW ===============================
 // Called by the WiFi stack after every transmission. "SUCCESS" means the
 // receiver's radio acknowledged the frame - a real end-to-end check.
-// (Core 3.0.x callback signature; 3.1+ changes the first parameter.)
-void onSent(const uint8_t *mac, esp_now_send_status_t status) {
+// (Board package 3.3+ signature: the first parameter describes the
+//  transmission. Before 3.3 it was just the receiver's MAC address.)
+void onSent(const esp_now_send_info_t *info, esp_now_send_status_t status) {
   if (status == ESP_NOW_SEND_SUCCESS) { txDelivered++; lastTxOk = 1; }
   else                                { txMissed++;    lastTxOk = 0; }
 }

@@ -47,6 +47,10 @@ The GT-U7 GPS is replaced by an **FK-A1 module** (u-blox M10 GPS with a
 | `CameraWebServer_v4/` | Freenove ESP32-WROVER camera | ESP32 Wrover Module, Partition Scheme: **Huge APP (3MB)** |
 | `BaseStation/` | The computer (Python 3 + browser) | — |
 
+Board package: **esp32 by Espressif Systems, version 3.3.12** (Tools →
+Board → Boards Manager). The sender will not compile on anything older
+than 3.3.0 and says so when you try.
+
 All serial monitors run at **115200 baud**. Arduino libraries needed
 (sender only): Adafruit BMP280, Adafruit NeoPixel, TinyGPSPlus — the
 compass is driven with plain I2C, no library. The camera folder already
