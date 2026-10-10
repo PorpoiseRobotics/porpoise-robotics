@@ -25,7 +25,7 @@
  *
  * BOARD / IDE SETTINGS
  *   Board:  "ESP32 Dev Module"
- *   Core:   esp32 by Espressif Systems, v3.0.7
+ *   Core:   esp32 by Espressif Systems, v3.3.12 (3.3.0 or newer)
  *   Serial monitor: 115200 baud
  *
  * LIBRARIES (Library Manager)
@@ -68,6 +68,13 @@
 #include <Adafruit_BMP280.h>
 #include <Adafruit_NeoPixel.h>
 #include <TinyGPSPlus.h>
+
+// The ESP-NOW "sent" callback (onSent, below) changed shape in board
+// package 3.3. On an older package the compiler gives a confusing type
+// error, so stop early with a plain-English one instead.
+#if ESP_ARDUINO_VERSION < ESP_ARDUINO_VERSION_VAL(3, 3, 0)
+#error "Update the esp32 board package to 3.3.12: Tools > Board > Boards Manager"
+#endif
 
 // ============================== Pins =================================
 #define TRIG_PIN    32   // HC-SR04 trigger (3.3 V output is fine)
@@ -283,8 +290,9 @@ void updateLeds(float inches) {
 // ============================= ESP-NOW ===============================
 // Called by the WiFi stack after every transmission. "SUCCESS" means the
 // receiver's radio acknowledged the frame - a real end-to-end check.
-// (Core 3.0.x callback signature; 3.1+ changes the first parameter.)
-void onSent(const uint8_t *mac, esp_now_send_status_t status) {
+// (Board package 3.3+ signature: the first parameter describes the
+//  transmission. Before 3.3 it was just the receiver's MAC address.)
+void onSent(const esp_now_send_info_t *info, esp_now_send_status_t status) {
   if (status == ESP_NOW_SEND_SUCCESS) { txDelivered++; lastTxOk = 1; }
   else                                { txMissed++;    lastTxOk = 0; }
 }
