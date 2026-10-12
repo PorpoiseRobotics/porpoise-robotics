@@ -39,8 +39,19 @@ students about the two identical "ESP32 Dev Module" entries in the board menu.
 | `l1_introduction.pptx` | Mechatronics, the vehicle, the Arduino IDE, first programs | `l1a_blink`, `l1b_serial_monitor`, `l1c_first_pixel` |
 | `l2_motor_control.pptx` | H-bridges, PWM, tank drive, dead reckoning | `l2a_one_motor`, `l2b_speed_ramp`, `l2c_maneuver_square` |
 | `l3_controller_programming.pptx` | Bluetooth, deadzones, mapping, mixing, failsafe | `l3a_controller_check`, `l3b_deadzone_and_map`, `l3c_tank_drive` |
-| `l4_neopixel_leds.pptx` | Addressable LEDs, colour, power budget, patterns | `l4a_all_one_color`, `l4b_led_map`, `l4c_patterns` |
+| `l4_neopixel_leds.pptx` | Addressable LEDs, color, power budget, patterns | `l4a_all_one_color`, `l4b_led_map`, `l4c_patterns` |
 | `l5_maneuvers_with_lights.pptx` | Non-blocking timing, edge detection, the full program | `l5a_millis_not_delay`, `l5b_button_toggle`, `l5c_drive_with_lights` |
+
+Each beginner track also has a **coding cheat sheet** in its `handouts/`
+folder - four pages, printed double-sided, handed out in Lesson 1 and kept
+on the desk. Two pages of the C++ the course uses, two about this vehicle,
+and the error messages students actually meet. Print the PDF; the .docx is
+there to edit. Every code block on it is compiled against the track's board
+package by `build_cheatsheet.py --compile`.
+
+The PS3 track builds on **esp32 board package 3.3.12** with **"Fork of PS3
+Controller Host"** - the original PS3 library does not compile on board
+package 3.3. See [`src/lessons/README.md`](../../src/lessons/README.md).
 
 ### Advanced
 
@@ -90,7 +101,7 @@ editable and prints sharp.
 
 They are 16:9 (13.333 x 7.5 inches), matching the existing Porpoise Robotics
 decks, and designed to print: white background, dark text, no full-bleed dark
-fills, and nothing that needs colour to make sense in greyscale.
+fills, and nothing that needs color to make sense in grayscale.
 
 ---
 
@@ -102,7 +113,7 @@ generator overwrites them and hand edits go with them.
 
 The generator exists so that the first version was reproducible, and so a
 change affecting all fifteen decks — a corrected pin number, a new house
-colour — can be made in one place before anybody has started editing.
+color — can be made in one place before anybody has started editing.
 
 ```bash
 python ground-vehicle/docs/courses/generator/build_decks.py
@@ -119,11 +130,12 @@ It needs `python-pptx` (`pip install python-pptx`). Files in
 | `build_decks.py` | Runs everything. Start here. |
 | `slidelib.py` | The slide types: bullets, tables, code, activities, quizzes |
 | `diagrams.py` | The nineteen drawn figures, as native shapes |
-| `content_beginner.py` | The five beginner lessons, parameterised by track |
+| `content_beginner.py` | The five beginner lessons, parameterized by track |
 | `content_advanced.py` | The five advanced lessons |
 | `content_explorers.py` | The twelve Explorers lessons |
 | `diagrams_explorers.py` | The Explorers figures, drawn for younger students |
 | `build_handouts.py` | The Explorers Mission Log, family letter, certificate, questionnaires and questionnaire tracker |
+| `build_cheatsheet.py` | The beginner coding cheat sheet, one per track; `--compile` builds every snippet on it |
 | `questionnaires.py` | The Explorers questionnaire wording, in one place for the forms and the tracker |
 | `docxlite.py` | A small Word writer for the handouts, standard library only |
 | `sync_explorer_h.py` | Copies the Explorers `explorer.h` into every sketch, or checks the copies agree |
@@ -206,29 +218,24 @@ board photographs, the engineering-to-mechatronics chart, the house logo, and
 the annotated PS3 and Switch controller maps. Generic technical figures that
 came from third parties in the old decks were **redrawn** as native PowerPoint
 shapes instead, because this repository is public. That is why the duty-cycle,
-H-bridge, colour-mixing, servo-timing and Ohm's-law figures look different from
+H-bridge, color-mixing, servo-timing and Ohm's-law figures look different from
 the versions in the old PDFs.
 
 Four images came from the **P3 Gen 3 decks**: the Porpoise Robotics logo, the
-labelled Switch controller, a second Switch controller shot, and the vehicle
-with a robotic arm fitted. Two of Kevin's own labelled figures were carried
+labeled Switch controller, a second Switch controller shot, and the vehicle
+with a robotic arm fitted. Two of Kevin's own labeled figures were carried
 over as crops rather than redrawn, because he drew them and they are ours: the
 board layout seen from above, and the annotated top plate.
 
 ### Pictures we have not taken yet
 
 Where a photograph is wanted and does not exist, the slide carries a **dashed,
-labelled placeholder box** in the space the picture will occupy, saying what
+labeled placeholder box** in the space the picture will occupy, saying what
 belongs there. Flip through a deck and every outstanding photograph is visible
 in one pass; they show on the printed handout too.
 
-Three are outstanding:
-
-| Deck | What is wanted |
-|---|---|
-| Beginner L1 | Our own breadboard wired to GPIO 2 and GND, LED lit. The photographs we have use a 9 V battery. |
-| Beginner L1 | A Gen 3 driving upside down, taken from floor level. |
-| Advanced L5 | The INA219 on a Gen 3 board, close enough to read the part. |
+None are outstanding: the last six photographs went in on 2026-09-09. The
+mechanism stays, because it is how the next missing picture will show up.
 
 To fill one in, drop the photograph in `images/` and swap the `Placeholder(...)`
 in the content module for `img("your-file.jpg")`. Anything else that resolves
@@ -239,8 +246,11 @@ so a mistyped filename is visible instead of invisible.
 
 ## Still to do
 
-- The three **photographs listed above**. Each one has a labelled placeholder
-  sitting on the slide until it arrives.
+- **The PS3 track on board package 3.3.12 has been compiled, not driven.**
+  Every PS3 program builds with no warnings against "Fork of PS3 Controller
+  Host" 1.1.1-idf5.4, whose one change from the original is how it sets the
+  Bluetooth address. Before the first cohort, upload `pathfinder_ps3` to one
+  vehicle and check the pad pairs, drives, lights and steers.
 - The two **controller images** are vendor product shots rather than Porpoise
   photography. They were already in the P2 and P3 decks, but this repository is
   public — worth a decision.

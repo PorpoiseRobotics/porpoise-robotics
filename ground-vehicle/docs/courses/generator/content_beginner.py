@@ -46,20 +46,50 @@ PS3 = {
     "pad": "Sony PS3 controller",
     "pad_short": "PS3 controller",
     "full_program": "pathfinder_ps3",
-    "board_pkg": "esp32  by Espressif Systems,  version 3.0.7",
+    "board_pkg": "esp32  by Espressif Systems,  version 3.3.12",
     "board_menu": "Tools > Board > esp32 > \"ESP32 Dev Module\"",
     "boards_url": "https://espressif.github.io/arduino-esp32/"
                   "package_esp32_index.json",
     "boards_search": "esp32",
-    "board_version": "3.0.7",
-    "board_note": "Version 3.0.7 specifically. Newer versions changed the way "
-                  "PWM is set up, and every motor program on this track uses "
-                  "the 3.0.7 spelling.",
-    "extra_lib": "\"PS3 Controller Host\" by Jeffrey van Pernis",
-    "extra_lib_note": "Searching Library Manager for \"Ps3Controller\" finds nothing. "
-                      "The display name is the longer one.",
-    "lib_short": "PS3 Controller Host",
-    "lib_and": " + PS3 Controller Host",
+    "board_version": "3.3.12",
+    "board_note": "Version 3.3.12 - the newest, and the one every program on "
+                  "this track was built with. If Boards Manager ever offers "
+                  "something newer, pick 3.3.12 anyway.",
+    "board_speaker": "Anybody who did this course before has 3.0.7 installed. "
+                     "Boards Manager updates it in place: pick 3.3.12 from the "
+                     "version list and click Install.",
+    "extra_lib": "\"Fork of PS3 Controller Host\" by Jeffrey van Pernis",
+    "extra_lib_note": "Search \"PS3 Controller Host\" and two come up. Install "
+                      "the one whose name starts \"Fork of\". If the original "
+                      "is installed, remove it - it will not compile on 3.3.12.",
+    "lib_speaker": "The PS3 library is a FORK of the original, which stopped "
+                   "compiling at board package 3.3. Both appear in the search, "
+                   "so check that every screen says Fork of. An error that "
+                   "mentions esp_base_mac_addr_set means the original is "
+                   "still installed - with both present the IDE picks the old "
+                   "one. Uninstall it and compile again.",
+    "pwm_speaker": "This board package lets you name the PIN in ledcWrite. "
+                   "Students who search online will find older code with "
+                   "numbered channels - that is the 2.x way of doing the "
+                   "same job, and it does not compile here.",
+    "address_step": "Set PS3_MAC_ADDRESS to the number on your controller's "
+                    "sticker.",
+    "address_short": "Set PS3_MAC_ADDRESS.",
+    "l3a_first_step": "1.  Set PS3_MAC_ADDRESS to the number on your "
+                      "controller's sticker. Upload, and open the Serial "
+                      "Monitor.",
+    "l3a_speaker": "Step 1 is the first time they set the address, and they "
+                   "will do it again in every controller program from here "
+                   "on. The sketch prints which address it is listening as. "
+                   "If that still ends in 00, that is why nothing connects.",
+    "no_connect_row": ["Nothing connects at all",
+                       "PS3_MAC_ADDRESS still ends in 00, or is not your number",
+                       "Put the number from your controller's sticker in"],
+    "extra_trouble_rows": [["Compile error: esp_base_mac_addr_set",
+                            "The ORIGINAL PS3 library is installed",
+                            "Uninstall it; keep only the Fork"]],
+    "lib_short": "Fork of PS3 Controller Host",
+    "lib_and": " + Fork of PS3 Controller Host",
     "drive_sketch": "lessons/beginner_ps3/l3c_tank_drive/l3c_tank_drive.ino",
     "led_sketch": "lessons/beginner_ps3/l4a_all_one_color/l4a_all_one_color.ino",
     "pin_style": "pin",
@@ -107,9 +137,29 @@ SWITCH = {
     "board_version": "4.1.0",
     "board_note": "Two entries are now called \"ESP32 Dev Module\". This "
                   "track needs the one under \"esp32_bluepad32\".",
+    "board_speaker": "Warn them that Boards Manager now lists TWO entries "
+                     "called \"ESP32 Dev Module\", one under \"esp32\" and "
+                     "one under \"esp32_bluepad32\". A pile of errors that "
+                     "make no sense almost always means the wrong one is "
+                     "selected.",
     "extra_lib": "none - Bluepad32 arrives with the board package",
     "extra_lib_note": "You still need \"Adafruit NeoPixel\" by Adafruit for the "
                       "lighting lessons.",
+    "lib_speaker": "Watch the search box. The display name is not always "
+                   "what you would guess.",
+    "pwm_speaker": "Mention that the numbered channel is an older way of "
+                   "doing the same job - it is a board package difference, "
+                   "not a different idea.",
+    "address_step": "Paste your MY_CONTROLLER line into the top.",
+    "address_short": "Paste in MY_CONTROLLER.",
+    "l3a_first_step": "1.  Upload it and open the Serial Monitor.",
+    "l3a_speaker": "Step 7 gives them the MY_CONTROLLER line they need for "
+                   "the rest of the day. Make sure it is written down or "
+                   "pasted immediately - it is easy to lose.",
+    "no_connect_row": ["Nothing connects at all",
+                       "Address mismatch",
+                       "Check the address in the sketch matches the pad"],
+    "extra_trouble_rows": [],
     "lib_short": "none (Bluepad32 ships with the board package)",
     "lib_and": "",
     "drive_sketch": "lessons/beginner_switch/l3c_tank_drive/l3c_tank_drive.ino",
@@ -186,7 +236,7 @@ STAGES = {
 AGENDA = {
     "lesson1": [
         ("0:00", "What mechatronics is, and what a Pathfinder is", None),
-        ("0:30", "A tour of the vehicle: computer, motors, lights, battery", None),
+        ("0:30", "A tour of the vehicle, and how to handle it safely", None),
         ("0:55", "BREAK  (10 minutes)", "break"),
         ("1:05", "Install the Arduino IDE, the board package and the libraries",
          "Setting up the IDE"),
@@ -197,7 +247,7 @@ AGENDA = {
          "Talking back"),
         ("2:40", "Your first light.  Upload l1c_first_pixel",
          "Your first light"),
-        ("2:55", "Safety, batteries, and what to expect next lesson", None),
+        ("2:55", "Check yourself, and what to expect next lesson", None),
     ],
     "lesson2": [
         ("0:00", "Recap. Two kinds of motor, and how an H-bridge works", None),
@@ -351,7 +401,7 @@ def lesson1(deck, T):
             "you open with next lesson.",
             "Ask first, before any of this: hands up for anybody who has "
             "met Arduino, the ESP-32, C++ or Ohm's law before. It changes "
-            "who you pair with whom, and it tells you which of the four "
+            "who you pair with whom, and it tells you which of the seven "
             "objectives is going to be the slow one.",
             "Objective four - saying why the resistor is there - is the one "
             "that separates following instructions from understanding. "
@@ -574,6 +624,36 @@ def lesson1(deck, T):
             "sensors - lands here.",
         ])
 
+    deck.bullets(
+        "Safety, and looking after the vehicle",
+        [("LITHIUM BATTERIES. 4S, 3300 mAh, about 16 volts and a lot of stored "
+          "energy. Never puncture, crush or short one. If a pack is swollen, hot, "
+          "or has been dropped hard, stop and tell an instructor.", 0),
+         ("Charge only on the bench, only supervised, and never leave a charging "
+          "pack unattended.", 0),
+         ("WHEELS OFF THE GROUND when you upload a change for the first time. A "
+          "vehicle on a block cannot drive off the desk.", 0),
+         ("Keep fingers, hair, sleeves and USB cables away from the wheels.", 0),
+         ("Know where your power switch is BEFORE you start a program that "
+          "drives.", 0),
+         ("Do not stare into the LEDs at full brightness from close up.", 0),
+         ("Carry the vehicle by the base plate, not by the top plate or the "
+          "wires.", 0)],
+        note="Everything in Lesson 2 onwards moves. This page stops being "
+             "theoretical next lesson.",
+        note_kind="safety",
+        speaker=[
+            "Slow down here. They have just had their hands on a vehicle, "
+            "and this is the page that stops somebody getting hurt next "
+            "lesson. It comes now, before anybody plugs a vehicle in.",
+            "Show them a real pack, and show them the swelling you are "
+            "describing. Words alone do not do it.",
+            "Wheels off the ground is the rule they will be tempted to "
+            "break in Lesson 2. Make it a habit today, while nothing moves.",
+            "Ask each group to find their power switch now and point at it. "
+            "They found it on the board drawing a few slides ago.",
+        ])
+
     deck.image_pair(
         "Three generations of Pathfinder",
         img("vehicle-gen1-and-gen2.jpg"),
@@ -678,28 +758,6 @@ def lesson1(deck, T):
             "Say so, so nobody thinks their vehicle is broken.",
         ])
 
-    diagrams.system_block(deck, controller=T["pad_short"])
-
-    diagrams.pin_reference(deck, motor_pins=T["motor_pins"],
-                           led_pin=T["led_pin"])
-
-    deck.image_slide(
-        "The Gen 3 control board, drawn out",
-        img("control-board-schematic.jpg"),
-        caption="You are not expected to read this today. It is here so "
-                "you know it exists, and so you can come back to it.",
-        speaker=[
-            "Show it, say what it is, and move on. Fifteen seconds.",
-            "The reason it is in the deck is that somebody always asks "
-            "what is actually on the board, and \"there is a drawing, "
-            "here it is\" is a better answer than a description.",
-            "Point out that everything on the previous slide - the motor "
-            "pins, the LED pin, the I2C pins - is somewhere on this "
-            "sheet. That is the connection worth making.",
-            "Anybody who wants to follow it properly should be pointed at "
-            "the advanced course.",
-        ])
-
     deck.two_columns(
         "What a microcontroller actually is",
         "The ESP32",
@@ -730,6 +788,28 @@ def lesson1(deck, T):
             "else is running).",
             "If somebody asks about the second core: yes, it has one, and "
             "no, we do not use it in this course.",
+        ])
+
+    diagrams.system_block(deck, controller=T["pad_short"])
+
+    diagrams.pin_reference(deck, motor_pins=T["motor_pins"],
+                           led_pin=T["led_pin"])
+
+    deck.image_slide(
+        "The Gen 3 control board, drawn out",
+        img("control-board-schematic.jpg"),
+        caption="You are not expected to read this today. It is here so "
+                "you know it exists, and so you can come back to it.",
+        speaker=[
+            "Show it, say what it is, and move on. Fifteen seconds.",
+            "The reason it is in the deck is that somebody always asks "
+            "what is actually on the board, and \"there is a drawing, "
+            "here it is\" is a better answer than a description.",
+            "Point out that everything on the previous slide - the motor "
+            "pins, the LED pin, the I2C pins - is somewhere on this "
+            "sheet. That is the connection worth making.",
+            "Anybody who wants to follow it properly should be pointed at "
+            "the advanced course.",
         ])
 
     deck.image_pair(
@@ -842,8 +922,7 @@ def lesson1(deck, T):
             "Both libraries go in now, even though nothing needs them until "
             "Lesson 4. Doing it once saves a whole class of upload failures "
             "later.",
-            "Watch the search box. The display name is not always what you "
-            "would guess, which is exactly what the note on the slide says.",
+            T["lib_speaker"],
         ])
 
     deck.table(
@@ -879,7 +958,7 @@ def lesson1(deck, T):
           "Library Manager in Step 4.", 0),
          ("", 0),
          ("WINDOWS.  Copy the sketch folders into", 0),
-         ("Documents\\\\Arduino\\\\", 1),
+         ("Documents\\Arduino\\", 1),
          ("MAC.  Copy the sketch folders into", 0),
          ("Documents/Arduino/", 1),
          ("", 0),
@@ -903,6 +982,36 @@ def lesson1(deck, T):
             "before you move on.",
         ])
 
+    deck.bullets(
+        "Keep this on your desk: the coding cheat sheet",
+        [("Two sheets, printed on both sides. Everything you need to write "
+          "the code in this course is on them.", 0),
+         ("", 0),
+         ("Pages 1 and 2:  the C++ - the shape of a program, variables, "
+          "math, decisions, loops, functions, the Serial Monitor and "
+          "millis().", 0),
+         ("Pages 3 and 4:  this vehicle - its pins, the motors, the 32 LEDs "
+          "and their map, the controller, and the patterns the full program "
+          "is built from.", 0),
+         ("The back page lists the error messages you will actually see, "
+          "and what each one means.", 0),
+         ("", 0),
+         ("Stuck?  Cheat sheet first, then your group, then an instructor.", 0)],
+        note="It is not cheating. Professional programmers look things up "
+             "all day. What matters is knowing WHERE to look.",
+        speaker=[
+            "Hand the cheat sheet out now, one per student rather than one "
+            "per group. It is {}/handouts/coding_cheat_sheet.pdf in the "
+            "repository - print it double-sided.".format(T["key"]),
+            "Do not walk through it. Point at the four pages so they know "
+            "what is where, and come back to it whenever somebody asks a "
+            "question it answers: \"what does your cheat sheet say?\"",
+            "Every challenge in the course, including the Lesson 4 pattern "
+            "and the Lesson 5 projects, can be done with what is on it. If "
+            "a student needs something that is not, tell whoever maintains "
+            "the course - the sheet should grow.",
+        ])
+
     deck.section("Your first program", minutes=stage_minutes("lesson1", "Your first circuit and program"),
         stages=STAGES["lesson1"], stage="Your first circuit and program",
         speaker=[
@@ -911,8 +1020,6 @@ def lesson1(deck, T):
             "Hand out the breadboards, LEDs, resistors and jumper wires "
             "now, one set per group, while you talk.",
         ])
-
-    diagrams.program_structure(deck)
 
     deck.bullets(
         "The ESP32 has no LED we can use, so you are going to give it one",
@@ -924,14 +1031,14 @@ def lesson1(deck, T):
           "something blink, you have to make a circuit that works - and a "
           "circuit is the thing underneath everything else on this vehicle.", 0),
          ("", 0),
-         ("You need three things from the kit:", 0),
+         ("You need four things from the kit:", 0),
          ("a breadboard", 1),
          ("an LED", 1),
          ("a 220 ohm resistor", 1),
          ("two jumper wires", 1)],
         lead="Your first circuit",
         speaker=[
-            "Hold up the three parts as you name them.",
+            "Hold up the four parts as you name them.",
             "If anyone asks why the resistor: tell them to wait ninety seconds, "
             "it is the next slide but one.",
         ])
@@ -1002,6 +1109,8 @@ def lesson1(deck, T):
             "wires, and the breadboard is running off the vehicle.",
         ])
 
+    diagrams.program_structure(deck)
+
     deck.code(
         "l1a_blink  -  the whole program",
         ["const int LED_PIN = 2;   // the pin your LED is wired to",
@@ -1009,31 +1118,40 @@ def lesson1(deck, T):
          "",
          "void setup() {",
          "  pinMode(LED_PIN, OUTPUT);",
+         "  Serial.begin(115200);",
+         "  Serial.println(\"Blink is running.\");",
          "}",
          "",
          "void loop() {",
          "  digitalWrite(LED_PIN, HIGH);",
+         "  Serial.println(\"The LED is on\");",
          "  delay(BLINK_MS);",
          "",
          "  digitalWrite(LED_PIN, LOW);",
+         "  Serial.println(\"The LED is off\");",
          "  delay(BLINK_MS);",
          "}"],
         filename="l1a_blink.ino",
-        notes=[("const int  says this is a whole number that never changes. "
-                "Naming it means you change it in one place - move your LED "
-                "to another pin and only this line changes.", 0),
+        notes=[("const int  is a whole number that never changes. Move your "
+                "LED and only this line changes.", 0),
                ("pinMode(..., OUTPUT)  tells the ESP32 we intend to WRITE to "
                 "that pin. Without it, digitalWrite does nothing.", 0),
-               ("HIGH puts 3.3 volts on the pin.  LOW puts 0 volts on it. "
-                "That is the entire idea of digital output.", 0),
-               ("delay(1000)  waits one second. Remember this line - in Lesson 5 "
-                "we will throw it away.", 0)],
+               ("HIGH puts 3.3 volts on the pin, LOW puts 0. That is all "
+                "digital output is.", 0),
+               ("Serial.println()  sends a line of text back to your "
+                "laptop.", 0),
+               ("delay(BLINK_MS)  waits 1000 milliseconds, one second. "
+                "Remember it - in Lesson 5 we throw it away.", 0)],
         size=14,
         speaker=[
-            "Fourteen lines, and every one of them is worth a sentence. "
+            "Eighteen lines, and every one of them is worth a sentence. "
             "This is the first program they read, so read it properly.",
-            "Ask which lines are initialisation, which are setup, which are "
+            "Ask which lines are initialization, which are setup, which are "
             "loop, and point back to the three-part diagram.",
+            "The four Serial lines are a first look, not the lesson on it. "
+            "Say only this: Serial.begin opens a line back to the laptop, "
+            "and println sends one line of text down it. The Serial Monitor "
+            "gets its own section after the break.",
             "Ask what happens when loop() reaches the bottom. The answer - "
             "it starts again immediately - is not obvious to everybody.",
             "Flag the two delay() calls. Tell them these come out in Lesson "
@@ -1047,32 +1165,47 @@ def lesson1(deck, T):
          ("2.  Click the tick to VERIFY. It should compile with no errors.", 0),
          ("3.  Click the arrow to UPLOAD. Do not unplug during upload.", 0),
          ("4.  Wait for \"Done uploading\" and look at your LED.", 0),
+         ("5.  Tools > Serial Monitor. Set the box at the bottom to "
+          "115200.", 0),
          ("", 0),
          ("Then change things:", 0),
-         ("5.  Set BLINK_MS to 100. Upload. Then 2000. Upload.", 0),
-         ("6.  Delete ONE of the two delay lines and upload.", 0)],
-        expect=[("YOUR LED, on the breadboard, one second on and one "
-                 "second off.", 0),
+         ("6.  Set BLINK_MS to 100. Upload. Then 2000. Upload.", 0),
+         ("7.  Delete ONE of the two delay lines and upload. Watch the LED "
+          "AND the Serial Monitor.", 0)],
+        expect=[("Your LED: one second on, one second off - and a line in "
+                 "the Serial Monitor each time it changes.", 0),
                 ("Nothing at all means the LED is in backwards, or a leg is "
                  "in the wrong row.", 0)],
         questions=[("Which makes it blink faster, a bigger number or a "
                     "smaller one? Why?", 0),
-                   ("With one delay deleted, the LED is still blinking. How "
-                    "fast, and why can you barely see it?", 0),
+                   ("One delay deleted: the Serial Monitor still says on, "
+                    "off. Why does the LED look stuck?", 0),
                    ("What resistor would a RED LED need? It drops about "
                     "1.8 V instead of 2.0 V.", 0)],
         minutes=15,
         speaker=[
             "Circuits checked before anybody uploads. Say it once, then "
             "enforce it.",
-            "Steps 1 to 4 are following instructions. Steps 5 and 6 are the "
-            "actual lesson - do not let a group stop at step 4.",
-            "The deleted-delay question is the good one. It still blinks, "
-            "at about half a second on and no time off, so it looks "
-            "permanently lit.",
-            "The red-LED question needs Ohm's law, which they have not had "
-            "yet. Take answers, do not resolve it, and promise it for "
-            "Lesson 2.",
+            "Steps 1 to 5 are following instructions. Steps 6 and 7 are the "
+            "actual lesson - do not let a group stop at step 5.",
+            "Step 5 is a first look at the Serial Monitor, not the lesson on "
+            "it. If the window fills with nonsense characters, the box at "
+            "the bottom is not on 115200.",
+            "ANSWER, faster: a SMALLER number. BLINK_MS is how long each half "
+            "of the blink lasts, so a smaller wait means less time on and "
+            "less time off.",
+            "ANSWER, deleted delay: the loop is still running - the Serial "
+            "Monitor proves it. Delete the SECOND delay and the LED is on "
+            "for BLINK_MS, then off for a few millionths of a second before "
+            "loop() turns it straight back on, so it looks permanently lit. "
+            "Delete the FIRST and it is the other way round, so it looks "
+            "dark. Either way it is still blinking; one half is just too "
+            "short to see. This is the good question - make them explain it.",
+            "ANSWER, red LED: the same sum as the circuit slide. "
+            "R = (3.3 - 1.8) / 0.020 = 75 ohms, the SMALLEST safe resistor. "
+            "The 220 in the kit still works: (3.3 - 1.8) / 220 is about "
+            "7 mA, a little brighter than the green one. Lesson 2 does "
+            "Ohm's law properly.",
         ])
 
     deck.section("Making the vehicle talk back", minutes=stage_minutes("lesson1", "Talking back"),
@@ -1086,7 +1219,8 @@ def lesson1(deck, T):
     deck.bullets(
         "The Serial Monitor",
         [("The ESP32 has no screen. If you want to know what it is thinking, it "
-          "has to tell you - down the same USB cable you upload through.", 0),
+          "has to tell you - down the same USB cable you upload through. You "
+          "saw it do that in l1a_blink.", 0),
          ("Serial.begin(115200);   opens the connection. Put it in setup().", 1),
          ("Serial.print(\"text\");    prints and stays on the same line.", 1),
          ("Serial.println(x);       prints and moves to a new line.", 1),
@@ -1105,7 +1239,7 @@ def lesson1(deck, T):
         speaker=[
             "The baud rate mismatch is the thing that will happen to "
             "somebody in the next ten minutes. Show them the nonsense "
-            "characters deliberately so they recognise it.",
+            "characters deliberately so they recognize it.",
             "print versus println is worth ten seconds with a marker on the "
             "board.",
             "The last bullet is the debugging habit the whole course rests "
@@ -1176,8 +1310,8 @@ def lesson1(deck, T):
          ("5.  Change the two numbers in the math section. PREDICT the answers "
           "before you upload, then check.", 0),
          ("6.  Add a line of your own that prints every time round the loop.", 0)],
-        expect=[("A greeting, some arithmetic, then one line per second "
-                 "counting up.", 0)],
+        expect=[("A greeting, some arithmetic, then one line every three "
+                 "seconds counting up.", 0)],
         questions=[("What is 9 / 10 in this program? What did you expect?", 0),
                    ("What does millis() / 1000 give you, and why?", 0)],
         minutes=15,
@@ -1186,9 +1320,15 @@ def lesson1(deck, T):
             "let anybody upload before writing down what they expect.",
             "The reset button is on the ESP32 itself and is marked EN. Show "
             "them where before they hunt for it.",
-            "millis() / 1000 gives seconds since power-up. That is the "
-            "first time millis() appears, and it is deliberate groundwork "
-            "for Lesson 5.",
+            "ANSWER, 9 / 10: it is 0. Both are whole numbers, so the "
+            "remainder is thrown away - the trap from the slide before. "
+            "Most people expect 0.9, or 1 if they think it rounds. It does "
+            "not round.",
+            "ANSWER, millis() / 1000: the number of whole seconds since the "
+            "board powered up or was reset. millis() counts milliseconds, "
+            "and whole-number division by 1000 turns that into seconds. That "
+            "is the first time millis() appears, and it is deliberate "
+            "groundwork for Lesson 5.",
         ])
 
     deck.section("Your first light", minutes=stage_minutes("lesson1", "Your first light"),
@@ -1297,34 +1437,15 @@ def lesson1(deck, T):
             "them predict first.",
             "Deleting show() is a deliberate failure. Make everybody do it, "
             "so the symptom is familiar before it happens by accident.",
-        ])
-
-    deck.bullets(
-        "Safety, and looking after the vehicle",
-        [("LITHIUM BATTERIES. 4S, 3300 mAh, about 16 volts and a lot of stored "
-          "energy. Never puncture, crush or short one. If a pack is swollen, hot, "
-          "or has been dropped hard, stop and tell an instructor.", 0),
-         ("Charge only on the bench, only supervised, and never leave a charging "
-          "pack unattended.", 0),
-         ("WHEELS OFF THE GROUND when you upload a change for the first time. A "
-          "vehicle on a block cannot drive off the desk.", 0),
-         ("Keep fingers, hair, sleeves and USB cables away from the wheels.", 0),
-         ("Know where your power switch is BEFORE you start a program that "
-          "drives.", 0),
-         ("Do not stare into the LEDs at full brightness from close up.", 0),
-         ("Carry the vehicle by the base plate, not by the top plate or the "
-          "wires.", 0)],
-        note="Everything in Lesson 2 onwards moves. This page stops being "
-             "theoretical next lesson.",
-        note_kind="safety",
-        speaker=[
-            "Slow down here. This is the page that stops somebody getting "
-            "hurt next lesson.",
-            "Show them a real pack, and show them the swelling you are "
-            "describing. Words alone do not do it.",
-            "Wheels off the ground is the rule they will be tempted to "
-            "break in Lesson 2. Make it a habit today, while nothing moves.",
-            "Ask each group to find their power switch now and point at it.",
+            "ANSWER, where: LED 0 is the LEFT end of the FRONT bar, and LED "
+            "31 is the LEFT end of the REAR bar. The numbers run left to "
+            "right across the front, then come back right to left across "
+            "the rear, so 0 and 31 sit on the same side. Lesson 4 maps the "
+            "rest.",
+            "ANSWER, show(): setPixelColor only changes the color stored in "
+            "the ESP32's memory. show() is what sends that memory down the "
+            "wire to the LEDs, so without it the strip never hears about the "
+            "change.",
         ])
 
     deck.quiz(
@@ -1344,13 +1465,15 @@ def lesson1(deck, T):
         speaker=[
             "Run this as a conversation, not a test. Ask the room, take a "
             "wrong answer first, then get to the right one.",
-            "Answers, in order: initialisation once at the top / setup once "
+            "Answers, in order: initialization once at the top / setup once "
             "at power-up / loop forever; pinMode makes the pin an output, "
             "and without it digitalWrite does nothing; the baud rate does "
             "not match Serial.begin; 7 / 2 is 3 and 7.0 / 2 is 3.5; the "
             "data is passed down the chain and each LED keeps the first "
             "message it sees; you forgot strip.show().",
-            "Remind them to bring the LED drawing next lesson.",
+            "Remind them to bring the LED drawing next lesson, and that "
+            "next lesson things move - the safety page applies from the "
+            "very first upload.",
         ])
 
     return deck
@@ -1376,7 +1499,7 @@ def _board_setup_slide(deck, T):
          ("4.  Tools > Board > Boards Manager. Search \"{}\".".format(
              T["boards_search"]), 0),
          ("The entry you want is  {}".format(T["board_pkg"]), 1),
-         ("5.  Choose version {}, NOT the latest. Install.".format(
+         ("5.  Choose version {} and click Install.".format(
              T["board_version"]), 0),
          ("6.  {}".format(T["board_menu"]), 0)],
         T["boards_screenshot"],
@@ -1402,10 +1525,7 @@ def _board_setup_slide(deck, T):
             "INSTALLED. Check screens rather than taking their word for it.",
             "The version number matters more than they think. A different "
             "version is the cause of most compile errors that make no sense.",
-            "On the Switch track, warn them that Boards Manager now lists "
-            "TWO entries called \"ESP32 Dev Module\", one under \"esp32\" "
-            "and one under \"esp32_bluepad32\". A pile of errors that make "
-            "no sense almost always means the wrong one is selected.",
+            T["board_speaker"],
         ])
 
 
@@ -1491,7 +1611,7 @@ def lesson2(deck, T):
         "Brushless, with an ESC",
         [("More power for the weight, and far longer life - no brushes to "
           "wear out.", 0),
-         ("Needs an Electronic Speed Controller to energise three windings in "
+         ("Needs an Electronic Speed Controller to energize three windings in "
           "the right order.", 0),
          ("The ESC takes a throttle signal, not a direction and a speed.", 0),
          ("Used on drones, and on our larger vehicles.", 0),
@@ -1624,9 +1744,7 @@ def lesson2(deck, T):
             "Flag the 300 Hz experiment now. They do it in the next "
             "activity but one, and hearing the motors sing is the moment "
             "PWM becomes real.",
-            "On the Switch track, mention that the numbered channel is an "
-            "older way of doing the same job - it is a board package "
-            "difference, not a different idea.",
+            T["pwm_speaker"],
         ])
 
     deck.code(
@@ -1689,10 +1807,19 @@ def lesson2(deck, T):
             "is being pushed less hard, which is not quite the same as "
             "going slower. Keep it at that level.",
             "If a group finds a duty so low the wheel will not start at "
-            "all, tell them what they have found and move on. We are "
-            "deliberately not chasing that number in this course.",
+            "all, tell them they have found something real - and that the "
+            "next activity, l2b_speed_ramp, is built to pin that exact "
+            "number down.",
             "Step 5 moves the pins to another motor. If nothing happens, "
             "they have almost certainly typed one pin of a pair.",
+            "ANSWER, at 60: slower AND with less force. A lower duty means "
+            "the pin is on for less of each cycle, so the motor gets less "
+            "average power. Near the bottom it may not have enough to "
+            "overcome friction at all.",
+            "ANSWER, swapping pins: the motor turns whichever way the "
+            "current flows through it. Swap which pin is driven and the "
+            "current runs through the motor the other way, so it spins the "
+            "other way. Nothing was rewired - only which end is positive.",
         ])
 
 
@@ -1707,13 +1834,14 @@ def lesson2(deck, T):
         "Do it now  -  duty vs speed",
         "l2b_speed_ramp",
         [("1.  Wheels still off the ground. Upload it.", 0),
-         ("2.  Watch the wheels and read the Serial Monitor at the same time.", 0),
-         ("3.  Note the duty value at which the wheels START to turn.", 0),
-         ("4.  Note the value at which the sound stops changing.", 0),
+         ("2.  Watch the wheels and the Serial Monitor together. Each duty "
+          "is held for {} ms.".format(T["step_ms"]), 0),
+         ("3.  Write down the duty at which the wheels START to turn.", 0),
+         ("4.  Set DUTY_STEP to 1 to pin that number down exactly.", 0),
          ("5.  Change PWM_FREQ from 20000 to 300 and upload. LISTEN.", 0),
          ("6.  Put it back to 20000.", 0)],
-        expect=[("All four wheels winding up from nothing to full speed and back, "
-                 "with the duty and the percentage printing as it goes.", 0)],
+        expect=[("All four wheels winding slowly up to full speed and back, "
+                 "the duty printing at each step.", 0)],
         questions=[("Is the speed proportional to the duty all the way down? "
                     "Where does it stop being a straight line?", 0),
                    ("What is the 300 Hz whine, and where does it go at 20 kHz?", 0)],
@@ -1727,8 +1855,21 @@ def lesson2(deck, T):
             "The whine is the switching frequency, now inside human "
             "hearing. At 20 kHz it is above it, which is exactly why we "
             "chose that number.",
-            "Question two - where the speed stops being proportional - is "
-            "the honest answer: at the bottom, where friction wins.",
+            "The ramp holds each duty value for STEP_MS so that the number "
+            "on the screen and the wheel in front of them line up. Steps of "
+            "5 get them within 5; step 4 (DUTY_STEP = 1) gets the exact "
+            "number, at the cost of a much slower ramp. Groups that finish "
+            "early can check whether all four wheels start at the same duty "
+            "- they usually do not.",
+            "ANSWER, proportional: no. At the bottom friction wins - the "
+            "wheels do nothing at all until the duty is high enough to "
+            "break them loose, then they jump into motion. Above that it is "
+            "roughly a straight line, and at the very top the sound stops "
+            "changing because the motor is close to its full speed.",
+            "ANSWER, the whine: it is the PWM switching itself. At 300 Hz "
+            "the motor coils buzz 300 times a second, well inside human "
+            "hearing. At 20 kHz the buzz is still there, but above what a "
+            "human ear can hear - which is exactly why we chose it.",
         ])
 
     deck.section("STEM break: Ohm's law and circuits", minutes=stage_minutes("lesson2", "Ohm's law and circuits"),
@@ -2130,6 +2271,13 @@ def lesson2(deck, T):
             "first, then run. Make a note of which groups predicted well.",
             "If a group's vehicle curves badly on the straights, one motor "
             "is weaker. That is a real finding and worth saying out loud.",
+            "ANSWERS are different for every vehicle, so check the working "
+            "rather than the number. Speed: the side length they measured "
+            "divided by FORWARD_MS / 1000 - the side in feet divided by "
+            "{} seconds. Turn rate: 90 degrees divided by the TUNED "
+            "TURN_MS in seconds, once the square closes. A group whose "
+            "square closes at TURN_MS = 450 has a turn rate of 90 / 0.45 = "
+            "200 degrees per second.".format(T["forward_s"]),
         ])
 
     deck.bullets(
@@ -2227,8 +2375,8 @@ def lesson2(deck, T):
           "the vehicle do?", 0),
          ("6.  Your wheel is 3 inches across. How far does the vehicle travel "
           "in one wheel turn?", 0),
-         ("7.  Your square comes out as a rectangle. Which number is wrong, and "
-          "which way should you change it?", 0),
+         ("7.  Your vehicle overshoots every corner, so the square never "
+          "closes. Which number do you change, and which way?", 0),
          ("8.  Give two reasons the same program gives a different square today "
           "than it did yesterday.", 0)],
         lead="Next lesson: you get to drive it yourself.",
@@ -2240,9 +2388,10 @@ def lesson2(deck, T):
             "average; 25% of 255 is about 64; 20 kHz is above hearing and "
             "300 Hz is not; the vehicle spins on the spot; 9.42 inches, "
             "which is 0.79 feet.",
-            "For question 7, a rectangle means the two straights differ - "
-            "FORWARD_MS is fine and the corners are not square, so TURN_MS "
-            "is the number to change.",
+            "For question 7: TURN_MS, and make it SMALLER. Every corner "
+            "turns too far because the spin runs too long. Undershooting "
+            "would be the opposite - make it bigger. FORWARD_MS only "
+            "changes the length of the sides, never the angles.",
             "For question 8, any two of: battery charge, floor surface, "
             "wheel slip, motors not matched.",
             "Tell them next lesson they drive it themselves. That is the "
@@ -2428,7 +2577,7 @@ def lesson3(deck, T):
     deck.activity(
         "Do it now  -  what does the controller actually send?",
         "l3a_controller_check",
-        [("1.  Upload it and open the Serial Monitor.", 0),
+        [(T["l3a_first_step"], 0),
          (("2.  Press the PS button on the controller." if T["key"].endswith("ps3")
            else "2.  Hold the SYNC button until the controller lights run."), 0),
          ("3.  Press every button in turn and match it to the printed name.", 0),
@@ -2439,8 +2588,8 @@ def lesson3(deck, T):
         ([("7.  Copy the MY_CONTROLLER line it prints. You need it all day.", 0)]
          if not T["key"].endswith("ps3") else
          [("7.  Squeeze L2 slowly. It is not just on or off - watch the number.", 0)]),
-        expect=[("A line for every press, every release, and every stick "
-                 "movement.", 0)],
+        expect=[("A line for every press and every release, and up to four "
+                 "lines a second while a stick moves.", 0)],
         questions=[("Which way is negative on the Y axis?", 0),
                    ("How far does your stick drift when nobody is touching it?", 0)],
         minutes=25,
@@ -2448,12 +2597,20 @@ def lesson3(deck, T):
             "This is a reading exercise, not a driving one. Nothing moves.",
             "Step 5 is the one that sets up the whole deadzone section: "
             "hands off, and watch the number refuse to sit at zero.",
-            "On the Switch track, step 7 gives them the MY_CONTROLLER line "
-            "they need for the rest of the day. Make sure it is written "
-            "down or pasted immediately - it is easy to lose.",
+            T["l3a_speaker"],
             "Walk round with a list of button names. Somebody will find a "
             "button that prints nothing, and that is usually a third-party "
             "pad rather than a fault.",
+            "The sticks print at most four times a second, on purpose - "
+            "PRINT_MS in the sketch. Anybody who wants to see why can set "
+            "it to 20 and watch the window scroll away.",
+            "ANSWER, Y axis: pushing UP gives a NEGATIVE number, down a "
+            "positive one ({}). That is why the driving code puts a "
+            "minus sign in front of the Y reading.".format(T["stick_range"]),
+            "ANSWER, drift: it depends on the pad, which is the point. A "
+            "worn stick usually rests a few counts off zero. Collect the "
+            "numbers from the room - the biggest one is what the deadzone "
+            "has to beat, and it is the next section.",
         ])
 
     deck.section("Deadzone and map", minutes=stage_minutes("lesson3", "Deadzone and map"),
@@ -2503,7 +2660,9 @@ def lesson3(deck, T):
          "//  Where does it sit between toLow and toHigh?\"",
          "",
          "map(0,   0, {0}, 0, 255)   ->    0".format(T["stick_max"]),
-         "map({0}, 0, {0}, 0, 255)   ->  127".format(T["stick_max"] // 2),
+         "map({0}, 0, {1}, 0, 255)   ->  {2}".format(
+             T["stick_max"] // 2, T["stick_max"],
+             (T["stick_max"] // 2) * 255 // T["stick_max"]),
          "map({0}, 0, {0}, 0, 255)   ->  255".format(T["stick_max"]),
          "",
          "// In stickToSpeed the low end is the DEADZONE, not zero,",
@@ -2514,6 +2673,11 @@ def lesson3(deck, T):
              T["deadzone"], T["stick_max"])],
         filename="the idea, and how the program uses it",
         notes=[("map() is just proportion. Nothing more.", 0),
+               ("It works in WHOLE numbers. {} x 255 / {} is {:.3f}..., and "
+                "the fraction is thrown away - not rounded - just like "
+                "7 / 2 in Lesson 1.".format(
+                    T["stick_max"] // 2, T["stick_max"],
+                    (T["stick_max"] // 2) * 255.0 / T["stick_max"]), 0),
                ("It does NOT clamp. Feed it something outside the input range "
                 "and you get something outside the output range, which is why "
                 "the program calls constrain() straight afterwards.", 0),
@@ -2523,6 +2687,10 @@ def lesson3(deck, T):
         speaker=[
             "map() is just proportion. Say that first, then show the three "
             "worked examples.",
+            "Make them work the middle one out before you say it. Half the "
+            "stick is NOT exactly half speed, because map() works in whole "
+            "numbers and throws the fraction away - the 7 / 2 trap from "
+            "Lesson 1, in a place where it actually matters.",
             "The important subtlety is on the last line: the low end is the "
             "DEADZONE, not zero. Without that, the leftover travel could "
             "never reach full speed.",
@@ -2535,7 +2703,8 @@ def lesson3(deck, T):
     deck.activity(
         "Do it now  -  watch the arithmetic",
         "l3b_deadzone_and_map",
-        [("1.  Upload it. Nothing moves - this is print only.", 0),
+        [("1.  {} Upload it. Nothing moves - this is print only.".format(
+             T["address_step"]), 0),
          ("2.  Push the stick VERY slowly from center to full forward. Watch "
           "both columns. Where does the speed stop being 0?", 0),
          ("3.  Set STICK_DEADZONE to 0. Upload. Put the controller down and do "
@@ -2545,7 +2714,8 @@ def lesson3(deck, T):
          ("5.  Put it back. Now set MOTOR_MIN to 60 and watch what happens the "
           "instant you leave the deadzone.", 0)],
         expect=[("Two columns: the raw number from the controller, and the motor "
-                 "speed it turns into.", 0)],
+                 "speed it turns into. A new line only when the stick "
+                 "moves.", 0)],
         questions=[("With the deadzone at 0, what does the vehicle do when "
                     "nobody is holding the controller?", 0),
                    ("What does MOTOR_MIN = 60 change, and when would you want "
@@ -2560,6 +2730,14 @@ def lesson3(deck, T):
             "Step 5 previews MOTOR_MIN, which they met in Lesson 2. The "
             "jump the instant they leave the deadzone is what a raised "
             "minimum feels like.",
+            "ANSWER, deadzone 0: it would creep. The resting drift is no "
+            "longer thrown away, so it turns into a small motor speed - the "
+            "speed column stops reading 0 even with nobody touching the pad.",
+            "ANSWER, MOTOR_MIN = 60: the speed jumps from 0 straight to 60 "
+            "the moment the stick leaves the deadzone, instead of starting "
+            "from 0. You want it for motors that will not turn at all below "
+            "some duty - the number they found with l2b_speed_ramp. These "
+            "vehicles drive fine without it, which is why it ships at 0.",
         ])
 
     deck.section("Driving it", minutes=stage_minutes("lesson3", "Driving it"),
@@ -2590,9 +2768,9 @@ def lesson3(deck, T):
         speaker=[
             "Two lines of arithmetic. Write them on the board and work an "
             "example with the room before you show the slide.",
-            "The half-power steering choice is a design decision, not a "
+            "The {} steering limit is a design decision, not a "
             "limitation. Explain the reasoning: full-power steering spins "
-            "faster than anybody can correct for.",
+            "faster than anybody can correct for.".format(T["turn_pct"]),
             "constrain() is what catches forward 200 plus turn 60. Ask what "
             "would happen without it - the number wraps past what the motor "
             "can take and the vehicle turns the wrong way.",
@@ -2642,8 +2820,9 @@ def lesson3(deck, T):
     deck.activity(
         "Do it now  -  drive it",
         "l3c_tank_drive",
-        [("1.  Wheels off the ground. Upload. Check that up is forward and "
-          "right is right BEFORE you put it down.", 0),
+        [("1.  {} Then wheels off the ground, upload, and check that up "
+          "is forward and right is right BEFORE you put it down.".format(
+              T["address_step"]), 0),
          ("2.  Put it on the floor in a clear space and drive.", 0),
          ("3.  Wheels off the ground, motors running. Carry the pad out "
           "of range - round a corner, or thirty feet down the corridor - "
@@ -2687,6 +2866,11 @@ def lesson3(deck, T):
             "Make them put both back before they leave.",
             "Give this the full thirty minutes. It is the payoff for three "
             "lessons of groundwork.",
+            "ANSWER: the wheels stopped within about a second of the link "
+            "dropping, and picked up again when the pad came back in range. "
+            "The four lines are the if at the very top of loop(): no "
+            "controller, so drive(0, 0) and return before anything else "
+            "runs.",
         ])
 
     deck.bullets(
@@ -2725,9 +2909,7 @@ def lesson3(deck, T):
     deck.table(
         "When it will not connect",
         ["Symptom", "Most likely cause", "What to do"],
-        [["Nothing connects at all",
-          "Address mismatch",
-          "Check the address in the sketch matches the pad"],
+        [T["no_connect_row"],
          ["Connects, then drops",
           "Flat controller battery",
           "Charge it over USB for a few minutes"],
@@ -2742,7 +2924,7 @@ def lesson3(deck, T):
           "Raise STICK_DEADZONE"],
          ["Nothing at all, no serial output",
           "Wrong board selected",
-          "Check the board menu - see Lesson 1"]],
+          "Check the board menu - see Lesson 1"]] + T["extra_trouble_rows"],
         col_widths=[3.5, 3, 4],
         size=13,
         speaker=[
@@ -2782,9 +2964,9 @@ def lesson3(deck, T):
             "For question 6: full-power steering is faster than a person "
             "can correct for.",
             "The answer to question 7, in full:  "
-            "if (!Ps3.isConnected()) { drive(0, 0); return; }  - four lines "
-            "if you count the closing brace, and they go at the very top of "
-            "loop().",
+            "if ({}) {{ drive(0, 0); return; }}  - four lines if you count "
+            "the closing brace, and they go at the very top of "
+            "loop().".format(T["guard"]),
             "Question 7 should be written out, not said. Check a few "
             "notebooks.",
         ])
@@ -2797,41 +2979,48 @@ def _pairing_slide(deck, T):
         deck.bullets(
             "One vehicle, one controller  -  read the sticker",
             [("A PS3 controller has no discovery mode. It talks to ONE "
-              "vehicle and no other, and that is decided before you get "
-              "it - we program and label every pad and every vehicle "
-              "before the lesson.", 0),
+              "Bluetooth address and no other - we program and label "
+              "every pad before the lesson.", 0),
              ("", 0),
-             ("So all you have to do is match the stickers.", 0),
-             ("The sticker on the pad and the sticker on the vehicle "
-              "carry the same number.", 1),
-             ("Same number, they work together. Different numbers, "
-              "nothing happens at all.", 1),
-             ("If your pad will not connect, check the stickers before "
-              "you check anything else.", 1),
+             ("The number on your pad's sticker is the end of that "
+              "address:", 0),
+             ("02:02:03:04:05:NN      NN = the number on the sticker", 1),
              ("", 0),
-             ("The number is really a Bluetooth address written into "
-              "both the pad and the sketch. You do not have to set it, "
-              "but it is worth knowing that is what the sticker stands "
-              "for.", 0)],
-            note="Do not swap pads between vehicles. A pad only ever "
-                 "drives the vehicle with the same number on it.",
+             ("YOU put it into every program that uses the controller, "
+              "near the top:", 0),
+             ("const char *PS3_MAC_ADDRESS = \"02:02:03:04:05:00\";", 1),
+             ("Change the 00 to your number. Left at 00, nothing "
+              "connects - so a forgotten edit can never drive somebody "
+              "else's vehicle.", 0),
+             ("", 0),
+             ("Pad will not connect? Check the number in the sketch "
+              "against the sticker before anything else.", 0)],
+            note="Every program that uses the controller has a CHANGE THIS "
+                 "BEFORE YOU UPLOAD block. Look for it before every "
+                 "upload.",
             note_kind="warn",
             speaker=[
                 "Kevin's instruction, 2026-09-05: we program and label "
-                "the controllers, so do not make students worry about "
-                "how. Tell them what the sticker means and move on.",
-                "Say the odd part plainly all the same: on a PS3 pad it "
-                "is the CONTROLLER that is told which vehicle to talk "
-                "to, not the vehicle that chooses a controller.",
+                "the controllers, so students never run SixaxisPairTool. "
+                "What they DO have to do is copy the sticker number into "
+                "each program they upload: l3a, l3b, l3c, l5b, l5c and "
+                "pathfinder_ps3.",
+                "Say the odd part plainly: on a PS3 pad it is the "
+                "CONTROLLER that is told which address to talk to. The "
+                "sketch makes the ESP32 answer to that address.",
+                "Why every sketch ships ending in 00: with a real address "
+                "as the default, a student who forgot to change it would "
+                "drive whichever vehicle owns that pad. Now forgetting "
+                "means nothing connects, and the Serial Monitor prints the "
+                "address the sketch is listening as.",
                 "FOR YOU, NOT FOR THE SLIDE - how the labelling is done. "
                 "Plug the pad into a Windows PC over USB, open "
-                "SixaxisPairTool, type the address in and click Update, "
-                "then put the same address into PS3_MAC_ADDRESS in the "
-                "sketch. The scheme is 02:02:03:04:05:NN, where NN is "
-                "the vehicle number.",
-                "Also for you: the first pair of digits must be EVEN. An "
-                "odd one silently fails to connect, which is a very "
-                "confusing way to spend an afternoon.",
+                "SixaxisPairTool, type 02:02:03:04:05:NN and click Update, "
+                "then put NN on a sticker on the pad.",
+                "Also for you: keep the first pair of digits EVEN - 02 is "
+                "what we use. An odd one is not an ordinary device address "
+                "and failed silently with the original library, which is a "
+                "very confusing way to spend an afternoon.",
                 "Check the stickers around the room now, before anybody "
                 "uploads. Every term somebody loses a morning to a pad "
                 "that was picked up off the wrong table.",
@@ -3266,7 +3455,7 @@ def lesson4(deck, T):
           "than 255, and why full white across all 32 is used for a "
           "moment and never held.", 0)],
         note="Power = voltage x current. Energy from the battery becomes light "
-             "and heat, and the ratio is not as favourable as you would hope.",
+             "and heat, and the ratio is not as favorable as you would hope.",
         note_kind="warn",
         speaker=[
             "Do the arithmetic on the board with them. It is four "
@@ -3360,6 +3549,12 @@ def lesson4(deck, T):
             "numbering rather than read it off.",
             "The LED directly behind number 3 is the one the mirror section "
             "shows them. Let the program answer it, not you.",
+            "ANSWERS. Behind 3 is 28, because 31 - 3 = 28. The whole right "
+            "side is two ranges, 8 to 15 on the front and 16 to 23 on the "
+            "rear - the loop splits each side in two. Step 6: the middle "
+            "four of the front bar are 6, 7, 8 and 9. Step 7: the four "
+            "corners are 0 (front left), 15 (front right), 16 (rear right) "
+            "and 31 (rear left).",
         ])
 
     deck.code(
@@ -3405,7 +3600,7 @@ def lesson4(deck, T):
             "The < versus <= point is worth a full minute. With FRONT_LAST "
             "at 15 they need <= or they lose LED 15.",
             "Say out loud that off-by-one is the most common bug in "
-            "programming and that this is where they meet it. It normalises "
+            "programming and that this is where they meet it. It normalizes "
             "getting it wrong.",
         ])
 
@@ -3461,7 +3656,7 @@ def lesson4(deck, T):
           "of KITT.", 0),
          ("6.  Copy colorWipe, rename it, and make it run BACKWARDS. Call it "
           "from loop().", 0)],
-        expect=[("Color wipe, theatre chase, a flowing rainbow, then the "
+        expect=[("Color wipe, theater chase, a flowing rainbow, then the "
                  "scanner sweeping front and rear together.", 0)],
         questions=[("In theaterChase, why does the inner loop step in threes?", 0),
                    ("What does >> 1 do to a number? Why does that dim an LED?", 0)],
@@ -3493,7 +3688,8 @@ def lesson4(deck, T):
          ("D-pad quadrants - light only the quarter you press", 1),
          ("Rules: a function you call from loop(), using at least one "
           "for loop. Then show the class - the best one gets used in "
-          "the race next lesson.", 0)],
+          "the race next lesson.", 0),
+         ("Stuck on how to write something? It is on your cheat sheet.", 0)],
         lead="Twenty minutes, in your groups",
         speaker=[
             "Twenty minutes, hands off, let them build. Circulate but do "
@@ -3508,6 +3704,9 @@ def lesson4(deck, T):
             "The stoplight and the D-pad quadrants are the two easiest "
             "starting points if a group is stuck - both are for loops over a "
             "known range, which is exactly what they just practiced.",
+            "When a group asks how to write something, ask what their cheat "
+            "sheet says before you answer. Functions, for loops, the LED "
+            "map and every NeoPixel call they need are all on it.",
         ])
 
     deck.table(
@@ -3531,9 +3730,12 @@ def lesson4(deck, T):
          ["Lights work, vehicle stutters",
           "delay() inside an animation",
           "Lesson 5 - use millis() instead"],
-         ["One LED stays dark forever",
-          "That pixel or its solder joint has failed",
-          "Everything after it still works - it passes data through"]],
+         ["One LED stays dark, the rest work",
+          "That pixel's LED has failed",
+          "Its chip still passes the data on - replace it when you can"],
+         ["Every LED after one point is dark",
+          "The data chain is broken at that pixel",
+          "Check its DATA IN and DATA OUT joints"]],
         lead="Work down this list before you change any code.",
         col_widths=[3.4, 3.2, 4.4],
         size=12,
@@ -3541,9 +3743,10 @@ def lesson4(deck, T):
             "Do not read this out. Point at it and tell them to work down "
             "it before changing any code.",
             "Row one will happen to somebody in the next ten minutes.",
-            "The last row is a good one: a dead pixel still passes data "
-            "through, so everything after it keeps working. That is the "
-            "chain idea again.",
+            "The last two rows are the chain idea again, from both sides. "
+            "A pixel whose LED dies usually still passes the data on, so "
+            "only that one is dark. A break in the data line darkens "
+            "everything after it and nothing before it.",
         ])
 
     deck.quiz(
@@ -3565,8 +3768,12 @@ def lesson4(deck, T):
             "forgot strip.show(); yellow, because red and green together "
             "look yellow to your eye; about 1.9 amps.",
             "Questions 6 and 7 they should answer from their own drawing, "
-            "not from memory.",
-            "Question 8 should be written out. Check a few.",
+            "not from memory. Question 6: 0 to 7 on the front and 24 to 31 "
+            "on the rear. Question 7: 31 - 6 = 25.",
+            "Question 8 should be written out. Check a few. One answer:  "
+            "for (int i = 16; i <= 31; i++) { strip.setPixelColor(i, "
+            "strip.Color(255, 0, 0)); }  then strip.show(). Watch for < 31, "
+            "which misses LED 31, and for a missing show().",
             "Tell them next lesson is everything at once, and a race.",
         ])
 
@@ -3689,12 +3896,12 @@ def lesson5(deck, T):
         notes=[("millis() returns how many milliseconds the board has been "
                 "switched on. Reading it costs nothing.", 0),
                ("Each job needs its OWN \"when did I last run\" variable.", 0),
-               ("unsigned long, because millis() counts past what an int can "
-                "hold in under an hour.", 0),
+               ("unsigned long, because that is what millis() returns. It "
+                "never goes negative.", 0),
                ("Subtracting like this also survives the moment millis() wraps "
                 "back to zero, which happens after 49 days.", 0),
-               ("This exact pattern appears five times in the full vehicle "
-                "program.", 0)],
+               ("The full vehicle program uses this exact pattern for its "
+                "waiting blink and for the scanner.", 0)],
         size=14, highlight={3, 4},
         speaker=[
             "Four lines. Get them to copy it into a notebook, because they "
@@ -3703,7 +3910,11 @@ def lesson5(deck, T):
             "power-up, and all you ever do is subtract.",
             "Each job needs its OWN lastRun variable. That is the bit "
             "people get wrong when they first try it.",
-            "unsigned long matters: an int overflows in under an hour. "
+            "unsigned long matters because it is what millis() returns. On "
+            "an ESP32 an int is the same size but signed, so it would go "
+            "negative after about 25 days. On a classic Arduino Uno, where "
+            "an int is only 16 bits, it goes wrong after 33 seconds - which "
+            "is where most of the warnings they will read online come from. "
             "Subtracting rather than comparing is also what survives the "
             "wrap at 49 days.",
         ])
@@ -3740,6 +3951,12 @@ def lesson5(deck, T):
             "Step 6 - a third light on its own timer without touching the "
             "other two - is the proof they have understood the pattern.",
             "Nothing moves in this one, so no blocks needed.",
+            "ANSWERS. Without the delay, loop() runs tens of thousands of "
+            "times a second - the exact number varies, so take theirs. With "
+            "delay(1000) it runs once a second, so the count reads 1: the "
+            "vehicle has gone from checking everything tens of thousands of "
+            "times a second to once, and for the other 999 milliseconds it "
+            "is not reading the controller, the lights or anything else.",
         ])
 
     deck.bullets(
@@ -3785,7 +4002,7 @@ def lesson5(deck, T):
     deck.activity(
         "Do it now  -  see the bug, then the fix",
         "l5b_button_toggle",
-        [("1.  Upload it.", 0),
+        [("1.  {} Upload it.".format(T["address_short"]), 0),
          ("2.  Press {} a few times. One press, one change, every "
           "time.".format(T["btn_lights"]), 0),
          ("3.  Now press {} ONCE and read the Serial "
@@ -3908,10 +4125,11 @@ def lesson5(deck, T):
     deck.activity(
         "Do it now  -  drive with lights",
         "l5c_drive_with_lights",
-        [("1.  Wheels off the ground. Upload. Check the controls.", 0),
-         ("2.  Put it down and drive. Watch the lights follow the stick: "
-          "headlights, tail lights, brake lights when you stop, white in "
-          "reverse, amber on the side you are turning toward.", 0),
+        [("1.  {} Wheels off the ground. Upload. Check the "
+          "controls.".format(T["address_short"]), 0),
+         ("2.  Put it down and drive. The lights follow the stick: "
+          "headlights, brake lights when you stop, white in reverse, amber "
+          "on the side you turn toward.", 0),
          ("3.  Press {} to toggle the lights.".format(T["btn_lights"]), 0),
          ("4.  D-pad up and down for bright and dim headlights.", 0),
          ("5.  Make the turn signals BLINK rather than stay on. Use millis(), "
@@ -3932,13 +4150,23 @@ def lesson5(deck, T):
             "possible feedback.",
             "The amber only appears on one side because the pattern picks a "
             "side from the sign of the turn value.",
+            "ANSWER, brake lights: line {} starts every pass assuming "
+            "LIGHTS_STOPPED, and only driving or turning changes it. Then "
+            "line {}, in showDrivingLights(), turns the rear bar brake red "
+            "whenever the pattern is LIGHTS_STOPPED. So letting go of the "
+            "stick IS what puts the brake lights on.".format(
+                srcfacts.line_of(T["lights_sketch"],
+                                 "LightPattern newPattern = LIGHTS_STOPPED;"),
+                srcfacts.line_of(T["lights_sketch"],
+                                 "if (lightPattern == LIGHTS_STOPPED) rearColor = brakeLight;")),
         ])
 
     deck.section("The full program", minutes=stage_minutes("lesson5", "The full program"),
         stages=STAGES["lesson5"], stage="The full program",
         speaker=[
-            "Forty-five minutes on the real program. Have it open on the "
-            "projector.",
+            "{} minutes on the real program, the race included. Have it "
+            "open on the projector.".format(
+                stage_minutes("lesson5", "The full program")),
             "Frame it honestly: they already wrote most of this. Today is "
             "about the last few pieces and about reading the whole thing.",
         ])
@@ -3960,8 +4188,8 @@ def lesson5(deck, T):
         col_widths=[5.5, 5.5],
         size=14,
         speaker=[
-            "Go down the right-hand column and let them realise how much of "
-            "it they recognise. That is the point of the table.",
+            "Go down the right-hand column and let them realize how much of "
+            "it they recognize. That is the point of the table.",
             "Only four rows say New today. Everything else is theirs "
             "already.",
         ])
@@ -3984,7 +4212,7 @@ def lesson5(deck, T):
           "range finder on top.", 0),
          ("", 0),
          ("Watch out for which kind you have. A standard servo takes a "
-          "position, plus or minus 180 degrees. A CONTINUOUS ROTATION servo "
+          "position, across about 180 degrees. A CONTINUOUS ROTATION servo "
           "reads the same pulse as a SPEED and will just keep turning.", 0)],
         img("vehicle-with-pan-tilt.jpg"),
         caption="Two servos, driven from opposite sides of the vehicle",
@@ -4066,7 +4294,7 @@ def lesson5(deck, T):
             "Give them the full ten minutes and stay quiet for most of it.",
             "The order matters. Vocabulary first, then the skeleton, then "
             "the detail - the same habit the advanced course opens with.",
-            "Section 2 is the confidence builder. They will recognise "
+            "Section 2 is the confidence builder. They will recognize "
             "STICK_DEADZONE, MOTOR_MAX and the LED count as numbers they "
             "have already changed with their own hands.",
             "Section 6 is the assessment. Walk round and ask groups to point "
@@ -4113,10 +4341,8 @@ def lesson5(deck, T):
         "Do it now  -  the real thing",
         T["full_program"],
         [("1.  Open {}.ino.".format(T["full_program"]), 0),
-         ("2.  READ IT FIRST. You will recognise almost all of it.", 0),
-         (("3.  Set PS3_MAC_ADDRESS to your vehicle's address."
-           if T["key"].endswith("ps3") else
-           "3.  Paste your MY_CONTROLLER line into the top."), 0),
+         ("2.  READ IT FIRST. You will recognize almost all of it.", 0),
+         ("3.  {}".format(T["address_step"]), 0),
          ("4.  Wheels off the ground. Upload. Check every control.", 0),
          ("5.  Put it down and drive properly.", 0),
          ("6.  Find three things in the file you have NOT seen before, and work "
@@ -4134,7 +4360,9 @@ def lesson5(deck, T):
             "what they do. Collect the answers, they are a good measure of "
             "the term.",
             "The green blink means it is waiting for a controller. They saw "
-            "showWaitingLights() in the code.",
+            "showWaitingLights() in the code. A green blink that never "
+            "stops usually means step 3 was skipped - the Serial Monitor "
+            "says which address it is listening as.",
             "Give this the full thirty minutes and circulate. This is the "
             "last time they get help before the race.",
         ])
@@ -4210,7 +4438,8 @@ def lesson5(deck, T):
             "file has a section called THE IDEA, which is the part worth "
             "understanding rather than the feature.",
             "If anybody is staying on after the course, get them to pick "
-            "one today while the enthusiasm is high.",
+            "one today while the enthusiasm is high. The cheat sheet from "
+            "Lesson 1 covers all the C++ these projects need.",
         ])
 
     deck.image_pair(
@@ -4311,13 +4540,18 @@ def lesson5(deck, T):
             "Run it as a conversation, and take your time - this is the "
             "last thing they do.",
             "Answers, in order: delay stops everything, so two different "
-            "rates cannot both be served; the four-line pattern should be "
-            "written out and checked; unsigned long because an int "
-            "overflows in under an hour.",
+            "rates cannot both be served; the four-line pattern, written "
+            "out:  unsigned long last = 0;  then in loop()  if (millis() - "
+            "last >= INTERVAL) { last = millis(); ...do the thing... }; "
+            "unsigned long because it is what millis() returns and it "
+            "never goes negative - an int would after about 25 days.",
             "Edge detection catches the moment a button goes down; without "
             "it one press registers thousands of times. A dirty flag saves "
             "redrawing the strip when nothing changed.",
             "A servo centers on a 1.5 ms pulse, sent every 20 ms.",
+            "For question 7, any three of: two servos aimed with the right "
+            "stick, the KITT scanner without delay(), the sharp-steering "
+            "toggle on the stick click, and the startup light show.",
             "For question 8: mechanically, one motor weaker or a wheel "
             "dragging; in software, a small turn correction added to the "
             "straight-line command.",
@@ -4362,6 +4596,16 @@ def enrich(track):
 
     percent = 100.0 * track["deadzone"] / track["stick_max"]
     track["deadzone_pct"] = "about %d%%" % round(percent)
+
+    # The Lesson 2 activities quote how long the ramp holds each duty value
+    # and how long each side of the square is driven.
+    lessons = drive.rsplit("/", 2)[0]
+    track["step_ms"] = srcfacts.number(
+        lessons + "/l2b_speed_ramp/l2b_speed_ramp.ino", "STEP_MS")
+    forward_ms = srcfacts.number(
+        lessons + "/l2c_maneuver_square/l2c_maneuver_square.ino", "FORWARD_MS")
+    track["forward_s"] = "%g" % (forward_ms / 1000.0)
+    track["lights_sketch"] = lessons + "/l5c_drive_with_lights/l5c_drive_with_lights.ino"
     return track
 
 

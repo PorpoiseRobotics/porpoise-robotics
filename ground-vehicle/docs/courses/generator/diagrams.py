@@ -136,6 +136,7 @@ def program_structure(deck, title="Every program has the same three parts", spea
         "Ask before you explain: which of these three runs more than once? Let somebody get it wrong first - the answer sticks better.",
         "The first part has no keyword in C++. It is just the top of the file. Naming it anyway gives them somewhere to file #includes and constants.",
         "Common misunderstanding: students think setup() runs every time round. Say plainly that it runs once, at power-up, and never again until reset.",
+        "Every line in the three boxes is from l1a_blink, which is the next slide in full. They are about to read the same program twice: once as a shape, once line by line.",
     ])
 
     # Named the way the course names them: INITIALIZATION, SETUP, LOOP. The
@@ -143,11 +144,11 @@ def program_structure(deck, title="Every program has the same three parts", spea
     # file - but giving it a name makes the three-part shape easy to hold on to.
     parts = [
         ("1.  INITIALIZATION", "Libraries, constants, variables.\nThe top of the file.",
-         "#include <Adafruit_NeoPixel.h>\nconst int LED_PIN = 5;", LIGHT_GREY),
+         "const int LED_PIN = 2;\nconst int BLINK_MS = 1000;", LIGHT_GREY),
         ("2.  SETUP", "setup() runs ONCE, at power-up.\nGet the hardware ready.",
-         "void setup() {\n  pinMode(LED_PIN, OUTPUT);\n}", LIGHT_TEAL),
+         "void setup() {\n  pinMode(LED_PIN, OUTPUT);\n  Serial.begin(115200);\n}", LIGHT_TEAL),
         ("3.  LOOP", "loop() runs OVER AND OVER,\nuntil the power goes off.",
-         "void loop() {\n  digitalWrite(LED_PIN, HIGH);\n  delay(1000);\n}", LIGHT_AMBER),
+         "void loop() {\n  digitalWrite(LED_PIN, HIGH);\n  delay(BLINK_MS);\n  ...\n}", LIGHT_AMBER),
     ]
 
     col_w = Inches(3.85)
@@ -179,9 +180,9 @@ def program_structure(deck, title="Every program has the same three parts", spea
            size=12, color=AMBER, align=PP_ALIGN.CENTER, bold=True)
 
     deck._note(slide,
-               "delay(1000) is what makes this one blink once a second. Take "
-               "the delay out and the same loop runs thousands of times a "
-               "second, too fast to see.",
+               "delay(BLINK_MS) is what makes it blink slowly enough to see. "
+               "Take the delays out and the same loop runs thousands of times "
+               "a second, far too fast for your eye.",
                "info")
     return slide
 
@@ -564,8 +565,8 @@ def deadzone_map(deck, title="From thumbstick to motor speed", stick_max=127,
                  deadzone=20, speaker=None):
     slide = deck.blank(title, speaker=speaker or [
         "The two numbers that matter are the deadzone and the top of the stick range. Everything else on the slide follows from those.",
-        "Ask why the line does not start at zero. The answer - a stick at rest is never exactly centered - is worth getting from the room rather than telling them.",
-        "The jump at the deadzone edge is deliberate: below the minimum duty the motor buzzes instead of turning, so the map skips straight past it.",
+        "Ask why the ramp does not start at the origin. The answer - a stick at rest is never exactly centered - is worth getting from the room rather than telling them.",
+        "With MOTOR_MIN at 0 the ramp leaves the deadzone edge at zero speed, with no jump. Step 5 of the next activity sets MOTOR_MIN to 60, and then the speed jumps from 0 straight to 60 at the edge. That is what a speed floor looks like.",
         "Come back to this diagram when somebody's vehicle creeps on its own.",
     ])
 
@@ -1010,7 +1011,7 @@ def state_machine(deck, title="The lighting state machine", speaker=None):
         "A state machine is just: what am I doing now, and what could make that change. The diagram is a picture of exactly that.",
         "Point out that exactly one state is active at a time. That is what stops the lights contradicting themselves.",
         "Ask the room for a transition that is missing, then decide together whether it should be there.",
-        "This shape turns up everywhere in embedded work. Naming it now means they recognise it later.",
+        "This shape turns up everywhere in embedded work. Naming it now means they recognize it later.",
     ])
 
     top = BODY_TOP + Inches(0.35)
@@ -1560,7 +1561,9 @@ def bearing_plot(deck, title="Plotting where a maneuver ends up", speaker=None):
         "Bearings here are measured the navigator's way: 0 is straight ahead "
         "and they increase clockwise.",
         "Then the whole path is just adding the legs up, which is what the "
-        "table on the right does.",
+        "table on the right does. The four legs are the baseball diamond on "
+        "the next slide: home to first at 45 degrees, then three left turns, "
+        "which is why the bearings go 45, 315, 225, 135.",
         "Worth saying that this is exactly how a ship's dead reckoning plot "
         "is kept - and why it drifts, because every leg's error is added to "
         "the one before it.",
@@ -1616,9 +1619,9 @@ def bearing_plot(deck, title="Plotting where a maneuver ends up", speaker=None):
     headers = ["Leg", "Time", "Bearing", "East", "North"]
     rows = [
         ["1", "10 s", "45", "+23.6", "+23.6"],
-        ["2", "10 s", "135", "+23.6", "-23.6"],
+        ["2", "10 s", "315", "-23.6", "+23.6"],
         ["3", "10 s", "225", "-23.6", "-23.6"],
-        ["4", "10 s", "315", "-23.6", "+23.6"],
+        ["4", "10 s", "135", "+23.6", "-23.6"],
         ["", "", "total", "0.0", "0.0"],
     ]
     widths = [Inches(0.7), Inches(1.0), Inches(1.2), Inches(1.35), Inches(1.35)]

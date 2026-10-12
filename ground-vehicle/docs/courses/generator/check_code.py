@@ -96,10 +96,10 @@ ALLOWED = {
 
     # worked arithmetic showing what map() returns, not lines of the program
     "map(0, 0, 127, 0, 255) -> 0",
-    "map(63, 0, 63, 0, 255) -> 127",
+    "map(63, 0, 127, 0, 255) -> 126",
     "map(127, 0, 127, 0, 255) -> 255",
     "map(0, 0, 511, 0, 255) -> 0",
-    "map(255, 0, 255, 0, 255) -> 127",
+    "map(255, 0, 511, 0, 255) -> 127",
     "map(511, 0, 511, 0, 255) -> 255",
 
     # formulae and register names set in the code font
