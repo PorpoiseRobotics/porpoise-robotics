@@ -21,9 +21,17 @@
  * 1. Board package: "esp32_bluepad32" by Ricardo Quesada, version 4.1.0.
  *      File > Preferences > "Additional boards manager URLs", add:
  *        https://raw.githubusercontent.com/ricardoquesada/esp32-arduino-lib-builder/master/bluepad32_files/package_esp32_bluepad32_index.json
+ *      Tools > Board > Boards Manager, search "esp32_bluepad32", install 4.1.0.
  *      Then Tools > Board > esp32_bluepad32 > "ESP32 Dev Module".
- * 2. Library: "Adafruit NeoPixel" by Adafruit.
- *    Bluepad32 itself ships with the board package.
+ *      If "esp32 by Espressif Systems" is installed too (the PS3 track uses
+ *      it), the board menu has two "ESP32 Dev Module" entries. Pick the one
+ *      under esp32_bluepad32.
+ * 2. One library, from Tools > Manage Libraries:
+ *      "Adafruit NeoPixel" by Adafruit (built with 1.15.5).
+ *
+ * Everything else ships with the board package - Bluepad32 (Bluepad32.h and
+ * uni.h), Wire, EEPROM and esp_mac.h - so there is nothing more to install.
+ * FastLED is NOT needed. 11.2 used it; leaving it installed does no harm.
  *
  * CONTROLS
  * - Left thumbstick:  drive. Up forward, down reverse, left/right steer.
@@ -32,8 +40,10 @@
  * - D-pad DOWN:  headlights back to normal
  * - D-pad LEFT:  left turn signal, 3 cycles, or hold for longer
  * - D-pad RIGHT: right turn signal, 3 cycles, or hold for longer
- * - X button (west):  toggle all running lights
- * - Y button (north): run the KITT scanner
+ * - Left face button: toggle all running lights
+ *     (Y on a Switch pad, X on Xbox, Square on PlayStation)
+ * - Top face button:  run the KITT scanner
+ *     (X on a Switch pad, Y on Xbox, Triangle on PlayStation)
  * - L3 (left stick click): cycle throttle modes
  *     NORMAL - full speed, reduced steering authority (default)
  *     FAST   - full speed, full steering
@@ -82,6 +92,15 @@
  * - Switched to the current Bluepad32 controller API and dropped the unused
  *   esp_now.h and WiFi.h includes and the unused servo position variables.
  * - Split one 1292-line file into tabs by subsystem.
+ *
+ * CHANGES 2026-10-12
+ * - The serial console no longer blocks. Serial.readStringUntil() stopped
+ *   loop(), with the motors still running, until a typed line arrived - for a
+ *   whole second with the Serial Monitor set to "No line ending".
+ * - The INA219 is set to its 32 V range, as its comment always said. It was
+ *   on the 16 V range, below a charged 4S pack (16.8 V).
+ * - The INA219's two bytes are read in a fixed order. In
+ *   (Wire.read() << 8) | Wire.read() the compiler may call either one first.
 **/
 
 #include <Bluepad32.h>

@@ -1046,8 +1046,8 @@ def lesson2(deck):
           "speed. A global speed cap makes a vehicle feel broken; a steering "
           "cap makes it feel controllable.", 0)],
         "Four servos, one right stick",
-        [("Each servo owns one DIRECTION of the stick and sweeps its full "
-          "travel across half the range:", 0),
+        [("Each servo owns one DIRECTION of the stick, and pushing that way "
+          "moves it from center to one end, about 90 degrees:", 0),
          ("servo 1  -  stick up", 1),
          ("servo 3  -  stick down", 1),
          ("servo 2  -  stick left", 1),
@@ -2202,7 +2202,10 @@ def lesson5(deck):
          "  Wire.write(reg);",
          "  Wire.endTransmission(false);   // REPEATED START, keep the bus",
          "  Wire.requestFrom((uint8_t)INA219_I2C_ADDR, (uint8_t)2);",
-         "  return Wire.available() >= 2 ? (Wire.read() << 8) | Wire.read() : 0;",
+         "  if (Wire.available() < 2) return 0;",
+         "  uint8_t high = Wire.read();",
+         "  uint8_t low  = Wire.read();",
+         "  return (high << 8) | low;",
          "}",
          "",
          "float readCurrentAmps() {",
@@ -2217,17 +2220,22 @@ def lesson5(deck):
         filename="Sensors.ino",
         notes=[("endTransmission(FALSE) is a repeated start. A full stop "
                 "would let another master grab the bus mid-read.", 0),
+               ("High byte, then low byte, as two statements. In one "
+                "expression C++ may call either read() first.", 0),
                ("The shunt register is SIGNED. Read it unsigned and every "
                 "braking current becomes a huge positive number.", 0),
                ("Bus voltage sits in the top 13 bits, so it is shifted down.", 0),
                ("Forty lines of your own beats a library you cannot read.", 0)],
-        size=12, highlight={3, 9},
+        size=12, highlight={3, 6, 12},
         speaker=[
             "No library. Two functions and a datasheet. That is the point "
             "of the slide.",
             "The repeated start matters: a full stop would let another "
             "master grab the bus between writing the register number and "
             "reading the answer.",
+            "The two reads are separate statements on purpose. Written as "
+            "(Wire.read() << 8) | Wire.read(), C++ does not promise which "
+            "read() runs first - the bytes can come back swapped.",
             "The signed read is the trap. Read the shunt register unsigned "
             "and every regenerative spike comes back as a huge positive "
             "number.",

@@ -155,7 +155,12 @@ uint16_t ina219Read16(uint8_t reg) {
   Wire.write(reg);
   Wire.endTransmission(false);          // Repeated start, do not release the bus
   Wire.requestFrom((uint8_t)INA219_I2C_ADDR, (uint8_t)2);
-  return Wire.available() >= 2 ? (Wire.read() << 8) | Wire.read() : 0;
+  if (Wire.available() < 2) return 0;
+  // Two separate statements, so the high byte is always read first. In
+  // (Wire.read() << 8) | Wire.read() C++ may call either read() first.
+  uint8_t high = Wire.read();
+  uint8_t low  = Wire.read();
+  return (high << 8) | low;
 }
 
 bool isIna219Present() {
@@ -166,7 +171,7 @@ bool isIna219Present() {
 void ina219Init() {
   ina219Write16(REG_CONFIG, 0x8000);              // Reset
   delay(1);
-  ina219Write16(REG_CONFIG, 0b0001100111001111);  // 32 V range, 12-bit, continuous
+  ina219Write16(REG_CONFIG, 0b0011100111001111);  // 32 V range (bit 13), 12-bit, continuous
   ina219Write16(REG_CALIB, 20999);                // Calibration for this shunt
 }
 

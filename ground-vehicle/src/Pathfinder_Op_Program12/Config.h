@@ -202,4 +202,7 @@ const uint8_t PAIRED_VALID_MAGIC = 0xA5;
 const unsigned long DIAG_INTERVAL_MS      = 5000;
 const unsigned long JOY_REPORT_INTERVAL_MS = 250;   // 4 Hz
 
+// A typed command with no line ending runs after this much quiet.
+const unsigned long CONSOLE_IDLE_MS = 1000;
+
 #endif  // CONFIG_H

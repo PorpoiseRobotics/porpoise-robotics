@@ -185,10 +185,45 @@ void handleDynamicsCommand(const String &args) {
   }
 }
 
-void handleSerialCommands() {
-  if (!Serial.available()) return;
+/*
+  Collects whatever characters have arrived and runs the command once the line
+  is finished. It returns immediately either way, so the vehicle keeps driving
+  while you type. Serial.readStringUntil() would stop loop() - and leave the
+  motors running at their last speed - until the line came in.
 
-  String cmd = Serial.readStringUntil('\n');
+  A line is finished by CR, LF or both, or by CONSOLE_IDLE_MS of quiet, which
+  is what makes the Serial Monitor's "No line ending" setting work too.
+*/
+void handleSerialCommands() {
+  static String input_line = "";
+  static unsigned long last_char_time = 0;
+
+  while (Serial.available() > 0) {
+    char c = (char)Serial.read();
+    last_char_time = millis();
+
+    if (c == '\n' || c == '\r') {
+      if (input_line.length() > 0) {
+        runCommand(input_line);
+        input_line = "";
+      }
+      continue;
+    }
+
+    // Printable characters only, and capped, so a stuck sender cannot grow
+    // the string until the ESP32 runs out of memory.
+    if (c >= 32 && c < 127 && input_line.length() < 80) {
+      input_line += c;
+    }
+  }
+
+  if (input_line.length() > 0 && millis() - last_char_time >= CONSOLE_IDLE_MS) {
+    runCommand(input_line);
+    input_line = "";
+  }
+}
+
+void runCommand(String cmd) {
   cmd.trim();
   cmd.toLowerCase();
   if (cmd.length() == 0) return;

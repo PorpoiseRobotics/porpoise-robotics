@@ -167,9 +167,10 @@ void write_servo(uint8_t channel, int microseconds) {
 }
 
 /*
-  The right stick drives four servos, one per direction. Each servo sweeps its
-  full travel across half of the stick's range and sits centered otherwise, so
-  a single stick can aim four independent things.
+  The right stick drives four servos, one per direction. Pushing the stick a
+  servo's way moves it from center (1.5 ms) to one end of its travel (2.0 ms),
+  about 90 degrees; otherwise it sits centered. So a single stick can aim four
+  independent things.
 */
 void update_servos(ControllerPtr gp) {
   int rs_y = remap_axis(gp->axisRY(), INPUT_DEADZONE_RS_Y, rs_y_sc, AXIS_MAX, AXIS_MAX);
