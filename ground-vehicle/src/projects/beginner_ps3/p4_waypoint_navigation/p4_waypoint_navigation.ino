@@ -26,10 +26,17 @@
 
   BEFORE YOU CAN COMPILE THIS
   ---------------------------
-  1. Board package: "esp32" by Espressif Systems, VERSION 3.0.7
+  1. Board package: "esp32" by Espressif Systems, VERSION 3.3.12
        Tools > Board > esp32 > "ESP32 Dev Module".
-  2. Libraries: "PS3 Controller Host" by Jeffrey van Pernis
+  2. Libraries: "Fork of PS3 Controller Host" by Jeffrey van Pernis
                 "Adafruit NeoPixel" by Adafruit
+
+  BEFORE YOU UPLOAD
+  -----------------
+  Set PS3_MAC_ADDRESS, just below the #include lines, to YOUR controller's
+  address: the number on its sticker goes in place of the 00 at the end.
+  You do this in every program that uses the controller. Left at 00, the
+  controller will not connect.
 
   CONTROLS
   --------
@@ -77,7 +84,13 @@
 #include <Ps3Controller.h>
 #include <Adafruit_NeoPixel.h>
 
-const char *PS3_MAC_ADDRESS = "02:02:03:04:05:08";
+// ======================== CHANGE THIS BEFORE YOU UPLOAD ========================
+// Your controller only talks to ONE address, and this has to be it. Replace
+// the 00 at the end with the number on YOUR controller's sticker - controller
+// 7 is "02:02:03:04:05:07". Every vehicle in the room needs a different number,
+// and left at 00 nothing will connect.
+// ==============================================================================
+const char *PS3_MAC_ADDRESS = "02:02:03:04:05:00";
 
 // --- LEDs ---
 const int LED_PIN        = 5;
@@ -349,6 +362,9 @@ void setup() {
   drive(0, 0);
 
   Ps3.begin(PS3_MAC_ADDRESS);
+  Serial.print("Listening as ");
+  Serial.print(PS3_MAC_ADDRESS);
+  Serial.println("  - it must match the number on your controller.");
   Serial.println("Drive with lights. Waiting for the controller...");
 }
 
