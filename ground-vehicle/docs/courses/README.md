@@ -246,11 +246,13 @@ so a mistyped filename is visible instead of invisible.
 
 ## Still to do
 
-- **The PS3 track on board package 3.3.12 has been compiled, not driven.**
-  Every PS3 program builds with no warnings against "Fork of PS3 Controller
-  Host" 1.1.1-idf5.4, whose one change from the original is how it sets the
-  Bluetooth address. Before the first cohort, upload `pathfinder_ps3` to one
-  vehicle and check the pad pairs, drives, lights and steers.
+- **The PS3 track on board package 3.3.12 has not been driven yet.** The first
+  vehicle run (2026-10-12) found that Bluetooth never started, because board
+  package 3.3 frees its memory at power-on; every PS3 sketch now includes
+  `esp32-hal-alloc-bt-classic-mem.h` to keep it (see the lessons README). With
+  that line the radio starts and answers on the right address. Before the
+  first cohort, upload `pathfinder_ps3` to one vehicle and check the pad
+  pairs, drives, lights and steers.
 - The two **controller images** are vendor product shots rather than Porpoise
   photography. They were already in the P2 and P3 decks, but this repository is
   public — worth a decision.

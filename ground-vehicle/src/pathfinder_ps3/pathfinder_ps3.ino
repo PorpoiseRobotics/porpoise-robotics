@@ -64,6 +64,9 @@
 */
 
 #include <Ps3Controller.h>
+// Keep this line. It tells the ESP32 to keep its Bluetooth memory - without
+// it the board frees that memory at power-on and no controller can connect.
+#include "esp32-hal-alloc-bt-classic-mem.h"
 #include <Adafruit_NeoPixel.h>
 
 // ===================================================================
@@ -75,7 +78,7 @@
 // 00 at the end with the number on its sticker - controller 7 is
 // "02:02:03:04:05:07". Left at 00, nothing connects. Change only the last two
 // digits: the first pair must stay EVEN, and 02 is what every pad here uses.
-const char *PS3_MAC_ADDRESS = "02:02:03:04:05:00";
+const char *PS3_MAC_ADDRESS = "02:02:03:04:05:08";
 
 // --- LED strip -------------------------------------------------------
 const int LED_PIN        = 5;    // GPIO 5 controls the LED strip
@@ -421,7 +424,9 @@ void setup() {
   strip.show();
 
   // --- Bluetooth ---
-  Ps3.begin(PS3_MAC_ADDRESS);
+  if (!Ps3.begin(PS3_MAC_ADDRESS)) {
+    Serial.println("Bluetooth did not start. Is the esp32-hal-alloc-bt-classic-mem.h line still at the top?");
+  }
   Serial.print("Listening as ");
   Serial.print(PS3_MAC_ADDRESS);
   Serial.println("  - it must match the number on your controller.");
