@@ -58,6 +58,9 @@
 */
 
 #include <Ps3Controller.h>
+// Keep this line. It tells the ESP32 to keep its Bluetooth memory - without
+// it the board frees that memory at power-on and no controller can connect.
+#include "esp32-hal-alloc-bt-classic-mem.h"
 
 // ======================== CHANGE THIS BEFORE YOU UPLOAD ========================
 // Your controller only talks to ONE address, and this has to be it. Replace
@@ -103,7 +106,9 @@ void setup() {
   Serial.begin(115200);
   delay(500);
 
-  Ps3.begin(PS3_MAC_ADDRESS);
+  if (!Ps3.begin(PS3_MAC_ADDRESS)) {
+    Serial.println("Bluetooth did not start. Is the esp32-hal-alloc-bt-classic-mem.h line still at the top?");
+  }
   Serial.print("Listening as ");
   Serial.print(PS3_MAC_ADDRESS);
   Serial.println("  - it must match the number on your controller.");

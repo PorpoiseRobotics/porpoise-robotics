@@ -455,10 +455,11 @@ def content(T):
 
     if ps3:
         pad_rows = [
-            [text_cell([b("At the top: "), t("the library, and YOUR "
-                       "controller's address. The number on its sticker "
-                       "replaces the 00.")]),
+            [text_cell([b("At the top: "), t("the library, the line that "
+                       "keeps Bluetooth on, and YOUR controller's address. "
+                       "The number on its sticker replaces the 00.")]),
              Code(["#include <Ps3Controller.h>",
+                   '#include "esp32-hal-alloc-bt-classic-mem.h"   // KEEP: Bluetooth',
                    'const char *PS3_MAC_ADDRESS = "02:02:03:04:05:00";   // CHANGE 00'],
                   ("top", "pad"))],
             [text_cell([b("In setup()")]),

@@ -48,6 +48,13 @@ PS3 Controller Host" (1.1.1-idf5.4, maintained by Rin Iwai) changes that one
 call and nothing else. Both supply `Ps3Controller.h`, and with both installed
 the IDE picks the original and the build fails - so uninstall the original.
 
+**Every PS3 sketch also includes `esp32-hal-alloc-bt-classic-mem.h`, right under
+`Ps3Controller.h`.** Board package 3.3 frees the Bluetooth memory at power-on
+unless a library asks to keep it, and the PS3 library is older than that rule.
+Without the line `Ps3.begin()` fails, the radio never starts and no controller
+can connect - yet everything compiles. The sketches print "Bluetooth did not
+start" if it happens. Found on a vehicle on 2026-10-12.
+
 **Every PS3 sketch that uses the controller ships with `PS3_MAC_ADDRESS` ending
 in `00`**, which no controller answers. Students change the last two digits to
 the number on their controller's sticker before uploading. Forgetting means no
