@@ -160,7 +160,7 @@ class Document:
     def table(self, rows, widths, *, header=False, heights=None,
               size=None, borders="all", fills=None, align=None,
               valign="top", bold_first_col=False, keep_together=True,
-              header_rows=None):
+              header_rows=None, para_after=2, line_height=None):
         """
         rows    - list of rows; each cell is a string, a list of runs, a
                   list of lists of runs (several paragraphs), or a Span
@@ -172,6 +172,9 @@ class Document:
                   height is a MINIMUM, so a full cell still grows
         borders - "all", "lines" (horizontal rules only), or "none"
         fills   - {(row, cell): hex color} for individual cells
+        para_after, line_height - spacing after each paragraph in a cell, in
+                  points, and line height as a multiple; a dense
+                  reference sheet wants both tighter than a workbook
         """
         size = size or self.base_size
         fills = fills or {}
@@ -254,7 +257,8 @@ class Document:
                 body = "".join(
                     _para_xml(p, size=size, bold=bold,
                               color=NAVY if is_header else None,
-                              after=2, align=cell_align)
+                              after=para_after, align=cell_align,
+                              line=line_height)
                     for p in paragraphs)
                 out.append("<w:tc><w:tcPr>{}</w:tcPr>{}</w:tc>".format(
                     tcpr, body))
