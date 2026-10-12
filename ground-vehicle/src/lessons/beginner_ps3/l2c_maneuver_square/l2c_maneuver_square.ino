@@ -21,7 +21,7 @@
 
   BEFORE YOU CAN COMPILE THIS
   ---------------------------
-  Board package: "esp32" by Espressif Systems, VERSION 3.0.7
+  Board package: "esp32" by Espressif Systems, VERSION 3.3.12
     Tools > Board > esp32 > "ESP32 Dev Module".
   Libraries: none.
 
@@ -65,9 +65,9 @@ const int PWM_FREQ = 20000;
 const int PWM_BITS = 8;
 
 // The numbers you are going to tune.
-const int DRIVE_SPEED = 150;    // Duty value used to drive straight
-const int TURN_SPEED  = 150;    // Duty value used for the corners
-const int FORWARD_MS  = 1500;   // How long each side of the square takes
+const int DRIVE_SPEED = 200;    // Duty value used to drive straight
+const int TURN_SPEED  = 200;    // Duty value used for the corners
+const int FORWARD_MS  = 1000;   // How long each side of the square takes
 const int TURN_MS     = 500;    // How long a 90 degree corner takes. TUNE ME.
 
 void setup() {

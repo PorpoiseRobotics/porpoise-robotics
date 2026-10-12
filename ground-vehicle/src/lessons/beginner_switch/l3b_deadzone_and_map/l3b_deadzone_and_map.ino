@@ -81,7 +81,11 @@ const int turnMax = (MOTOR_MAX * 3) / 4;
 
 ControllerPtr myController = nullptr;
 bool addressIsSet = false;
+// A new line is printed only when the stick has moved, and never more
+// often than once every PRINT_MS milliseconds. Make it 20 and see why.
+const unsigned long PRINT_MS = 250;
 unsigned long lastPrint = 0;
+int lastStickX = 0, lastStickY = 0;
 
 bool isMyController(const uint8_t *address) {
   for (int i = 0; i < 6; i++) {
@@ -158,6 +162,7 @@ void setup() {
 
   Serial.println("Waiting for your controller...");
   Serial.println();
+  Serial.println("A new line appears whenever the stick moves.");
   Serial.println("raw Y\t forward\t raw X\t turn\t| left\t right");
 }
 
@@ -187,10 +192,13 @@ void loop() {
   int leftSpeed  = constrain(forward + turn, -MOTOR_MAX, MOTOR_MAX);
   int rightSpeed = constrain(forward - turn, -MOTOR_MAX, MOTOR_MAX);
 
-  // Print about ten times a second, which is fast enough to feel live and slow
-  // enough to read.
-  if (millis() - lastPrint >= 100) {
-    lastPrint = millis();
+  // Print only when the stick has moved, and at most four times a second:
+  // fast enough to feel live, slow enough to read.
+  bool stickMoved = (leftStickX != lastStickX || leftStickY != lastStickY);
+  if (stickMoved && millis() - lastPrint >= PRINT_MS) {
+    lastPrint  = millis();
+    lastStickX = leftStickX;
+    lastStickY = leftStickY;
 
     Serial.print(leftStickY);   Serial.print("\t ");
     Serial.print(forward);      Serial.print("\t\t ");

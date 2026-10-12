@@ -14,7 +14,7 @@
 
   BEFORE YOU CAN COMPILE THIS
   ---------------------------
-  Board package: "esp32" by Espressif Systems, VERSION 3.0.7
+  Board package: "esp32" by Espressif Systems, VERSION 3.3.12
     Tools > Board > esp32 > "ESP32 Dev Module".
   Libraries: none.
 

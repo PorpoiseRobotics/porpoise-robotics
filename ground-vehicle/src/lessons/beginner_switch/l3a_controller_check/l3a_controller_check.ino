@@ -70,6 +70,12 @@ bool wasUp = false, wasDown = false, wasLeft = false, wasRight = false;
 
 int lastLx = 0, lastLy = 0, lastRx = 0, lastRy = 0;
 
+// The sticks move all the time. Printing every change would scroll
+// faster than anybody can read, so they are printed at most once every
+// PRINT_MS milliseconds. Make it 20 and see for yourself.
+const unsigned long PRINT_MS = 250;
+unsigned long lastPrint = 0;
+
 /*
   Prints one line when a button goes down and one when it comes back up.
   The "&" on wasDown means this function is handed the actual variable, not a
@@ -184,28 +190,32 @@ void loop() {
   reportButton("D-PAD LEFT",  dpad & DPAD_LEFT,  wasLeft);
   reportButton("D-PAD RIGHT", dpad & DPAD_RIGHT, wasRight);
 
-  // --- Thumbsticks ---
-  // Bluepad32 reports every stick axis as -512 to +511, whatever brand of
-  // controller you plug in. Print only when something has moved by more than
-  // 15, or the Serial Monitor scrolls forever.
-  int lx = myController->axisX();
-  int ly = myController->axisY();
-  int rx = myController->axisRX();
-  int ry = myController->axisRY();
+  // --- Thumbsticks, at most once every PRINT_MS ---
+  if (millis() - lastPrint >= PRINT_MS) {
+    lastPrint = millis();
 
-  if (abs(lx - lastLx) > 15 || abs(ly - lastLy) > 15) {
-    Serial.print("LEFT stick    x = ");  Serial.print(lx);
-    Serial.print("\t y = ");             Serial.println(ly);
-    lastLx = lx;
-    lastLy = ly;
+    // Bluepad32 reports every stick axis as -512 to +511, whatever brand of
+    // controller you plug in. Print only when a stick has moved by more
+    // than 15 since the last line about it.
+    int lx = myController->axisX();
+    int ly = myController->axisY();
+    int rx = myController->axisRX();
+    int ry = myController->axisRY();
+
+    if (abs(lx - lastLx) > 15 || abs(ly - lastLy) > 15) {
+      Serial.print("LEFT stick    x = ");  Serial.print(lx);
+      Serial.print("\t y = ");             Serial.println(ly);
+      lastLx = lx;
+      lastLy = ly;
+    }
+
+    if (abs(rx - lastRx) > 15 || abs(ry - lastRy) > 15) {
+      Serial.print("RIGHT stick   x = ");  Serial.print(rx);
+      Serial.print("\t y = ");             Serial.println(ry);
+      lastRx = rx;
+      lastRy = ry;
+    }
   }
 
-  if (abs(rx - lastRx) > 15 || abs(ry - lastRy) > 15) {
-    Serial.print("RIGHT stick   x = ");  Serial.print(rx);
-    Serial.print("\t y = ");             Serial.println(ry);
-    lastRx = rx;
-    lastRy = ry;
-  }
-
-  delay(20);   // Slow the loop down a little so the output stays readable
+  delay(20);   // A short pause before looking at the controller again
 }
