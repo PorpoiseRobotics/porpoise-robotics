@@ -78,7 +78,7 @@
 // 00 at the end with the number on its sticker - controller 7 is
 // "02:02:03:04:05:07". Left at 00, nothing connects. Change only the last two
 // digits: the first pair must stay EVEN, and 02 is what every pad here uses.
-const char *PS3_MAC_ADDRESS = "02:02:03:04:05:08";
+const char *PS3_MAC_ADDRESS = "02:02:03:04:05:00";
 
 // --- LED strip -------------------------------------------------------
 const int LED_PIN        = 5;    // GPIO 5 controls the LED strip
