@@ -18,7 +18,7 @@
 
   BEFORE YOU CAN COMPILE THIS
   ---------------------------
-  Board package: "esp32" by Espressif Systems, VERSION 3.0.7
+  Board package: "esp32" by Espressif Systems, VERSION 3.3.12
     Tools > Board > esp32 > "ESP32 Dev Module".
   Libraries: none.
 
@@ -36,14 +36,20 @@
 
   WHAT TO TRY
   -----------
-  1. Upload it and watch. At roughly what duty value do the wheels START to
-     turn? At what value does the sound stop changing?
-  2. Change STEP_MS from 30 to 5. Now the ramp is much faster. Does the vehicle
-     behave differently?
-  3. Change PWM_FREQ from 20000 to 300 and upload. Listen. That whine is the
+  1. Upload it, and watch the wheels and the Serial Monitor together. Each
+     duty value is held for STEP_MS, long enough to see whether the wheels
+     have started. At what duty do they START to turn? Do all four start
+     at the same number? At what value does the sound stop changing?
+  2. DUTY_STEP is 5, so your answer is only good to within 5. Set it to 1
+     and run it again to pin the number down exactly. The ramp is much
+     slower now - that is the price of the precision.
+  3. Put DUTY_STEP back to 5 and change STEP_MS from 300 to 20. Can you
+     still tell where the wheels start? That is why it is slow to begin
+     with.
+  4. Change PWM_FREQ from 20000 to 300 and upload. Listen. That whine is the
      switching frequency, now down inside the range of human hearing. Change it
      back afterwards.
-  4. Write down the highest duty value at which the vehicle still creeps
+  5. Write down the highest duty value at which the vehicle still creeps
      smoothly rather than jerking. That is useful when you tune your own
      driving program.
 */
@@ -58,7 +64,10 @@ const int PWM_FREQ = 20000;   // 20 kHz, above human hearing
 const int PWM_BITS = 8;       // Duty values 0..255
 const int PWM_MAX  = 255;
 
-const int STEP_MS = 30;       // Milliseconds between one duty value and the next
+// How long each duty value is held, in milliseconds. Slow on purpose: long
+// enough to read the number and see whether the wheels have started yet.
+const int STEP_MS   = 300;
+const int DUTY_STEP = 5;      // How far the duty moves each step. Try 1.
 
 void setup() {
   Serial.begin(115200);
@@ -109,14 +118,14 @@ void report(int duty) {
 
 void loop() {
   Serial.println("--- forward, winding up ---");
-  for (int duty = 0; duty <= PWM_MAX; duty += 5) {
+  for (int duty = 0; duty <= PWM_MAX; duty += DUTY_STEP) {
     allMotors(duty);
     report(duty);
     delay(STEP_MS);
   }
 
   Serial.println("--- forward, winding down ---");
-  for (int duty = PWM_MAX; duty >= 0; duty -= 5) {
+  for (int duty = PWM_MAX; duty >= 0; duty -= DUTY_STEP) {
     allMotors(duty);
     report(duty);
     delay(STEP_MS);
@@ -127,14 +136,14 @@ void loop() {
   delay(2000);
 
   Serial.println("--- reverse, winding up ---");
-  for (int duty = 0; duty <= PWM_MAX; duty += 5) {
+  for (int duty = 0; duty <= PWM_MAX; duty += DUTY_STEP) {
     allMotors(-duty);
     report(-duty);
     delay(STEP_MS);
   }
 
   Serial.println("--- reverse, winding down ---");
-  for (int duty = PWM_MAX; duty >= 0; duty -= 5) {
+  for (int duty = PWM_MAX; duty >= 0; duty -= DUTY_STEP) {
     allMotors(-duty);
     report(-duty);
     delay(STEP_MS);

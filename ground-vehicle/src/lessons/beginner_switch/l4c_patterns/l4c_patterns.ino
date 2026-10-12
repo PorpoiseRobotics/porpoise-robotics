@@ -4,7 +4,7 @@
 
   WHAT THIS PROGRAM DOES
   ----------------------
-  Runs four light patterns in turn: a color wipe, a theatre chase, a rainbow,
+  Runs four light patterns in turn: a color wipe, a theater chase, a rainbow,
   and the KITT scanner from the full vehicle program. Nothing moves.
 
   Each pattern is written as its own FUNCTION. A function is a piece of the
@@ -64,7 +64,7 @@ void colorWipe(uint32_t color, int wait) {
 }
 
 /*
-  A theatre marquee: every third LED is lit, and the pattern shuffles along by
+  A theater marquee: every third LED is lit, and the pattern shuffles along by
   one each frame so the lights appear to chase each other.
 
   Three loops, one inside another. The "b" loop is which of the three
@@ -161,7 +161,7 @@ void loop() {
   colorWipe(strip.Color(0, 0, 255), 30);   // Blue
   colorWipe(strip.Color(0, 0, 0),   30);   // Off again
 
-  Serial.println("theatre chase");
+  Serial.println("theater chase");
   theaterChase(strip.Color(127, 127, 127), 60);   // White, half brightness
   theaterChase(strip.Color(127, 0, 0),     60);   // Red
   strip.clear();

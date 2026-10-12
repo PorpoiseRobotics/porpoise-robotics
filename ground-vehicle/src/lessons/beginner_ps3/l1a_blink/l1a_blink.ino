@@ -8,6 +8,11 @@
   forever. It does not touch the motors, the servos or the 32 LEDs around the
   vehicle, so it is completely safe with the vehicle on the bench.
 
+  It also tells you what it is doing. Every time the LED changes, the ESP32
+  sends a line of text - "The LED is on", "The LED is off" - back up the USB
+  cable to the Serial Monitor on your computer. That is how a program shows
+  you what it is thinking, and it works even when you cannot see the LED.
+
   This is the smallest useful program there is. If this uploads and blinks,
   then your computer, your USB cable, your board package, your board AND your
   wiring are all working, and everything else in the course is built on top of
@@ -53,10 +58,10 @@
 
   BEFORE YOU CAN COMPILE THIS
   ---------------------------
-  Board package: "esp32" by Espressif Systems, VERSION 3.0.7
+  Board package: "esp32" by Espressif Systems, VERSION 3.3.12
     File > Preferences > "Additional boards manager URLs", add this line:
-      https://raw.githubusercontent.com/espressif/arduino-esp32/gh-pages/package_esp32_index.json
-    Then Tools > Board > Boards Manager, search "esp32", choose version 3.0.7.
+      https://espressif.github.io/arduino-esp32/package_esp32_index.json
+    Then Tools > Board > Boards Manager, search "esp32", choose version 3.3.12.
     Finally pick Tools > Board > esp32 > "ESP32 Dev Module".
   Libraries: none.
 
@@ -76,13 +81,18 @@
   WHAT TO TRY
   -----------
   1. Upload it as it is and watch your LED.
-  2. Change BLINK_MS to 100 and upload again. What happens?
-  3. Change it to 2000. Which number makes the LED blink FASTER - a bigger one
+  2. Open the Serial Monitor: Tools > Serial Monitor, or the magnifying glass
+     at the top right. Set the box at the bottom to 115200 baud. You should
+     see one line every time the LED changes.
+  3. Change BLINK_MS to 100 and upload again. What happens to the LED, and
+     to the Serial Monitor?
+  4. Change it to 2000. Which number makes the LED blink FASTER - a bigger one
      or a smaller one? Why?
-  4. Delete one of the two delay() lines and upload. Explain what you see.
-     (Hint: the LED is still blinking. How fast?)
-  5. Swap the LED round in the breadboard. What happens, and why?
-  6. Work out what resistor you would need for a RED LED, which drops about
+  5. Delete one of the two delay() lines and upload. The LED looks stuck,
+     but the Serial Monitor is still printing on, off, on, off. So the loop
+     is still running. What happened to the blink?
+  6. Swap the LED round in the breadboard. What happens, and why?
+  7. Work out what resistor you would need for a RED LED, which drops about
      1.8 V instead of 2.0 V.
 */
 
@@ -101,13 +111,21 @@ void setup() {
   // Tell the ESP32 that we intend to WRITE to this pin rather than read from
   // it. A pin has to be set to OUTPUT before digitalWrite() will do anything.
   pinMode(LED_PIN, OUTPUT);
+
+  // Open the line back to your computer, at 115200 bits per second. The
+  // Serial Monitor has to be set to the same number or the words arrive
+  // scrambled.
+  Serial.begin(115200);
+  Serial.println("Blink is running.");
 }
 
 void loop() {
   digitalWrite(LED_PIN, HIGH);   // HIGH puts 3.3 volts on the pin: LED on
+  Serial.println("The LED is on");
   delay(BLINK_MS);               // Do nothing at all for BLINK_MS milliseconds
 
   digitalWrite(LED_PIN, LOW);    // LOW puts 0 volts on the pin: LED off
+  Serial.println("The LED is off");
   delay(BLINK_MS);
 
   // ...and then loop() starts again from the top, forever.

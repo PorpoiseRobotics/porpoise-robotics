@@ -31,7 +31,7 @@ sets their board package up once in Lesson 1 and never touches it again.
 
 | Track | Board package | Board menu | Extra libraries |
 |---|---|---|---|
-| `beginner_ps3` | esp32 by Espressif Systems, **3.0.7** | Tools > Board > esp32 > ESP32 Dev Module | PS3 Controller Host, Adafruit NeoPixel |
+| `beginner_ps3` | esp32 by Espressif Systems, **3.3.12** | Tools > Board > esp32 > ESP32 Dev Module | Fork of PS3 Controller Host, Adafruit NeoPixel |
 | `beginner_switch` | esp32_bluepad32 by Ricardo Quesada, **4.1.0** | Tools > Board > esp32_bluepad32 > ESP32 Dev Module | Adafruit NeoPixel |
 | `advanced` | esp32_bluepad32 by Ricardo Quesada, **4.1.0** | Tools > Board > esp32_bluepad32 > ESP32 Dev Module | Adafruit NeoPixel |
 | `explorers` | esp32_bluepad32 by Ricardo Quesada, **4.1.0** | Tools > Board > esp32_bluepad32 > ESP32 Dev Module | Adafruit NeoPixel |
@@ -41,10 +41,22 @@ The two board packages are **mutually exclusive** and both add an entry called
 almost always the wrong one being selected. Each sketch names the package it
 needs in its header comment.
 
+**The PS3 track needs the FORK of PS3 Controller Host.** The original "PS3
+Controller Host" (1.1.0) does not compile on board package 3.3: it calls
+`esp_base_mac_addr_set`, which ESP-IDF 5.5 no longer declares for it. "Fork of
+PS3 Controller Host" (1.1.1-idf5.4, maintained by Rin Iwai) changes that one
+call and nothing else. Both supply `Ps3Controller.h`, and with both installed
+the IDE picks the original and the build fails - so uninstall the original.
+
+**Every PS3 sketch that uses the controller ships with `PS3_MAC_ADDRESS` ending
+in `00`**, which no controller answers. Students change the last two digits to
+the number on their controller's sticker before uploading. Forgetting means no
+connection, rather than driving somebody else's vehicle.
+
 The two packages also use incompatible PWM APIs, which is why the motor
 sketches differ between tracks and cannot be copied across:
 
-| | PS3 track (esp32 3.0.7) | Switch and advanced (bluepad32 4.1.0) |
+| | PS3 track (esp32 3.3.12) | Switch and advanced (bluepad32 4.1.0) |
 |---|---|---|
 | Set up | `ledcAttach(pin, freq, bits)` | `ledcSetup(ch, freq, bits)` then `ledcAttachPin(pin, ch)` |
 | Write | `ledcWrite(pin, duty)` | `ledcWrite(ch, duty)` |

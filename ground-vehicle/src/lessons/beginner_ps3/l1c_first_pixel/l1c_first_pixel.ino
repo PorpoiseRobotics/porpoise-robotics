@@ -16,7 +16,7 @@
 
   BEFORE YOU CAN COMPILE THIS
   ---------------------------
-  1. Board package: "esp32" by Espressif Systems, VERSION 3.0.7
+  1. Board package: "esp32" by Espressif Systems, VERSION 3.3.12
        Tools > Board > esp32 > "ESP32 Dev Module".
   2. Library: "Adafruit NeoPixel" by Adafruit
        Tools > Manage Libraries, search for it, click Install.

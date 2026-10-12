@@ -35,12 +35,17 @@ Same rule as the lesson sketches, for the same reason.
 
 | Folder | Course | Board package |
 |---|---|---|
-| [`beginner_ps3/`](beginner_ps3/) | Pathfinder Beginner, PS3 track | `esp32` by Espressif Systems, **3.0.7** |
+| [`beginner_ps3/`](beginner_ps3/) | Pathfinder Beginner, PS3 track | `esp32` by Espressif Systems, **3.3.12** |
 | [`beginner_switch/`](beginner_switch/) | Pathfinder Beginner, Switch track | `esp32_bluepad32` by Ricardo Quesada, **4.1.0** |
 
 The two packages are **mutually exclusive** and both add an entry called "ESP32
 Dev Module" to the board menu. A pile of errors that make no sense is almost
 always the wrong one selected.
+
+On the PS3 track, set `PS3_MAC_ADDRESS` before you upload, the same way you
+did for the lesson sketches: the number on your controller's sticker replaces
+the `00` at the end. The library is "Fork of PS3 Controller Host", not the
+original - see the lessons README.
 
 On the Switch track, fill in `MY_CONTROLLER` before you upload, the same way
 you did for the lesson sketches. Run `l3a_controller_check` and paste the line

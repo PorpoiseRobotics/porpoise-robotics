@@ -14,9 +14,17 @@
 
   BEFORE YOU CAN COMPILE THIS
   ---------------------------
-  1. Board package: "esp32" by Espressif Systems, VERSION 3.0.7
+  1. Board package: "esp32" by Espressif Systems, VERSION 3.3.12
        Tools > Board > esp32 > "ESP32 Dev Module".
-  2. Library: "PS3 Controller Host" by Jeffrey van Pernis
+  2. Library: "Fork of PS3 Controller Host" by Jeffrey van Pernis
+       (the fork, not the original - l3a_controller_check says why)
+
+  BEFORE YOU UPLOAD
+  -----------------
+  Set PS3_MAC_ADDRESS, just below the #include lines, to YOUR controller's
+  address: the number on its sticker goes in place of the 00 at the end.
+  You do this in every program that uses the controller. Left at 00, the
+  controller will not connect.
 
   THE TWO IDEAS
   -------------
@@ -51,7 +59,13 @@
 
 #include <Ps3Controller.h>
 
-const char *PS3_MAC_ADDRESS = "02:02:03:04:05:08";
+// ======================== CHANGE THIS BEFORE YOU UPLOAD ========================
+// Your controller only talks to ONE address, and this has to be it. Replace
+// the 00 at the end with the number on YOUR controller's sticker - controller
+// 7 is "02:02:03:04:05:07". Every vehicle in the room needs a different number,
+// and left at 00 nothing will connect.
+// ==============================================================================
+const char *PS3_MAC_ADDRESS = "02:02:03:04:05:00";
 
 // A PS3 stick reports -128 to +127 on each axis.
 const int STICK_MAX      = 127;
@@ -65,7 +79,11 @@ const int MOTOR_MIN = 0;          // Slowest speed given, just outside the deadz
 // toggle this with the stick click.
 const int turnMax = (MOTOR_MAX * 3) / 4;
 
+// A new line is printed only when the stick has moved, and never more
+// often than once every PRINT_MS milliseconds. Make it 20 and see why.
+const unsigned long PRINT_MS = 250;
 unsigned long lastPrint = 0;
+int lastStickX = 0, lastStickY = 0;
 
 /*
   Turns a thumbstick reading into a motor speed.
@@ -86,11 +104,15 @@ void setup() {
   delay(500);
 
   Ps3.begin(PS3_MAC_ADDRESS);
+  Serial.print("Listening as ");
+  Serial.print(PS3_MAC_ADDRESS);
+  Serial.println("  - it must match the number on your controller.");
 
   Serial.println();
   Serial.println("=== Deadzone and map ===");
   Serial.println("Press the PS button on your controller.");
   Serial.println();
+  Serial.println("A new line appears whenever the stick moves.");
   Serial.println("raw Y\t forward\t raw X\t turn\t| left\t right");
 }
 
@@ -113,10 +135,13 @@ void loop() {
   int leftSpeed  = constrain(forward + turn, -MOTOR_MAX, MOTOR_MAX);
   int rightSpeed = constrain(forward - turn, -MOTOR_MAX, MOTOR_MAX);
 
-  // Print about ten times a second, which is fast enough to feel live and slow
-  // enough to read.
-  if (millis() - lastPrint >= 100) {
-    lastPrint = millis();
+  // Print only when the stick has moved, and at most four times a second:
+  // fast enough to feel live, slow enough to read.
+  bool stickMoved = (leftStickX != lastStickX || leftStickY != lastStickY);
+  if (stickMoved && millis() - lastPrint >= PRINT_MS) {
+    lastPrint  = millis();
+    lastStickX = leftStickX;
+    lastStickY = leftStickY;
 
     Serial.print(leftStickY);   Serial.print("\t ");
     Serial.print(forward);      Serial.print("\t\t ");

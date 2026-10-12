@@ -10,12 +10,16 @@
 
   BEFORE YOU CAN COMPILE THIS
   ---------------------------
-  1. Board package: "esp32" by Espressif Systems, VERSION 3.0.7
-       Tools > Board > Boards Manager, search "esp32", choose version 3.0.7.
+  1. Board package: "esp32" by Espressif Systems, VERSION 3.3.12
+       Tools > Board > Boards Manager, search "esp32", choose version 3.3.12.
        Then pick Tools > Board > esp32 > "ESP32 Dev Module".
   2. Libraries (Tools > Manage Libraries):
-       - "PS3 Controller Host" by Jeffrey van Pernis   (gives us Ps3Controller.h)
-       - "Adafruit NeoPixel" by Adafruit               (gives us Adafruit_NeoPixel.h)
+       - "Fork of PS3 Controller Host" by Jeffrey van Pernis
+             gives us Ps3Controller.h. Install the FORK: the original
+             "PS3 Controller Host" does not compile on board package 3.3,
+             so remove it if you have it.
+       - "Adafruit NeoPixel" by Adafruit
+             gives us Adafruit_NeoPixel.h
   A library is code somebody else already wrote that your program can use. The
   compiler is what turns your code and the libraries together into the machine
   language the ESP32 actually runs.
@@ -26,6 +30,11 @@
   Use SixaxisPairTool on a PC to write the address below into the controller.
   Any address works, as long as the controller and this program use the SAME one.
   Write that address into PS3_MAC_ADDRESS below.
+
+  BEFORE YOU UPLOAD, set PS3_MAC_ADDRESS in the SETTINGS block to YOUR
+  controller's address - the number on its sticker. It ships ending in 00,
+  which no controller answers, so forgetting means no connection rather than
+  driving somebody else's vehicle.
 
   CONTROLS
   --------
@@ -62,7 +71,11 @@
 // ===================================================================
 
 // --- Bluetooth address this program answers to -----------------------
-const char *PS3_MAC_ADDRESS = "02:02:03:04:05:65"; // The first number in the MAC address needs to be even for the program to work
+// CHANGE THIS BEFORE YOU UPLOAD. It must match YOUR controller: replace the
+// 00 at the end with the number on its sticker - controller 7 is
+// "02:02:03:04:05:07". Left at 00, nothing connects. Change only the last two
+// digits: the first pair must stay EVEN, and 02 is what every pad here uses.
+const char *PS3_MAC_ADDRESS = "02:02:03:04:05:00";
 
 // --- LED strip -------------------------------------------------------
 const int LED_PIN        = 5;    // GPIO 5 controls the LED strip
@@ -409,6 +422,9 @@ void setup() {
 
   // --- Bluetooth ---
   Ps3.begin(PS3_MAC_ADDRESS);
+  Serial.print("Listening as ");
+  Serial.print(PS3_MAC_ADDRESS);
+  Serial.println("  - it must match the number on your controller.");
   Serial.println("Pathfinder ready. Waiting for the PS3 controller...");
 }
 

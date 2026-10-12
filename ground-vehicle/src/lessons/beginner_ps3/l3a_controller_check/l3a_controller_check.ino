@@ -14,11 +14,22 @@
 
   BEFORE YOU CAN COMPILE THIS
   ---------------------------
-  1. Board package: "esp32" by Espressif Systems, VERSION 3.0.7
+  1. Board package: "esp32" by Espressif Systems, VERSION 3.3.12
        Tools > Board > esp32 > "ESP32 Dev Module".
-  2. Library: "PS3 Controller Host" by Jeffrey van Pernis
-       Tools > Manage Libraries. Searching for "Ps3Controller" finds nothing -
-       the display name is the longer one above.
+  2. Library: "Fork of PS3 Controller Host" by Jeffrey van Pernis
+       Tools > Manage Libraries, and search for "PS3 Controller Host". Two
+       come up. Install the one whose name starts "Fork of".
+       If the original "PS3 Controller Host" is installed, REMOVE it first.
+       It does not compile on board package 3.3, and with both installed
+       the IDE picks the old one and fails with an error that mentions
+       esp_base_mac_addr_set.
+
+  BEFORE YOU UPLOAD
+  -----------------
+  Set PS3_MAC_ADDRESS, just below the #include lines, to YOUR controller's
+  address: the number on its sticker goes in place of the 00 at the end.
+  You do this in every program that uses the controller. Left at 00, the
+  controller will not connect.
 
   PAIRING
   -------
@@ -45,8 +56,13 @@
 
 #include <Ps3Controller.h>
 
-// This has to match the address written into your controller.
-const char *PS3_MAC_ADDRESS = "02:02:03:04:05:08";
+// ======================== CHANGE THIS BEFORE YOU UPLOAD ========================
+// Your controller only talks to ONE address, and this has to be it. Replace
+// the 00 at the end with the number on YOUR controller's sticker - controller
+// 7 is "02:02:03:04:05:07". Every vehicle in the room needs a different number,
+// and left at 00 nothing will connect.
+// ==============================================================================
+const char *PS3_MAC_ADDRESS = "02:02:03:04:05:00";
 
 // Remembers what each button was doing last time round, so we can print only
 // when something CHANGES rather than thousands of times a second.
@@ -58,6 +74,12 @@ bool wasSelect = false, wasStart = false, wasPs = false;
 
 int lastLx = 0, lastLy = 0, lastRx = 0, lastRy = 0;
 bool wasConnected = false;
+
+// Sticks and triggers move all the time. Printing every change would scroll
+// faster than anybody can read, so they are printed at most once every
+// PRINT_MS milliseconds. Make it 20 and see for yourself.
+const unsigned long PRINT_MS = 250;
+unsigned long lastPrint = 0;
 
 /*
   Prints one line when a button goes down and one when it comes back up.
@@ -84,7 +106,8 @@ void setup() {
   Serial.println();
   Serial.println("=== Controller check ===");
   Serial.print("This program is listening as ");
-  Serial.println(PS3_MAC_ADDRESS);
+  Serial.print(PS3_MAC_ADDRESS);
+  Serial.println("  - it must match the number on your controller.");
   Serial.println("Press the PS button on your controller now.");
 }
 
@@ -131,38 +154,42 @@ void loop() {
   reportButton("START",  Ps3.data.button.start,  wasStart);
   reportButton("PS",     Ps3.data.button.ps,     wasPs);
 
-  // --- Thumbsticks ---
-  // Each axis reports a whole number from -128 to +127. Print only when
-  // something has moved by more than 4, or the Serial Monitor scrolls forever.
-  int lx = Ps3.data.analog.stick.lx;
-  int ly = Ps3.data.analog.stick.ly;
-  int rx = Ps3.data.analog.stick.rx;
-  int ry = Ps3.data.analog.stick.ry;
+  // --- Thumbsticks and triggers, at most once every PRINT_MS ---
+  if (millis() - lastPrint >= PRINT_MS) {
+    lastPrint = millis();
 
-  if (abs(lx - lastLx) > 4 || abs(ly - lastLy) > 4) {
-    Serial.print("LEFT stick    x = ");  Serial.print(lx);
-    Serial.print("\t y = ");             Serial.println(ly);
-    lastLx = lx;
-    lastLy = ly;
+    // Each axis reports a whole number from -128 to +127. Print only when
+    // a stick has moved by more than 4 since the last line about it.
+    int lx = Ps3.data.analog.stick.lx;
+    int ly = Ps3.data.analog.stick.ly;
+    int rx = Ps3.data.analog.stick.rx;
+    int ry = Ps3.data.analog.stick.ry;
+
+    if (abs(lx - lastLx) > 4 || abs(ly - lastLy) > 4) {
+      Serial.print("LEFT stick    x = ");  Serial.print(lx);
+      Serial.print("\t y = ");             Serial.println(ly);
+      lastLx = lx;
+      lastLy = ly;
+    }
+
+    if (abs(rx - lastRx) > 4 || abs(ry - lastRy) > 4) {
+      Serial.print("RIGHT stick   x = ");  Serial.print(rx);
+      Serial.print("\t y = ");             Serial.println(ry);
+      lastRx = rx;
+      lastRy = ry;
+    }
+
+    // The triggers are not just on or off. L2 and R2 also report HOW HARD
+    // they are squeezed, 0 to 255.
+    if (Ps3.data.button.l2) {
+      Serial.print("L2 pressure: ");
+      Serial.println(Ps3.data.analog.button.l2);
+    }
+    if (Ps3.data.button.r2) {
+      Serial.print("R2 pressure: ");
+      Serial.println(Ps3.data.analog.button.r2);
+    }
   }
 
-  if (abs(rx - lastRx) > 4 || abs(ry - lastRy) > 4) {
-    Serial.print("RIGHT stick   x = ");  Serial.print(rx);
-    Serial.print("\t y = ");             Serial.println(ry);
-    lastRx = rx;
-    lastRy = ry;
-  }
-
-  // --- The triggers are not just on or off ---
-  // L2 and R2 also report HOW HARD they are squeezed, 0 to 255.
-  if (Ps3.data.button.l2) {
-    Serial.print("L2 pressure: ");
-    Serial.println(Ps3.data.analog.button.l2);
-  }
-  if (Ps3.data.button.r2) {
-    Serial.print("R2 pressure: ");
-    Serial.println(Ps3.data.analog.button.r2);
-  }
-
-  delay(20);   // Slow the loop down a little so the output stays readable
+  delay(20);   // A short pause before looking at the controller again
 }

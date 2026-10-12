@@ -65,7 +65,7 @@
   --------
   Every one of these three is the same shape: something the program
   already knows - which way it is moving - drives something the program
-  already does. No new sensor, and no new maths.
+  already does. No new sensor, and no new math.
 
   The hazards are the interesting one. They are drawn AFTER the driving
   lights, over the top, so the tail lights carry on underneath and the
