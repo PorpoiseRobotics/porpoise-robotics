@@ -41,7 +41,8 @@ ground-vehicle/
 │   ├── pathfinder_ps3/               beginner program, PS3 controller
 │   ├── pathfinder_nintendoswitch/    beginner program, Switch controller
 │   ├── pathfinder_find_controller/   setup tool: reads a controller's Bluetooth address
-│   ├── Pathfinder_Op_Program12/      advanced program
+│   ├── Pathfinder_Op_Program12/      advanced program, split into tabs (the advanced course teaches this one)
+│   ├── Pathfinder_Op_Program13/      Op 12 plus police lights and a hard-coded controller, in one file
 │   ├── lessons/                      small follow-along sketches for the courses
 │   ├── projects/                     worked "take it further" projects, for instructors
 │   └── legacy/                       superseded programs, kept for reference
@@ -62,6 +63,7 @@ once it has real files in it.
 | New to robotics, driving with a Nintendo Switch controller | `pathfinder_nintendoswitch` |
 | Setting up a Switch controller for a vehicle | `pathfinder_find_controller`, once |
 | Experienced, and want current sensing, a self-test, and four servos | `Pathfinder_Op_Program12` |
+| As above, plus police lights, with the controller's address written into the program instead of a pairing mode, all in one file | `Pathfinder_Op_Program13` |
 
 The two beginner programs are deliberately near-identical, so a student who has read one can read
 the other. Everything in [`src/legacy/`](src/legacy/) has been replaced — see the README there
