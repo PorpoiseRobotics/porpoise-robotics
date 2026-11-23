@@ -89,6 +89,18 @@ label.check input{width:22px;height:22px}
 .card .btns{display:flex;flex-wrap:wrap;gap:8px;margin-top:10px}
 #notes{font:13px/1.4 Consolas,monospace;background:#0d141b;color:#cfe3d4;border-radius:10px;padding:8px;height:180px;overflow-y:auto;white-space:pre-wrap}
 .boardItem{border:2px solid var(--line);border-radius:12px;padding:10px;margin-top:8px}
+.card h4{margin:16px 0 4px;font-size:17px}
+.help{font-size:15px;color:var(--soft)}
+.progress{height:22px;background:#e5e9ef;border-radius:11px;overflow:hidden;margin-top:8px}
+.progress div{height:100%;width:0;background:var(--good);transition:width .4s}
+#installBox{margin-top:10px;padding:12px;border-radius:12px;border:3px solid var(--accent);background:#eef4ff}
+#installBox.bad{border-color:var(--bad);background:#fff1f1}
+#installBox.good{border-color:var(--good);background:#effaf2}
+#installText{font-size:18px;font-weight:700}
+#installBox details{margin-top:8px;font-size:13px}
+#installBox pre{white-space:pre-wrap;max-height:160px;overflow-y:auto;background:#0d141b;color:#cfe3d4;padding:6px;border-radius:8px}
+.stGrid{display:flex;flex-wrap:wrap;gap:6px;margin-top:6px}
+.stGrid button{min-width:52px;font-weight:800;font-size:20px;border:0}
 
 /* ---------- pick-your-station overlay ---------- */
 #pick{position:fixed;inset:0;background:rgba(10,15,20,.75);z-index:20;display:flex;align-items:center;justify-content:center}
@@ -219,6 +231,17 @@ label.check input{width:22px;height:22px}
       <h3>Boards plugged into this laptop</h3>
       <div style="font-size:15px;color:var(--soft)">Plug a vehicle sensor board or a camera into USB to give it a station number, or to type the camera's WiFi. The WiFi names and passwords are in OneDrive: <b>Porpoise Robotics Private → WiFi networks.txt</b>. The password goes straight to the camera; this laptop does not keep it.</div>
       <div id="boardList"></div>
+
+      <h4>Install a program on a board</h4>
+      <div class="help">For a new board, or one that needs the newest program. Plug it into this laptop's USB, then press the program it should run. It takes about a minute. If it goes wrong, nothing is broken: just try again.</div>
+      <div id="installPorts"></div>
+      <div id="installBox" class="hidden">
+        <div id="installText"></div>
+        <div class="progress" id="installBar"><div></div></div>
+        <div id="installNext"></div>
+        <details id="installDetails" class="hidden"><summary>Technical details (for a helper)</summary><pre id="installLog"></pre></details>
+      </div>
+      <div class="btns"><button id="btnPorts">🔄 Look for boards again</button></div>
     </div>
 
     <div class="card">
@@ -566,7 +589,7 @@ $("chatText").addEventListener("input", updateCount);
 /* ==================== header buttons ==================== */
 $("btnFind").addEventListener("click", ()=>post("/identify",{}));
 $("btnSound").addEventListener("click", ()=>{ soundOn = !soundOn; $("btnSound").textContent = soundOn ? "🔔 Sound on" : "🔕 Sound off"; });
-$("btnSetup").addEventListener("click", ()=>{ fillSetup(); $("setup").classList.remove("hidden"); });
+$("btnSetup").addEventListener("click", ()=>{ fillSetup(); loadPorts(); $("setup").classList.remove("hidden"); });
 $("btnCloseSetup").addEventListener("click", ()=>$("setup").classList.add("hidden"));
 $("setup").addEventListener("click", ev=>{ if (ev.target.id === "setup") $("setup").classList.add("hidden"); });
 
@@ -645,6 +668,90 @@ function drawBoards(boards){
     list.appendChild(d);
   }
 }
+/* ==================== install a program on a board ==================== */
+const PROGRAM_NAMES = {"station-radio":"Station Radio","vehicle-sensors":"Vehicle Sensors","camera":"Camera"};
+let install = {available:false, ports:[], programs:[], problem:"", state:null};
+// What to type to a board to give it a station number (the camera must restart after).
+function stationLines(board, n){ return board === "camera" ? [`station ${n}`, "restart"] : [`station ${n}`]; }
+async function loadPorts(){
+  try { install = await (await fetch("/ports")).json(); } catch(e){ return; }
+  drawPorts();
+  if (install.state && install.state.stage) showFlash(install.state, false);
+}
+function drawPorts(){
+  const box = $("installPorts"); box.innerHTML = "";
+  const busy = !!(install.state && install.state.busy);
+  $("btnPorts").classList.toggle("hidden", !install.available);
+  if (install.problem) box.innerHTML = `<div class="warning">${esc(install.problem)}</div>`;
+  if (!install.available) return;
+  if (!install.ports.length){
+    box.innerHTML += '<div class="help" style="margin-top:8px">No boards found on USB. Plug one in, then press "Look for boards again". (Nothing shows up? Try another cable: some cables only charge.)</div>';
+    return;
+  }
+  for (const p of install.ports){
+    const d = document.createElement("div"); d.className = "boardItem";
+    const now = p.board ? `${PROGRAM_NAMES[p.board] || p.board}${p.station ? ", station " + p.station : ", no station number"}`
+                        : "a program the dashboard does not know (or none yet)";
+    d.innerHTML = `<b>USB port ${esc(p.port)}</b> <span class="help">${esc(p.desc || "")}</span>
+      <div>Running now: <b>${esc(now)}</b></div><div class="btns"></div>`;
+    for (const prog of install.programs){
+      const b = document.createElement("button");
+      b.textContent = `Install ${prog.title}`;
+      if (prog.id === p.board) b.className = "primary";
+      b.disabled = busy || !!install.problem;
+      b.addEventListener("click", ()=>startInstall(p, prog));
+      d.querySelector(".btns").appendChild(b);
+    }
+    box.appendChild(d);
+  }
+}
+async function startInstall(p, prog){
+  const nowName = PROGRAM_NAMES[p.board];
+  let q = `Install ${prog.title} on the board on ${p.port}?\n\nThis replaces the program on that board. Its saved station number and WiFi stay. Do not unplug it until it says it is finished (about a minute).`;
+  if (nowName && p.board !== prog.id) q = `⚠ This board is a ${nowName} board right now. After this it will be a ${prog.title} board instead.\n\n` + q;
+  if (p.board === "station-radio") q += "\n\nThis is your station radio: chat and the map stop for about a minute.";
+  if (!confirm(q)) return;
+  showFlash({busy:true, port:p.port, title:prog.title, stage:"releasing", text:"Getting ready…", percent:0});
+  const r = await post("/install", {port:p.port, program:prog.id});
+  if (!r.ok) showFlash({busy:false, ok:false, port:p.port, title:prog.title, stage:"failed", text:"It did not start.", error:r.error});
+}
+function showFlash(s, redraw = true){
+  install.state = s;
+  const box = $("installBox");
+  box.classList.remove("hidden");
+  box.classList.toggle("bad", s.ok === false);
+  box.classList.toggle("good", s.ok === true);
+  const pct = s.stage === "writing" ? ` ${s.percent}%` : "";
+  $("installText").textContent = (s.busy ? `${s.title} → ${s.port}: ` : "") + (s.text || "") + pct;
+  $("installBar").classList.toggle("hidden", s.ok === false);
+  $("installBar").firstElementChild.style.width = (s.percent || 0) + "%";
+  $("installLog").textContent = s.log || "";
+  $("installDetails").classList.toggle("hidden", !s.log);
+  const next = $("installNext"); next.innerHTML = "";
+  if (s.ok === false) next.innerHTML = `<div style="margin-top:8px;font-size:17px">${esc(s.error || "")}</div>`;
+  if (s.ok === true && s.hello) drawStationStep(next, s);
+  if (redraw) drawPorts();
+}
+function drawStationStep(next, s){
+  const h = s.hello, board = h.board, name = PROGRAM_NAMES[board] || board;
+  next.innerHTML = `<div style="margin-top:10px;font-size:17px">The board says it is now a <b>${esc(name)}</b> board.<br>
+      <b>Next: which station is it for?</b> ${h.station ? `It kept station ${h.station}; press ${h.station} to keep it.` : "It has no station number yet."}</div>
+    <div class="stGrid"></div><div class="stMsg" style="margin-top:6px"></div>`;
+  for (let n = 1; n <= limits.stations; n++){
+    const b = document.createElement("button");
+    b.textContent = n; b.style.background = stColor(n); b.style.color = textOn(n);
+    if (n === h.station) b.classList.add("on");
+    b.addEventListener("click", async ()=>{
+      const r = await post("/board", {port:s.port, lines:stationLines(board, n)});
+      next.querySelector(".stMsg").textContent = !r.ok ? "Could not reach the board. Unplug it, plug it back in, and use the list above."
+        : `Saved: station ${n}. The board is restarting.` + (board === "camera" ? " Next, give the camera the WiFi (in the list above, or with a phone: see the README)." : " All done!");
+    });
+    next.querySelector(".stGrid").appendChild(b);
+  }
+}
+$("btnPorts").addEventListener("click", loadPorts);
+setInterval(()=>{ if (!$("setup").classList.contains("hidden") && !(install.state && install.state.busy)) loadPorts(); }, 5000);
+
 function drawPick(){
   const g = $("pickGrid"); g.innerHTML = "";
   for (let n = 1; n <= limits.stations; n++){
@@ -683,7 +790,8 @@ function connectEvents(){
   es.addEventListener("camera", ev=>{ if (lastStatus) { lastStatus.camera = JSON.parse(ev.data); showStatus(lastStatus); } });
   es.addEventListener("settings", ev=>{ cfg = JSON.parse(ev.data); $("showOthers").checked = !!cfg.show_other_vehicles; drawField(); });
   es.addEventListener("note", ev=>note(JSON.parse(ev.data).text));
-  es.addEventListener("boards", ev=>drawBoards(JSON.parse(ev.data)));
+  es.addEventListener("boards", ev=>{ drawBoards(JSON.parse(ev.data)); if (!$("setup").classList.contains("hidden")) loadPorts(); });
+  es.addEventListener("flash", ev=>{ const s = JSON.parse(ev.data); showFlash(s); if (!s.busy) setTimeout(loadPorts, 500); });
   es.addEventListener("board_reply", ev=>{ const r = JSON.parse(ev.data); note(`${r.port}: ${r.text || r.what || r.type}`); });
   es.onerror = ()=>{ chip("chipRadio","bad","Dashboard stopped?"); };
 }
