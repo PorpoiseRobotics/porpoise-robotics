@@ -1,0 +1,35 @@
+Find the Target Sender - Rev 0.5 - assembly notes
+==================================================
+
+Paste the "Notes for the assembler" section into the order's comment box.
+
+Board specs
+  Layers: 2          Size: 85.05 x 85.05 mm      Thickness: 1.6 mm
+  Material: FR-4     Copper: 1 oz                Surface finish: ENIG or lead-free HASL
+  Solder mask: green (any)   Silkscreen: white
+  Min track/space: 0.152 mm  Min drill: 0.3 mm (vias 0.45 mm drill / 0.8 mm pad)
+  All parts on TOP side. 3 fiducials (FID1-FID3).
+
+Files
+  FindTheTarget_Rev0.5_Gerbers.zip     Gerbers + Excellon drill (PTH and NPTH separate)
+  FindTheTarget_Rev0.5_BOM.csv         BOM with manufacturer part numbers (DigiKey-stocked)
+  FindTheTarget_Rev0.5_Centroid.csv    pick-and-place (centroid/XY) file, mm, top side
+
+Notes for the assembler
+  1. Assemble all BOM parts, including the through-hole connectors
+     J1, J2, J3, J5, J6, J7, J8, J9.
+  2. Please bridge solder jumper JP1: join the MIDDLE pad to the pad marked "B"
+     (pads 2 and 3). Leave the "A" pad unconnected.
+  3. H1-H4 are mounting holes and FID1-FID3 are fiducials: no parts there.
+  4. Polarity:
+     - C1, C2: electrolytic, "+" marked on silkscreen.
+     - D3 (MBR230LSFT1G, SOD-123FL Schottky): cathode band toward J6 (right side).
+     - D2 (LED): cathode = pad 1.
+     - U2 (SOIC-14): pin 1 marked on silkscreen.
+     - D1 is bidirectional (no polarity).
+  5. J6-J9 are 1x19 female sockets that hold a plug-in ESP32 module; please seat
+     them flat and square to the board.
+
+Not on the board (buy separately)
+  ESP32 38-pin "Dev Module" (0.9 in row spacing, WROOM), FK-A1 GPS + JST-SH cable,
+  JST-XH mating housings/crimps for J1/J2/J5, NeoPixel strip, M3 screws + standoffs.

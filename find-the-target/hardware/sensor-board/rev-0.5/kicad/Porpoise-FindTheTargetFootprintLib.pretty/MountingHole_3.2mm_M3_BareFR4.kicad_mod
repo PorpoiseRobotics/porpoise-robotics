@@ -1,0 +1,163 @@
+(footprint "MountingHole_3.2mm_M3_BareFR4"
+	(version 20260206)
+	(generator "pcbnew")
+	(generator_version "10.0")
+	(layer "F.Cu")
+	(descr "Mounting Hole 3.2mm, M3, no annular. 7.0mm solder mask opening and 7.6mm copper keepout on both sides, so the screw head and standoff clamp bare FR4")
+	(tags "mountinghole M3 keepout")
+	(property "Reference" "REF**"
+		(at 0 -4.85 0)
+		(layer "F.SilkS")
+		(uuid "32a753a5-f878-4fe8-affe-4ee03affe1b6")
+		(effects
+			(font
+				(size 1 1)
+				(thickness 0.15)
+			)
+		)
+	)
+	(property "Value" "MountingHole_3.2mm_M3_BareFR4"
+		(at 0 4.85 0)
+		(layer "F.Fab")
+		(uuid "cc3ba010-6613-4979-af3e-9d1091ff0bc1")
+		(effects
+			(font
+				(size 1 1)
+				(thickness 0.15)
+			)
+		)
+	)
+	(property "Datasheet" ""
+		(at 0 0 0)
+		(layer "F.Fab")
+		(hide yes)
+		(uuid "a98facb2-6d6b-4ef6-a779-669be714527d")
+		(effects
+			(font
+				(size 1 1)
+				(thickness 0.15)
+			)
+		)
+	)
+	(property "Description" ""
+		(at 0 0 0)
+		(layer "F.Fab")
+		(hide yes)
+		(uuid "2be18c3a-e566-4c38-90b1-e0e8436491ba")
+		(effects
+			(font
+				(size 1 1)
+				(thickness 0.15)
+			)
+		)
+	)
+	(attr exclude_from_pos_files exclude_from_bom)
+	(duplicate_pad_numbers_are_jumpers no)
+	(fp_circle
+		(center 0 0)
+		(end 3.5 0)
+		(stroke
+			(width 0)
+			(type solid)
+		)
+		(fill yes)
+		(layer "F.Mask")
+		(uuid "bc4d55ff-b98a-4502-bb04-6e96b55200b2")
+	)
+	(fp_circle
+		(center 0 0)
+		(end 3.5 0)
+		(stroke
+			(width 0)
+			(type solid)
+		)
+		(fill yes)
+		(layer "B.Mask")
+		(uuid "a298f83d-8f15-48d1-b9ce-5c309d56eea1")
+	)
+	(fp_circle
+		(center 0 0)
+		(end 3.2 0)
+		(stroke
+			(width 0.15)
+			(type solid)
+		)
+		(fill no)
+		(layer "Cmts.User")
+		(uuid "1403ab02-9d4e-4e1a-ba21-1212af89f000")
+	)
+	(fp_circle
+		(center 0 0)
+		(end 3.85 0)
+		(stroke
+			(width 0.05)
+			(type solid)
+		)
+		(fill no)
+		(layer "F.CrtYd")
+		(uuid "65e86b21-f2ed-468a-99b4-73df2ab2312e")
+	)
+	(fp_text user "${REFERENCE}"
+		(at 0 0 0)
+		(layer "F.Fab")
+		(uuid "16ee02a7-d9c3-4b33-abeb-71be776db594")
+		(effects
+			(font
+				(size 1 1)
+				(thickness 0.15)
+			)
+		)
+	)
+	(pad "" np_thru_hole circle
+		(at 0 0)
+		(size 3.2 3.2)
+		(drill 3.2)
+		(layers "*.Cu" "*.Mask")
+		(uuid "cee9f45d-d8da-46fd-ba4d-79253e4a0abc")
+	)
+	(zone
+		(layers "F.Cu" "B.Cu")
+		(uuid "60fd1237-cae2-4626-b5c1-582b008af539")
+		(name "Mounting hole copper keepout")
+		(hatch edge 0.5)
+		(connect_pads
+			(clearance 0)
+		)
+		(min_thickness 0.25)
+		(keepout
+			(tracks not_allowed)
+			(vias not_allowed)
+			(pads allowed)
+			(copperpour not_allowed)
+			(footprints allowed)
+		)
+		(placement
+			(enabled no)
+			(sheetname "")
+		)
+		(fill
+			(thermal_gap 0.5)
+			(thermal_bridge_width 0.5)
+			(island_removal_mode 0)
+		)
+		(polygon
+			(pts
+				(xy 3.8036 0) (xy 3.7891 0.3315) (xy 3.7458 0.6605) (xy 3.674 0.9844) (xy 3.5742 1.3009) (xy 3.4473 1.6075)
+				(xy 3.294 1.9018) (xy 3.1157 2.1817) (xy 2.9137 2.4449) (xy 2.6896 2.6896) (xy 2.4449 2.9137) (xy 2.1817 3.1157)
+				(xy 1.9018 3.294) (xy 1.6075 3.4473) (xy 1.3009 3.5742) (xy 0.9844 3.674) (xy 0.6605 3.7458) (xy 0.3315 3.7891)
+				(xy 0 3.8036) (xy -0.3315 3.7891) (xy -0.6605 3.7458) (xy -0.9844 3.674) (xy -1.3009 3.5742) (xy -1.6075 3.4473)
+				(xy -1.9018 3.294) (xy -2.1817 3.1157) (xy -2.4449 2.9137) (xy -2.6896 2.6896) (xy -2.9137 2.4449)
+				(xy -3.1157 2.1817) (xy -3.294 1.9018) (xy -3.4473 1.6075) (xy -3.5742 1.3009) (xy -3.674 0.9844)
+				(xy -3.7458 0.6605) (xy -3.7891 0.3315) (xy -3.8036 0) (xy -3.7891 -0.3315) (xy -3.7458 -0.6605)
+				(xy -3.674 -0.9844) (xy -3.5742 -1.3009) (xy -3.4473 -1.6075) (xy -3.294 -1.9018) (xy -3.1157 -2.1817)
+				(xy -2.9137 -2.4449) (xy -2.6896 -2.6896) (xy -2.4449 -2.9137) (xy -2.1817 -3.1157) (xy -1.9018 -3.294)
+				(xy -1.6075 -3.4473) (xy -1.3009 -3.5742) (xy -0.9844 -3.674) (xy -0.6605 -3.7458) (xy -0.3315 -3.7891)
+				(xy 0 -3.8036) (xy 0.3315 -3.7891) (xy 0.6605 -3.7458) (xy 0.9844 -3.674) (xy 1.3009 -3.5742) (xy 1.6075 -3.4473)
+				(xy 1.9018 -3.294) (xy 2.1817 -3.1157) (xy 2.4449 -2.9137) (xy 2.6896 -2.6896) (xy 2.9137 -2.4449)
+				(xy 3.1157 -2.1817) (xy 3.294 -1.9018) (xy 3.4473 -1.6075) (xy 3.5742 -1.3009) (xy 3.674 -0.9844)
+				(xy 3.7458 -0.6605) (xy 3.7891 -0.3315)
+			)
+		)
+	)
+	(embedded_fonts no)
+)
