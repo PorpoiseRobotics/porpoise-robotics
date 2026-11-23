@@ -73,8 +73,7 @@ Each board saves its number in its own memory, so you do this once per board.
 
 - **Station radio:** start the dashboard (step 2e) with the radio plugged in. It asks
   "Which station is this?" — press the number.
-- **Vehicle sensor board:** plug it into the laptop, start the dashboard, open **⚙ Setup →
-  Boards plugged into this laptop**, choose the number, press **Save to this board**.
+- **Vehicle sensor board:** plug it into the laptop, start the dashboard, press **🔧 Set up a board** at the top, choose the number, press **Save to this board**.
   (Or, in the Arduino Serial Monitor at 115200 baud, type `station 3` and press Enter.)
 - **Camera:** next step.
 
@@ -89,8 +88,8 @@ Pick the easiest way. The password is in **WiFi networks.txt** in the private On
 - **Phone or laptop:** power the camera. It makes its own WiFi network called
   **`FTT-Camera-Setup`**. Join it; a setup page opens (if not, go to `http://192.168.4.1`).
   Choose the station number, pick the router's network, type the password, press **Save**.
-- **Dashboard:** plug the camera into the laptop's USB, open **⚙ Setup → Boards plugged into
-  this laptop**, fill in station number, WiFi name and password, press **Save to this board**.
+- **Dashboard:** plug the camera into the laptop's USB, press **🔧 Set up a board** at the top of
+  the dashboard, fill in station number, WiFi name and password, press **Save to this board**.
   The password goes straight to the camera; the laptop does not keep it.
 - **Serial Monitor:** type `station 3`, then `wifiname <network name>`, then
   `wifipass <password>`, then `wifisave`.
@@ -182,10 +181,11 @@ each one means.
 | **Vehicle ✖** | Vehicle switched on? Its LED ring should light up. Blinking orange = no station number (step 2c). LED 0 blinking = it cannot hear the station radio: move closer. Wrong color = it has another station's number. |
 | **GPS …** for more than 2 minutes | GPS only works outside with open sky. The FK-A1's blue light starts flashing when it has a fix. |
 | Vehicle not on the map, but GPS ✔ | The field map is not set up on this laptop (step 2g). |
-| **Camera ✖** | Is the camera powered and set up with this station's number (step 2d)? Is the laptop on the **same WiFi** as the camera? Open ⚙ Setup → Camera → **Search again**. If the router blocks it, type the camera's address (shown in its Serial Monitor) into Setup. |
+| **Camera ✖** | Is the camera powered and set up with this station's number (step 2d)? Is the laptop on the **same WiFi** as the camera? The dashboard names both networks when it knows them; join the camera's one from the WiFi symbol at the bottom right of the screen. Open ⚙ Setup → Camera → **Search again**. If the router blocks it, type the camera's address (shown in its Serial Monitor) into Setup. |
 | Chat says **✖ not delivered** | The other station's radio did not answer. Is that station's dashboard running and its radio plugged in? |
 | Marks from another station never appear | Both stations' dashboards must be running. Marks are re-sent every 30 seconds. |
 | `Start Dashboard.bat` says Python is not installed | Step 2e. Tick "Add python.exe to PATH" in the installer. |
+| The camera's setup network (`FTT-Camera-…-Setup`) never appears | That is normal once the camera has WiFi it can join: it only makes the setup network when it has no WiFi saved, or cannot join any for 30 seconds. To change its WiFi, use 🔧 Set up a board (top of the dashboard), or type `setup` in the Serial Monitor. |
 | A board is in a strange state | Unplug it and plug it back in. Every board is safe to restart at any time. |
 
 The sensor board also prints a self-test when it starts (Serial Monitor, 115200 baud): one PASS

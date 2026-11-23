@@ -110,6 +110,7 @@ label.check input{width:22px;height:22px}
   <div class="spacer"></div>
   <button id="btnFind" title="Makes your vehicle flash its lights">🔦 Find my vehicle</button>
   <button id="btnSound" title="Beep when a message arrives">🔔 Sound on</button>
+  <button id="btnBoards" title="Give a vehicle board or camera its station number and WiFi">🔧 Set up a board</button>
   <button id="btnSetup">⚙ Setup</button>
 </header>
 
@@ -216,7 +217,7 @@ label.check input{width:22px;height:22px}
     </div>
 
     <div class="card">
-      <h3>Boards plugged into this laptop</h3>
+      <h3 id="setupBoards">🔧 Set up a board</h3>
       <div style="font-size:15px;color:var(--soft)">Plug a vehicle sensor board or a camera into USB to give it a station number, or to type the camera's WiFi. The WiFi names and passwords are in OneDrive: <b>Porpoise Robotics Private → WiFi networks.txt</b>. The password goes straight to the camera; this laptop does not keep it.</div>
       <div id="boardList"></div>
     </div>
@@ -496,8 +497,19 @@ function showCamera(cam){
     camUrl = ""; img.removeAttribute("src"); img.classList.add("hidden"); msg.classList.remove("hidden");
     msg.innerHTML = (S && S.simulate) ? "Practice mode: there is no real camera, so no video here."
       : cam.searching ? "🔎 Looking for your camera on the WiFi…"
-      : "No camera found.<br><small>Is the camera switched on and set up with this station's number? Is this laptop on the same WiFi as the camera?</small>";
+      : wifiHint(cam);
   }
+}
+// Why no camera? The most common reason: the laptop and the camera are on
+// different WiFi networks, so they cannot see each other at all.
+function wifiHint(cam){
+  const lap = cam.laptop_wifi ? esc(cam.laptop_wifi) : "", camw = cam.camera_wifi ? esc(cam.camera_wifi) : "";
+  if (lap && camw && lap !== camw)
+    return `📶 This laptop is on the WiFi <b>${lap}</b>, but the camera is on <b>${camw}</b>.<br>` +
+           `Click the WiFi symbol at the bottom right of the screen and join <b>${camw}</b>.`;
+  return "No camera found.<br><small>Is the camera switched on and set up with this station's number?" +
+         (lap ? ` This laptop is on the WiFi <b>${lap}</b>: the camera must be on the same one (normally the field router).`
+              : " This laptop must be on the same WiFi as the camera (normally the field router).") + "</small>";
 }
 $("camImg").addEventListener("error", ()=>{ camUrl = ""; setTimeout(()=>lastStatus && showCamera(lastStatus.camera || {}), 3000); });
 
@@ -567,6 +579,7 @@ $("chatText").addEventListener("input", updateCount);
 $("btnFind").addEventListener("click", ()=>post("/identify",{}));
 $("btnSound").addEventListener("click", ()=>{ soundOn = !soundOn; $("btnSound").textContent = soundOn ? "🔔 Sound on" : "🔕 Sound off"; });
 $("btnSetup").addEventListener("click", ()=>{ fillSetup(); $("setup").classList.remove("hidden"); });
+$("btnBoards").addEventListener("click", ()=>{ fillSetup(); $("setup").classList.remove("hidden"); $("setupBoards").scrollIntoView(); });
 $("btnCloseSetup").addEventListener("click", ()=>$("setup").classList.add("hidden"));
 $("setup").addEventListener("click", ev=>{ if (ev.target.id === "setup") $("setup").classList.add("hidden"); });
 
@@ -621,9 +634,22 @@ $("wpFile").addEventListener("change", async ev=>{
 });
 $("btnClearWp").addEventListener("click", ()=>{ waypoints = []; drawField(); });
 
+let lastBoards = [], portProblems = [];
 function drawBoards(boards){
+  lastBoards = boards;
   const list = $("boardList"); list.innerHTML = "";
-  if (!boards.length) { list.innerHTML = '<div style="margin-top:8px;color:var(--soft)">No other boards plugged in right now.</div>'; return; }
+  // USB ports we could not use, explained in plain words.
+  for (const p of portProblems){
+    const d = document.createElement("div"); d.className = "boardItem"; d.style.borderColor = "var(--warn)";
+    d.innerHTML = p.problem === "busy"
+      ? `⚠️ A board is plugged in on <b>${esc(p.port)}</b>, but another program is using it. <b>Close the Arduino Serial Monitor</b> (or the Arduino IDE). It will show up here a few seconds later.`
+      : `⚠️ A board on <b>${esc(p.port)}</b> is not answering. Press the small <b>RST</b> or <b>EN</b> button on the board, or unplug it and plug it back in. If it still does not show up, it may need its program uploaded (see the README).`;
+    list.appendChild(d);
+  }
+  if (!boards.length) {
+    if (!portProblems.length) list.insertAdjacentHTML("beforeend", '<div style="margin-top:8px;color:var(--soft)">No boards plugged in right now. Plug a vehicle sensor board or a camera into this laptop with a USB cable; it appears here within a few seconds.</div>');
+    return;
+  }
   for (const b of boards){
     const d = document.createElement("div"); d.className = "boardItem";
     const name = {"vehicle-sensors":"Vehicle sensor board","camera":"Camera"}[b.board] || b.board;
@@ -684,6 +710,7 @@ function connectEvents(){
   es.addEventListener("settings", ev=>{ cfg = JSON.parse(ev.data); $("showOthers").checked = !!cfg.show_other_vehicles; drawField(); });
   es.addEventListener("note", ev=>note(JSON.parse(ev.data).text));
   es.addEventListener("boards", ev=>drawBoards(JSON.parse(ev.data)));
+  es.addEventListener("ports", ev=>{ portProblems = JSON.parse(ev.data); drawBoards(lastBoards); });
   es.addEventListener("board_reply", ev=>{ const r = JSON.parse(ev.data); note(`${r.port}: ${r.text || r.what || r.type}`); });
   es.onerror = ()=>{ chip("chipRadio","bad","Dashboard stopped?"); };
 }
@@ -695,6 +722,7 @@ async function start(){
   (S.notes || []).forEach(note);
   $("showOthers").checked = !!cfg.show_other_vehicles;
   showStatus({station:S.station, radio:S.radio, camera:S.camera, vehicle_age:(S.vehicles[10+S.station]||{}).age_s ?? null});
+  portProblems = S.port_problems || [];
   drawField(); drawChats(); drawToRow(); drawBoards(S.boards); drawPick(); updateCount();
   connectEvents();
   setInterval(drawToRow, 10000);

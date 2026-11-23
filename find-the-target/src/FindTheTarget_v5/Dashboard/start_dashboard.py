@@ -178,6 +178,7 @@ class Hub:
         self.roster = []
         self.notes = []                  # recent "# ..." lines from the board
         self.boards = {}                 # port -> hello dict, for the Setup page
+        self.port_problems = []          # [{port, problem: busy|silent}]
         self.camera = {"url": "", "found_by": "", "searching": False, "ip": ""}
         self.listeners = []              # one queue per open browser tab
         self.next_ref = 1
@@ -207,6 +208,7 @@ class Hub:
                 "roster": self.roster,
                 "notes": self.notes[-50:],
                 "boards": [dict(port=p, **h) for p, h in self.boards.items()],
+                "port_problems": list(self.port_problems),
                 "camera": dict(self.camera),
                 "settings": dict(self.settings),
                 "simulate": self.simulate,
@@ -462,7 +464,17 @@ class SerialLink:
 
     def __init__(self, port, on_line, on_close):
         self.port = port
-        self.ser = serial.Serial(port, 115200, timeout=0.5)
+        self.opened_at = time.time()
+        self.identified = False           # set once the board says which board it is
+        # On most ESP32 boards the USB chip's DTR and RTS wires are joined to
+        # the RESET and BOOT pins. Python switches both on when it opens a
+        # port, which can leave a board stuck in "waiting for a new program"
+        # mode and silent. Keep both off, like the Arduino Serial Monitor.
+        self.ser = serial.Serial()
+        self.ser.port, self.ser.baudrate, self.ser.timeout = port, 115200, 0.5
+        self.ser.dtr = False
+        self.ser.rts = False
+        self.ser.open()
         self.on_line, self.on_close = on_line, on_close
         self.wlock = threading.Lock()
         threading.Thread(target=self._run, daemon=True).start()
@@ -476,11 +488,16 @@ class SerialLink:
             return False
 
     def _run(self):
-        time.sleep(1.5)                   # opening the port resets the board
-        self.send("info")
         buf = b""
+        next_ask, asks = time.time() + 1.0, 0
         try:
             while True:
+                # Ask "who are you?" until the board answers (it may still be
+                # starting up, e.g. a camera joining WiFi takes a few seconds).
+                if not self.identified and asks < 20 and time.time() >= next_ask:
+                    self.send("info")
+                    asks += 1
+                    next_ask = time.time() + 3
                 chunk = self.ser.read(512)
                 if not chunk:
                     continue
@@ -508,6 +525,7 @@ class PortWatcher:
         self.hub, self.station, self.fixed = hub, station, fixed_port
         self.links = {}                   # port -> SerialLink
         self.kind = {}                    # port -> board name from its hello
+        self.busy = set()                 # ports another program is using
 
     def run(self):
         while True:
@@ -518,17 +536,33 @@ class PortWatcher:
                     if port not in self.links:
                         try:
                             self.links[port] = SerialLink(port, self.on_line, self.on_close)
+                            self.busy.discard(port)
                         except (serial.SerialException, OSError):
-                            pass          # busy (Serial Monitor open?) - try again later
+                            self.busy.add(port)   # Serial Monitor open? Try again in 3 s.
+                self.busy &= set(ports)           # forget ports that were unplugged
+                self.report_problems()
             except Exception as e:        # never let the watcher die
                 self.hub.note(f"USB check failed: {e}")
             time.sleep(3)
+
+    def report_problems(self):
+        """Tell the Set up a board section about USB ports that are busy or
+        silent, in words a first-time user can act on."""
+        problems = [{"port": p, "problem": "busy"} for p in sorted(self.busy)]
+        problems += [{"port": p, "problem": "silent"} for p, link in list(self.links.items())
+                     if not link.identified and time.time() - link.opened_at > 8]
+        with self.hub.lock:
+            changed = problems != self.hub.port_problems
+            self.hub.port_problems = problems
+        if changed:
+            self.hub.publish("ports", problems)
 
     def on_line(self, link, line):
         msg = parse_board_line(line)
         if msg is None:
             return
         if msg["type"] == "hello":
+            link.identified = True
             self.kind[link.port] = msg.get("board", "")
             with self.hub.lock:
                 if msg.get("board") == "station-radio":
@@ -734,15 +768,46 @@ def find_camera(station):
     return None
 
 
+def laptop_wifi_name():
+    """The WiFi network this laptop is on, or "" if unknown (Windows only)."""
+    try:
+        import subprocess
+        out = subprocess.run(["netsh", "wlan", "show", "interfaces"], capture_output=True,
+                             text=True, timeout=5, creationflags=getattr(subprocess, "CREATE_NO_WINDOW", 0)).stdout
+        for line in out.splitlines():
+            key, _, value = line.partition(":")
+            if key.strip() == "SSID":
+                return value.strip()
+    except Exception:
+        pass
+    return ""
+
+
+def plugged_in_camera(hub):
+    """A camera for this station that is plugged into USB right now, if any:
+    its hello line tells us its WiFi name and address directly."""
+    with hub.lock:
+        for b in hub.boards.values():
+            if b.get("board") == "camera" and int(b.get("station") or 0) == hub.station:
+                return b
+    return None
+
+
 def camera_worker(hub):
     while True:
         try:
+            cam_board = plugged_in_camera(hub)
+            with hub.lock:
+                hub.camera.update(laptop_wifi=laptop_wifi_name(),
+                                  camera_wifi=(cam_board or {}).get("ssid", "") or hub.camera.get("camera_wifi", ""))
             manual = hub.settings.get("camera_url", "").strip()
             if manual:
                 with hub.lock:
                     hub.camera.update(url=manual, found_by="typed in Setup", searching=False)
             elif hub.station:
                 ip = hub.camera.get("ip")
+                if not ip and cam_board and cam_board.get("ip"):
+                    ip = cam_board["ip"]          # it told us over USB
                 if not (ip and ask_whoami(ip, 1.5)):
                     with hub.lock:
                         hub.camera.update(searching=True)
