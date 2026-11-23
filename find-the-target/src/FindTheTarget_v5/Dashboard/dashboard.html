@@ -1,0 +1,705 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Find the Target</title>
+<!--
+  Find the Target v5 - station dashboard.
+  Served by start_dashboard.py; open http://localhost:8000.
+  Everything is in this one file and nothing is loaded from the internet,
+  so it works on a field router that has no internet connection.
+-->
+<style>
+:root{
+  --bg:#eef2f7; --card:#ffffff; --ink:#14202b; --soft:#5b6875; --line:#d6dde6;
+  --good:#17a34a; --bad:#dc2626; --warn:#d97706; --accent:#1f6feb; --me:#1f6feb;
+}
+*{box-sizing:border-box}
+body{margin:0;background:var(--bg);color:var(--ink);font:17px/1.4 "Segoe UI",system-ui,-apple-system,sans-serif}
+button{font:inherit;cursor:pointer;border-radius:12px;border:2px solid var(--line);background:#fff;padding:8px 14px}
+button:hover{border-color:var(--accent)}
+button.primary{background:var(--accent);border-color:var(--accent);color:#fff;font-weight:700}
+button.big{font-size:20px;padding:12px 18px}
+button.on{outline:4px solid #ffd23f;border-color:#14202b}
+input,select{font:inherit;padding:8px 10px;border-radius:10px;border:2px solid var(--line);width:100%}
+h2{font-size:20px;margin:0 0 10px}
+.hidden{display:none !important}
+
+/* ---------- top bar ---------- */
+header{display:flex;align-items:center;gap:12px;flex-wrap:wrap;padding:10px 16px;background:#14202b;color:#fff;position:sticky;top:0;z-index:5}
+.badge{font-size:26px;font-weight:800;padding:6px 18px;border-radius:14px;background:#888;color:#fff;white-space:nowrap}
+.chip{display:flex;align-items:center;gap:8px;font-weight:600;padding:6px 12px;border-radius:999px;background:#26323d}
+.chip .dot{width:14px;height:14px;border-radius:50%;background:#6b7785}
+.chip.ok .dot{background:#22c55e}.chip.bad .dot{background:#ef4444}.chip.warn .dot{background:#f59e0b}
+header .spacer{flex:1}
+header button{background:#26323d;color:#fff;border-color:#3b4856}
+
+/* ---------- problem banner ---------- */
+#banner{margin:12px 16px 0;padding:14px 18px;border-radius:14px;font-size:19px;font-weight:600;background:#fde68a;color:#3b2a00;border:3px solid #f59e0b}
+#banner.bad{background:#fecaca;border-color:#dc2626;color:#450a0a}
+
+/* ---------- layout ---------- */
+main{display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1.25fr);gap:14px;padding:14px 16px}
+.panel{background:var(--card);border-radius:16px;padding:14px;box-shadow:0 1px 3px rgba(0,0,0,.08)}
+#camBox{position:relative;background:#0d141b;border-radius:12px;aspect-ratio:4/3;display:flex;align-items:center;justify-content:center;overflow:hidden}
+#camBox img{width:100%;height:100%;object-fit:contain}
+#camMsg{color:#cfd8e3;text-align:center;padding:20px;font-size:18px}
+.numbers{display:grid;grid-template-columns:repeat(3,1fr);gap:10px;margin-top:12px}
+.num{background:#f6f8fb;border:2px solid var(--line);border-radius:14px;padding:8px 10px}
+.num .lbl{font-size:14px;color:var(--soft);font-weight:600}
+.num .val{font-size:28px;font-weight:800;white-space:nowrap}
+.num .val small{font-size:15px;font-weight:600;color:var(--soft)}
+.num.good{border-color:var(--good)}.num.warn{border-color:var(--warn)}.num.bad{border-color:var(--bad)}
+#fieldSvg{width:100%;display:block;border-radius:12px;touch-action:manipulation}
+.tools{display:flex;flex-wrap:wrap;gap:8px;margin-top:10px;align-items:center}
+.tools input{flex:1;min-width:160px}
+#toolHelp{margin-top:8px;color:var(--soft);font-size:16px;min-height:24px}
+label.check{display:flex;gap:8px;align-items:center;margin-top:8px;font-size:16px}
+label.check input{width:22px;height:22px}
+
+/* ---------- chat ---------- */
+#chatPanel{grid-column:1 / -1}
+.chatGrid{display:grid;grid-template-columns:minmax(0,1.3fr) minmax(0,1fr);gap:16px}
+#chatList{height:300px;overflow-y:auto;background:#f6f8fb;border-radius:12px;padding:10px;border:2px solid var(--line)}
+.msg{display:flex;gap:10px;margin:8px 0;align-items:flex-start}
+.msg .who{flex:none;width:44px;height:44px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-weight:800;font-size:20px;color:#fff}
+.msg .bubble{background:#fff;border:2px solid var(--line);border-radius:14px;padding:6px 12px;max-width:100%}
+.msg.mine .bubble{border-color:var(--me);background:#eaf1ff}
+.msg.private .bubble{border-style:dashed}
+.msg .meta{font-size:13px;color:var(--soft);font-weight:600}
+.msg .text{font-size:19px;word-wrap:break-word}
+.quick{display:flex;flex-wrap:wrap;gap:8px;margin:10px 0}
+.quick button{font-size:18px}
+.toRow{display:flex;flex-wrap:wrap;gap:6px;align-items:center}
+.toRow button{min-width:52px;font-weight:700}
+.toRow button.faded{opacity:.45}
+.sendRow{display:flex;gap:8px;margin-top:10px}
+.sendRow input{font-size:20px}
+#chatCount{font-size:14px;color:var(--soft);margin-top:4px}
+.warning{margin-top:10px;font-size:15px;color:#7c2d12;background:#ffedd5;border-radius:10px;padding:8px 12px}
+
+/* ---------- setup drawer ---------- */
+#setup{position:fixed;inset:0;background:rgba(10,15,20,.55);z-index:10;display:flex;justify-content:flex-end}
+#setup .drawer{width:min(620px,100%);height:100%;overflow-y:auto;background:var(--bg);padding:16px}
+.card{background:#fff;border-radius:14px;padding:14px;margin-bottom:12px}
+.card h3{margin:0 0 8px;font-size:18px}
+.row2{display:grid;grid-template-columns:1fr 1fr;gap:8px}
+.card label{display:block;font-size:14px;color:var(--soft);margin-top:8px;font-weight:600}
+.card .btns{display:flex;flex-wrap:wrap;gap:8px;margin-top:10px}
+#notes{font:13px/1.4 Consolas,monospace;background:#0d141b;color:#cfe3d4;border-radius:10px;padding:8px;height:180px;overflow-y:auto;white-space:pre-wrap}
+.boardItem{border:2px solid var(--line);border-radius:12px;padding:10px;margin-top:8px}
+
+/* ---------- pick-your-station overlay ---------- */
+#pick{position:fixed;inset:0;background:rgba(10,15,20,.75);z-index:20;display:flex;align-items:center;justify-content:center}
+#pick .box{background:#fff;border-radius:20px;padding:24px;max-width:640px;text-align:center}
+#pick .grid{display:grid;grid-template-columns:repeat(3,1fr);gap:12px;margin-top:16px}
+#pick .grid button{font-size:30px;font-weight:800;padding:18px;color:#fff;border:0}
+
+@media (max-width:900px){ main{grid-template-columns:1fr} .chatGrid{grid-template-columns:1fr} .numbers{grid-template-columns:repeat(2,1fr)} }
+</style>
+</head>
+<body>
+
+<header>
+  <div class="badge" id="badge">Station ?</div>
+  <div class="chip" id="chipRadio"><span class="dot"></span><span>Radio</span></div>
+  <div class="chip" id="chipVehicle"><span class="dot"></span><span>Vehicle</span></div>
+  <div class="chip" id="chipGps"><span class="dot"></span><span>GPS</span></div>
+  <div class="chip" id="chipCam"><span class="dot"></span><span>Camera</span></div>
+  <div class="spacer"></div>
+  <button id="btnFind" title="Makes your vehicle flash its lights">🔦 Find my vehicle</button>
+  <button id="btnSound" title="Beep when a message arrives">🔔 Sound on</button>
+  <button id="btnSetup">⚙ Setup</button>
+</header>
+
+<div id="banner" class="hidden"></div>
+
+<main>
+  <section class="panel">
+    <h2>📷 Camera</h2>
+    <div id="camBox"><img id="camImg" alt="Live video from the vehicle" class="hidden"><div id="camMsg">Looking for your camera…</div></div>
+    <div class="numbers">
+      <div class="num" id="nRange"><div class="lbl">Distance ahead</div><div class="val">--</div></div>
+      <div class="num" id="nHeading"><div class="lbl">Facing</div><div class="val">--</div></div>
+      <div class="num" id="nSpeed"><div class="lbl">Speed</div><div class="val">--</div></div>
+      <div class="num" id="nSats"><div class="lbl">GPS satellites</div><div class="val">--</div></div>
+      <div class="num" id="nTemp"><div class="lbl">Temperature</div><div class="val">--</div></div>
+      <div class="num" id="nSignal"><div class="lbl">Radio signal</div><div class="val">--</div></div>
+      <div class="num" id="nDx"><div class="lbl">To target: left/right</div><div class="val">--</div></div>
+      <div class="num" id="nDy"><div class="lbl">To target: up/down</div><div class="val">--</div></div>
+      <div class="num" id="nPress"><div class="lbl">Air pressure</div><div class="val">--</div></div>
+    </div>
+  </section>
+
+  <section class="panel">
+    <h2>🗺️ Map</h2>
+    <svg id="fieldSvg" role="img" aria-label="Map of the field"></svg>
+    <div class="tools">
+      <button data-kind="1">🎯 Target</button>
+      <button data-kind="2">⚠️ Danger</button>
+      <button data-kind="3">📍 Waypoint</button>
+      <button data-kind="4">🤝 Meet here</button>
+      <input id="markLabel" maxlength="24" placeholder="Name for the mark (optional)">
+    </div>
+    <div id="toolHelp">Pick a mark above, then tap the map to put it there. Tap one of your marks to remove it.</div>
+    <label class="check"><input type="checkbox" id="showOthers"> Show other stations' vehicles on the map</label>
+  </section>
+
+  <section class="panel" id="chatPanel">
+    <h2>💬 Chat with other stations</h2>
+    <div class="chatGrid">
+      <div id="chatList" aria-live="polite"></div>
+      <div>
+        <div class="toRow" id="toRow"><b style="margin-right:6px">Send to:</b></div>
+        <div class="quick" id="quick"></div>
+        <div class="sendRow">
+          <input id="chatText" placeholder="Type a message…" autocomplete="off">
+          <button class="primary big" id="btnSend">Send</button>
+        </div>
+        <div id="chatCount"></div>
+        <div class="warning">⚠️ Anyone nearby can read these messages. Use station numbers, never names, and be kind.</div>
+      </div>
+    </div>
+  </section>
+</main>
+
+<!-- ======================= Setup (for grown-ups) ======================= -->
+<div id="setup" class="hidden">
+  <div class="drawer">
+    <div style="display:flex;justify-content:space-between;align-items:center">
+      <h2>⚙ Setup</h2><button class="big" id="btnCloseSetup">✖ Close</button>
+    </div>
+
+    <div class="card">
+      <h3>This station</h3>
+      <div id="setupStation">--</div>
+      <div class="btns"><button id="btnChangeStation">Change station number</button></div>
+    </div>
+
+    <div class="card">
+      <h3>Camera</h3>
+      <div id="setupCam">--</div>
+      <label>Camera video address (leave empty to find it by itself)</label>
+      <input id="cfgCam" placeholder="http://192.168.0.42:81/stream">
+      <div class="btns"><button class="primary" id="btnSaveCam">Save</button><button id="btnFindCam">Search again</button></div>
+    </div>
+
+    <div class="card">
+      <h3>Field (the map)</h3>
+      <div style="font-size:15px;color:var(--soft)">Park the vehicle at the corner that should be (0,0), facing along the long side with the field on its left. Then press both "Use my vehicle" buttons.</div>
+      <div class="row2">
+        <div><label>Corner latitude</label><input type="number" id="cfgLat" step="0.000001"></div>
+        <div><label>Corner longitude</label><input type="number" id="cfgLon" step="0.000001"></div>
+        <div><label>Direction of the long side (°)</label><input type="number" id="cfgBrg" step="0.1"></div>
+        <div><label>&nbsp;</label><button id="btnUseHere">📍 Use my vehicle's spot</button></div>
+        <div><label>Length (meters)</label><input type="number" id="cfgLen" step="0.5"></div>
+        <div><label>Width (meters)</label><input type="number" id="cfgWid" step="0.5"></div>
+      </div>
+      <div class="btns"><button id="btnUseHeading">🧭 Use my vehicle's facing</button><button class="primary" id="btnSaveField">Save field</button></div>
+    </div>
+
+    <div class="card">
+      <h3>Target spot (gold crosshair)</h3>
+      <div class="row2">
+        <div><label>x (feet from the corner, along)</label><input type="number" id="cfgDestX" step="1"></div>
+        <div><label>y (feet from the corner, up)</label><input type="number" id="cfgDestY" step="1"></div>
+      </div>
+      <div class="btns"><button class="primary" id="btnSaveDest">Save</button><button id="btnClearDest">Clear</button></div>
+    </div>
+
+    <div class="card">
+      <h3>Route from a spreadsheet</h3>
+      <div style="font-size:15px;color:var(--soft)">.xlsx or .csv with columns <b>name, x_ft, y_ft</b> (feet from the corner) or <b>name, lat, lon</b>. Only this laptop sees the route.</div>
+      <input type="file" id="wpFile" accept=".xlsx,.csv" style="margin-top:8px">
+      <div class="btns"><button id="btnClearWp">Clear route</button></div>
+    </div>
+
+    <div class="card">
+      <h3>Boards plugged into this laptop</h3>
+      <div style="font-size:15px;color:var(--soft)">Plug a vehicle sensor board or a camera into USB to give it a station number, or to type the camera's WiFi. The WiFi names and passwords are in OneDrive: <b>Porpoise Robotics Private → WiFi networks.txt</b>. The password goes straight to the camera; this laptop does not keep it.</div>
+      <div id="boardList"></div>
+    </div>
+
+    <div class="card">
+      <h3>Messages from the radio board</h3>
+      <div id="notes"></div>
+    </div>
+  </div>
+</div>
+
+<!-- ======================= Which station are you? ======================= -->
+<div id="pick" class="hidden">
+  <div class="box">
+    <h2 style="font-size:28px">Which station is this?</h2>
+    <div style="font-size:18px">Look at the number on your table or vehicle and press it.</div>
+    <div class="grid" id="pickGrid"></div>
+  </div>
+</div>
+
+<script>
+"use strict";
+/* ==================== constants ==================== */
+// Station colors. The vehicle's LED ring uses the same ones.
+const COLORS = ["#ff7a00","#e61e1e","#1e5aff","#14b83c","#e6b400","#a03ce6","#ff6e14","#00b4c8","#ff50aa","#8a8f98"];
+const KINDS = {1:{emoji:"🎯",name:"Target"},2:{emoji:"⚠️",name:"Danger"},3:{emoji:"📍",name:"Waypoint"},4:{emoji:"🤝",name:"Meet here"}};
+const QUICK = ["🎯 I found it!","🆘 Need help!","🚗 On my way","⚠️ Watch out!","👍 Yes","👎 No","⏳ Wait","🎉 Great job!"];
+const FT = 0.3048;                 // meters per foot
+const $ = id => document.getElementById(id);
+
+/* ==================== state ==================== */
+let S = null;                      // snapshot from /state
+let cfg = {};                      // settings
+let station = 0;
+const vehicles = {};               // node -> telemetry
+let chats = [];
+let marks = {mine:[], others:[]};
+let sendTo = 0;
+let tool = 0;                      // 0 = no mark tool picked
+let trail = [];
+let waypoints = [];
+let soundOn = true;
+let limits = {chat_bytes:120, marks:40, label:24, stations:9};
+
+/* ==================== helpers ==================== */
+function stColor(n){ return COLORS[(n>=0 && n<=9) ? n : 0]; }
+function textOn(n){ return [4,7,9].includes(n) ? "#14202b" : "#fff"; }
+function esc(s){ return String(s).replace(/[&<>"]/g, c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;"}[c])); }
+function bytes(s){ return new TextEncoder().encode(s).length; }
+async function post(path, body){
+  const r = await fetch(path,{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify(body)});
+  return r.json();
+}
+function note(text){
+  const n = $("notes");
+  n.textContent += text + "\n";
+  n.scrollTop = n.scrollHeight;
+}
+function compass(deg){
+  const names=["N","NE","E","SE","S","SW","W","NW"];
+  return names[Math.round(((deg%360)+360)%360/45)%8];
+}
+function beep(){
+  if (!soundOn) return;
+  try{
+    const ctx = new (window.AudioContext||window.webkitAudioContext)();
+    const o = ctx.createOscillator(), g = ctx.createGain();
+    o.frequency.value = 880; g.gain.value = 0.08;
+    o.connect(g); g.connect(ctx.destination); o.start(); o.stop(ctx.currentTime + 0.15);
+  }catch(e){}
+}
+
+/* ==================== GPS <-> field meters ==================== */
+// Same math as v4. Field coordinates are a graph with (0,0) at the
+// bottom-left corner: x along the long side, y up across the width.
+function fieldReady(){ return !!cfg.field_origin_lat; }
+function gpsToField(lat, lon){
+  const R = 111320, lat0 = cfg.field_origin_lat, lon0 = cfg.field_origin_lon;
+  const dN = (lat-lat0)*R, dE = (lon-lon0)*R*Math.cos(lat0*Math.PI/180);
+  const b = cfg.field_bearing_deg*Math.PI/180;
+  return { x: dE*Math.sin(b)+dN*Math.cos(b), y: dN*Math.sin(b)-dE*Math.cos(b) };
+}
+function fieldToGps(x, y){        // the reverse, for dropping a mark where you tap
+  const R = 111320, lat0 = cfg.field_origin_lat, lon0 = cfg.field_origin_lon;
+  const b = cfg.field_bearing_deg*Math.PI/180;
+  const dN = x*Math.cos(b)+y*Math.sin(b), dE = x*Math.sin(b)-y*Math.cos(b);
+  return { lat: lat0 + dN/R, lon: lon0 + dE/(R*Math.cos(lat0*Math.PI/180)) };
+}
+function toSvg(p){ return { x:p.x, y:cfg.field_width_m - p.y }; }
+function fromSvg(p){ return { x:p.x, y:cfg.field_width_m - p.y }; }
+
+/* ==================== map drawing ==================== */
+const NS = "http://www.w3.org/2000/svg", PAD = 6;
+function el(name, attrs, parent){
+  const e = document.createElementNS(NS, name);
+  for (const k in attrs) e.setAttribute(k, attrs[k]);
+  if (parent) parent.appendChild(e);
+  return e;
+}
+function svgText(parent, x, y, txt, size, attrs){
+  const t = el("text",{x, y, "font-size":size, "text-anchor":"middle", "font-family":"Segoe UI, system-ui, sans-serif", ...attrs}, parent);
+  t.textContent = txt; return t;
+}
+function drawField(){
+  const L = cfg.field_length_m || 100, W = cfg.field_width_m || 64, svg = $("fieldSvg");
+  svg.innerHTML = "";
+  svg.setAttribute("viewBox", `${-PAD} ${-PAD} ${L+2*PAD} ${W+2*PAD}`);
+  el("rect",{x:-PAD,y:-PAD,width:L+2*PAD,height:W+2*PAD,fill:"#2e7d4f",rx:1.5}, svg);
+  for (let i=0;i<10;i++) el("rect",{x:i*L/10,y:0,width:L/10,height:W,fill:i%2?"#2a7449":"#2e7d4f"}, svg);
+  const chalk = {fill:"none",stroke:"#f3f6f1","stroke-width":0.35};
+  el("rect",{...chalk,x:0,y:0,width:L,height:W}, svg);
+  el("line",{...chalk,x1:L/2,y1:0,x2:L/2,y2:W}, svg);
+  el("circle",{...chalk,cx:L/2,cy:W/2,r:9.15*Math.min(1,L/105)}, svg);
+  const paW=16.5, paH=Math.min(40.3,W*0.63), gaW=5.5, gaH=Math.min(18.3,W*0.29);
+  for (const side of [0,1]){
+    el("rect",{...chalk,x:side?L-paW:0,y:(W-paH)/2,width:paW,height:paH}, svg);
+    el("rect",{...chalk,x:side?L-gaW:0,y:(W-gaH)/2,width:gaW,height:gaH}, svg);
+  }
+  svgText(svg, -2.8, W+3.6, "0,0", 2, {fill:"#f3f6f1"});
+  // route from the spreadsheet
+  if (waypoints.length){
+    const pts = waypoints.map(w=>toSvg(w.lat!==undefined ? gpsToField(w.lat,w.lon) : w));
+    el("polyline",{points:pts.map(p=>`${p.x},${p.y}`).join(" "),fill:"none",stroke:"#f3f6f1","stroke-width":0.3,"stroke-dasharray":"1 1"}, svg);
+    pts.forEach((p,i)=>{ el("circle",{cx:p.x,cy:p.y,r:1.4,fill:"#1d2b26",stroke:"#f3f6f1","stroke-width":0.3}, svg);
+                         svgText(svg,p.x,p.y+0.6,String(i+1),1.6,{fill:"#fff"}); });
+  }
+  // destination crosshair
+  if (cfg.dest_x_ft!=null && cfg.dest_y_ft!=null){
+    const s = toSvg({x:cfg.dest_x_ft*FT, y:cfg.dest_y_ft*FT}), gold="#ffd23f";
+    el("circle",{cx:s.x,cy:s.y,r:2.4,fill:"none",stroke:gold,"stroke-width":0.5}, svg);
+    el("circle",{cx:s.x,cy:s.y,r:0.6,fill:gold}, svg);
+    svgText(svg, s.x, s.y-3.2, "TARGET", 2, {fill:gold,"font-weight":"700"});
+  }
+  el("polyline",{id:"trail",fill:"none",stroke:stColor(station),"stroke-width":0.45,opacity:0.6}, svg);
+  el("g",{id:"marksLayer"}, svg);
+  el("g",{id:"vehLayer"}, svg);
+  if (!fieldReady()) svgText(svg, L/2, W/2, "Ask a grown-up to set up the field (⚙ Setup)", 3.2, {fill:"#fff","font-weight":"700"});
+  drawDynamic();
+}
+function drawDynamic(){
+  const mL = $("marksLayer"), vL = $("vehLayer");
+  if (!mL || !fieldReady()) return;
+  mL.innerHTML = ""; vL.innerHTML = "";
+  const all = [...marks.others.map(m=>({...m, mine:false})),
+               ...marks.mine.map(m=>({...m, from:station, mine:true}))];
+  for (const m of all){
+    const p = toSvg(gpsToField(m.lat, m.lon));
+    const g = el("g",{transform:`translate(${p.x},${p.y})`,style:"cursor:pointer"}, mL);
+    el("circle",{r:2.6,fill:"#fff",stroke:stColor(m.from),"stroke-width":0.8}, g);
+    svgText(g, 0, 1.1, KINDS[m.kind] ? KINDS[m.kind].emoji : "📍", 3, {});
+    const label = (m.label ? m.label + " · " : "") + "S" + m.from;
+    svgText(g, 0, -3.4, label, 1.9, {fill:"#fff","font-weight":"700",stroke:"#14202b","stroke-width":0.35,"paint-order":"stroke"});
+    const title = el("title",{}, g);
+    title.textContent = `${KINDS[m.kind]?.name || "Mark"} from Station ${m.from}${m.label ? ": "+m.label : ""}`;
+    if (m.mine) g.addEventListener("click", ev=>{ ev.stopPropagation(); askRemove(m); });
+  }
+  // trail for our own vehicle
+  const tr = $("trail");
+  if (tr) tr.setAttribute("points", trail.map(p=>{const s=toSvg(p);return `${s.x},${s.y}`;}).join(" "));
+  // vehicles
+  for (const node in vehicles){
+    const v = vehicles[node], st = Number(v.station), mine = st === station;
+    if (!mine && !cfg.show_other_vehicles) continue;
+    if (!v.gps_fix || (Date.now()/1000 - v._at) > 10) continue;
+    const p = toSvg(gpsToField(v.lat, v.lon));
+    const rot = (v.mag_ok ? v.heading_deg : v.course_deg) - cfg.field_bearing_deg + 90;
+    const size = mine ? 1.4 : 1.0;
+    const g = el("g",{transform:`translate(${p.x},${p.y})`}, vL);
+    const r = el("g",{transform:`rotate(${rot}) scale(${size})`}, g);
+    el("path",{d:"M0,-3.2 L1.4,-0.8 L-1.4,-0.8 Z",fill:stColor(st)}, r);
+    el("circle",{r:1.6,fill:stColor(st),stroke:"#fff","stroke-width":0.35}, g);
+    svgText(g, 0, 0.7, String(st), 1.9, {fill:textOn(st),"font-weight":"800"});
+  }
+}
+async function askRemove(m){
+  if (!confirm(`Remove your ${KINDS[m.kind]?.name || "mark"}${m.label ? ' "'+m.label+'"' : ""}?`)) return;
+  const r = await post("/mark",{action:"remove", id:m.id});
+  if (!r.ok) alert(r.error);
+}
+$("fieldSvg").addEventListener("click", async ev=>{
+  if (!tool) return;
+  if (!fieldReady()){ alert("The field is not set up yet. Ask a grown-up to open ⚙ Setup."); return; }
+  const svg = $("fieldSvg"), pt = svg.createSVGPoint();
+  pt.x = ev.clientX; pt.y = ev.clientY;
+  const s = pt.matrixTransform(svg.getScreenCTM().inverse());
+  const g = fieldToGps(fromSvg(s).x, fromSvg(s).y);
+  const r = await post("/mark",{kind:tool, lat:g.lat, lon:g.lon, label:$("markLabel").value});
+  if (!r.ok) { alert(r.error); return; }
+  $("markLabel").value = "";
+  setTool(0);
+});
+function setTool(k){
+  tool = (tool === k) ? 0 : k;
+  document.querySelectorAll(".tools button").forEach(b=>b.classList.toggle("on", Number(b.dataset.kind) === tool));
+  $("toolHelp").textContent = tool
+    ? `Now tap the map where the ${KINDS[tool].name} should go.`
+    : "Pick a mark above, then tap the map to put it there. Tap one of your marks to remove it.";
+}
+document.querySelectorAll(".tools button").forEach(b=>b.addEventListener("click", ()=>setTool(Number(b.dataset.kind))));
+$("showOthers").addEventListener("change", ev=>post("/settings",{show_other_vehicles: ev.target.checked}));
+
+/* ==================== numbers (our own vehicle only) ==================== */
+function setNum(id, html, state){
+  const e = $(id);
+  e.querySelector(".val").innerHTML = html;
+  e.className = "num" + (state ? " " + state : "");
+}
+function showTelemetry(v){
+  if (v.sonar_ok) {
+    const d = v.distance_in;
+    setNum("nRange", `${d.toFixed(0)}<small> in</small>`, d < 20 ? "bad" : d < 40 ? "warn" : "good");
+  } else setNum("nRange", "—<small> no echo</small>", "warn");
+  const hd = v.mag_ok ? v.heading_deg : (v.speed_mph > 1 ? v.course_deg : null);
+  setNum("nHeading", hd == null ? "--" : `${compass(hd)}<small> ${hd.toFixed(0)}°</small>`, "");
+  setNum("nSpeed", `${v.speed_mph.toFixed(1)}<small> mph</small>`, "");
+  setNum("nSats", `${v.sats}<small>${v.gps_fix ? " ✔" : " (no fix yet)"}</small>`, v.gps_fix ? "good" : "warn");
+  setNum("nTemp", v.bmp_ok ? `${v.temp_f.toFixed(0)}<small> °F</small>` : "--", "");
+  setNum("nPress", v.bmp_ok ? `${v.pressure_atm.toFixed(3)}<small> atm</small>` : "--", "");
+  if (v.rssi == null) setNum("nSignal", "via relay", "warn");
+  else { const bars = v.rssi > -60 ? 4 : v.rssi > -70 ? 3 : v.rssi > -80 ? 2 : 1;
+         setNum("nSignal", `${"▮".repeat(bars)}${"▯".repeat(4-bars)}<small> ${v.rssi} dBm</small>`, bars > 2 ? "good" : bars > 1 ? "warn" : "bad"); }
+  // distance to the destination, in feet, along each axis
+  if (fieldReady() && v.gps_fix && cfg.dest_x_ft != null){
+    const p = gpsToField(v.lat, v.lon);
+    const dx = cfg.dest_x_ft - p.x/FT, dy = cfg.dest_y_ft - p.y/FT;
+    setNum("nDx", `${dx>0?"→":"←"} ${Math.abs(dx).toFixed(0)}<small> ft</small>`, Math.abs(dx) < 10 ? "good" : "");
+    setNum("nDy", `${dy>0?"↑":"↓"} ${Math.abs(dy).toFixed(0)}<small> ft</small>`, Math.abs(dy) < 10 ? "good" : "");
+  } else { setNum("nDx","--",""); setNum("nDy","--",""); }
+  if (fieldReady() && v.gps_fix){
+    const p = gpsToField(v.lat, v.lon), last = trail[trail.length-1];
+    if (!last || Math.hypot(p.x-last.x, p.y-last.y) > 0.5) { trail.push(p); if (trail.length > 600) trail.shift(); }
+  }
+}
+
+/* ==================== header and problems ==================== */
+function chip(id, state, text){
+  const c = $(id); c.className = "chip " + state; c.querySelector("span:last-child").textContent = text;
+}
+let lastStatus = null;
+function showStatus(st){
+  lastStatus = st;
+  station = st.station || 0;
+  const b = $("badge");
+  b.textContent = station ? `Station ${station}` : "Station ?";
+  b.style.background = stColor(station); b.style.color = textOn(station);
+  const radioOk = st.radio && st.radio.connected;
+  chip("chipRadio", radioOk ? "ok" : "bad", radioOk ? "Radio ✔" : "Radio ✖");
+  const age = st.vehicle_age;
+  const vOk = age != null && age < 5;
+  chip("chipVehicle", vOk ? "ok" : "bad", vOk ? "Vehicle ✔" : "Vehicle ✖");
+  const mine = vehicles[10 + station];
+  const gpsOk = vOk && mine && mine.gps_fix;
+  chip("chipGps", gpsOk ? "ok" : (vOk ? "warn" : "bad"), gpsOk ? "GPS ✔" : "GPS …");
+  const cam = st.camera || {};
+  chip("chipCam", cam.url ? "ok" : (cam.searching ? "warn" : "bad"), cam.url ? "Camera ✔" : (cam.searching ? "Camera …" : "Camera ✖"));
+  showCamera(cam);
+
+  // One clear sentence about the most important problem, if there is one.
+  let msg = "", bad = true;
+  if (!radioOk) msg = "🔌 The station radio is not connected. Plug the radio board into this laptop's USB port. (If it is plugged in, close the Arduino Serial Monitor.)";
+  else if (!station) msg = "Choose your station number.";
+  else if (!vOk) { msg = "🚗 Your vehicle is not talking to the radio. Is the vehicle switched on? Is it close enough?"; }
+  else if (!gpsOk) { msg = "🛰️ Waiting for GPS. The vehicle must be outside with a clear view of the sky (about 30 seconds)."; bad = false; }
+  const ban = $("banner");
+  ban.textContent = msg; ban.classList.toggle("hidden", !msg); ban.classList.toggle("bad", bad);
+  $("pick").classList.toggle("hidden", !(radioOk && st.radio.needs_station));
+  $("setupStation").innerHTML = station ? `This laptop is <b>Station ${station}</b>. Its vehicle is node ${10+station}.` : "No station number yet.";
+}
+let camUrl = "";
+function showCamera(cam){
+  const img = $("camImg"), msg = $("camMsg");
+  $("setupCam").textContent = cam.url ? `Using ${cam.url} (${cam.found_by || ""})` : (cam.searching ? "Searching the WiFi network…" : "Not found yet.");
+  if (cam.url && cam.url !== camUrl){
+    camUrl = cam.url; img.src = cam.url;
+    img.classList.remove("hidden"); msg.classList.add("hidden");
+  } else if (!cam.url){
+    camUrl = ""; img.removeAttribute("src"); img.classList.add("hidden"); msg.classList.remove("hidden");
+    msg.innerHTML = (S && S.simulate) ? "Practice mode: there is no real camera, so no video here."
+      : cam.searching ? "🔎 Looking for your camera on the WiFi…"
+      : "No camera found.<br><small>Is the camera switched on and set up with this station's number? Is this laptop on the same WiFi as the camera?</small>";
+  }
+}
+$("camImg").addEventListener("error", ()=>{ camUrl = ""; setTimeout(()=>lastStatus && showCamera(lastStatus.camera || {}), 3000); });
+
+/* ==================== chat ==================== */
+function stationsHeard(){
+  const heard = new Set();
+  for (const n in vehicles) heard.add(Number(vehicles[n].station));
+  (S && S.roster || []).forEach(r => heard.add(r.id > 10 ? r.id - 10 : r.id));
+  chats.forEach(c => heard.add(c.from));
+  return heard;
+}
+function drawToRow(){
+  const row = $("toRow");
+  row.querySelectorAll("button").forEach(b=>b.remove());
+  const heard = stationsHeard();
+  const mk = (label, n) => {
+    const b = document.createElement("button");
+    b.textContent = label;
+    if (n) { b.style.background = stColor(n); b.style.color = textOn(n); b.style.borderColor = stColor(n);
+             b.title = heard.has(n) ? `Only Station ${n}` : `Station ${n} has not been heard yet`;
+             if (!heard.has(n)) b.classList.add("faded"); }
+    if (n === sendTo) b.classList.add("on");
+    b.addEventListener("click", ()=>{ sendTo = n; drawToRow(); });
+    row.appendChild(b);
+  };
+  mk("📢 Everyone", 0);
+  for (let n = 1; n <= limits.stations; n++) if (n !== station) mk(String(n), n);
+}
+function chatLine(c){
+  const mine = c.mine || c.from === station;
+  const d = document.createElement("div");
+  d.className = "msg" + (mine ? " mine" : "") + (c.to ? " private" : "");
+  d.dataset.ref = c.ref || "";
+  const to = c.to ? `to Station ${c.to} only` : "to everyone";
+  let state = "";
+  if (c.mine) state = {sending:" · ⏳ sending", confirmed:" · ✔ delivered", failed:" · ✖ not delivered — try again", sent:" · ✔ sent", busy:" · ✖ radio busy — try again"}[c.state] || "";
+  d.innerHTML = `<div class="who" style="background:${stColor(c.from)};color:${textOn(c.from)}">${c.from}</div>
+    <div class="bubble"><div class="meta">${mine ? "You" : "Station " + c.from} ${to} · ${esc(c.time||"")}<span class="st">${state}</span></div>
+    <div class="text">${esc(c.text)}</div></div>`;
+  return d;
+}
+function drawChats(){
+  const list = $("chatList"); list.innerHTML = "";
+  if (!chats.length) list.innerHTML = '<div style="color:var(--soft)">No messages yet. Say hello! 👋</div>';
+  chats.forEach(c => list.appendChild(chatLine(c)));
+  list.scrollTop = list.scrollHeight;
+}
+function updateCount(){
+  const left = limits.chat_bytes - bytes($("chatText").value);
+  $("chatCount").textContent = left >= 0 ? `${left} letters left` : `Too long by ${-left}`;
+  $("chatCount").style.color = left < 0 ? "var(--bad)" : "";
+}
+async function sendChat(text){
+  text = text.trim();
+  if (!text) return;
+  if (bytes(text) > limits.chat_bytes) { alert("That message is too long. Make it shorter."); return; }
+  const r = await post("/chat",{to:sendTo, text});
+  if (!r.ok) { alert(r.error); return; }
+  $("chatText").value = ""; updateCount();
+}
+QUICK.forEach(q=>{ const b=document.createElement("button"); b.textContent=q; b.addEventListener("click",()=>sendChat(q)); $("quick").appendChild(b); });
+$("btnSend").addEventListener("click", ()=>sendChat($("chatText").value));
+$("chatText").addEventListener("keydown", ev=>{ if (ev.key === "Enter") sendChat($("chatText").value); });
+$("chatText").addEventListener("input", updateCount);
+
+/* ==================== header buttons ==================== */
+$("btnFind").addEventListener("click", ()=>post("/identify",{}));
+$("btnSound").addEventListener("click", ()=>{ soundOn = !soundOn; $("btnSound").textContent = soundOn ? "🔔 Sound on" : "🔕 Sound off"; });
+$("btnSetup").addEventListener("click", ()=>{ fillSetup(); $("setup").classList.remove("hidden"); });
+$("btnCloseSetup").addEventListener("click", ()=>$("setup").classList.add("hidden"));
+$("setup").addEventListener("click", ev=>{ if (ev.target.id === "setup") $("setup").classList.add("hidden"); });
+
+/* ==================== setup ==================== */
+function fillSetup(){
+  $("cfgCam").value = cfg.camera_url || "";
+  $("cfgLat").value = cfg.field_origin_lat; $("cfgLon").value = cfg.field_origin_lon;
+  $("cfgBrg").value = cfg.field_bearing_deg; $("cfgLen").value = cfg.field_length_m; $("cfgWid").value = cfg.field_width_m;
+  $("cfgDestX").value = cfg.dest_x_ft ?? ""; $("cfgDestY").value = cfg.dest_y_ft ?? "";
+}
+async function saveSettings(obj){
+  const r = await post("/settings", obj);
+  if (r.ok) { cfg = r.settings; drawField(); }
+}
+$("btnSaveCam").addEventListener("click", ()=>saveSettings({camera_url: $("cfgCam").value.trim()}));
+$("btnFindCam").addEventListener("click", ()=>{ $("cfgCam").value = ""; saveSettings({camera_url: ""}); });
+$("btnSaveField").addEventListener("click", ()=>{ trail = []; saveSettings({
+  field_origin_lat:Number($("cfgLat").value), field_origin_lon:Number($("cfgLon").value),
+  field_bearing_deg:Number($("cfgBrg").value), field_length_m:Number($("cfgLen").value)||100, field_width_m:Number($("cfgWid").value)||64}); });
+$("btnUseHere").addEventListener("click", ()=>{
+  const v = vehicles[10+station];
+  if (!v || !v.gps_fix) { alert("Your vehicle has no GPS fix yet."); return; }
+  $("cfgLat").value = v.lat.toFixed(7); $("cfgLon").value = v.lon.toFixed(7);
+});
+$("btnUseHeading").addEventListener("click", ()=>{
+  const v = vehicles[10+station];
+  if (!v || !v.mag_ok) { alert("Your vehicle's compass is not working."); return; }
+  $("cfgBrg").value = v.heading_deg.toFixed(1);
+});
+$("btnSaveDest").addEventListener("click", ()=>{
+  const x = $("cfgDestX").value, y = $("cfgDestY").value;
+  saveSettings({dest_x_ft: x === "" ? null : Number(x), dest_y_ft: y === "" ? null : Number(y)});
+});
+$("btnClearDest").addEventListener("click", ()=>saveSettings({dest_x_ft:null, dest_y_ft:null}));
+$("btnChangeStation").addEventListener("click", ()=>$("pick").classList.remove("hidden"));
+$("wpFile").addEventListener("change", async ev=>{
+  const f = ev.target.files[0]; if (!f) return;
+  const r = await (await fetch("/table",{method:"POST",headers:{"X-Filename":f.name},body:await f.arrayBuffer()})).json();
+  ev.target.value = "";
+  if (!r.ok) { alert(r.error); return; }
+  const [head, ...rows] = r.rows;
+  const h = head.map(x=>String(x).toLowerCase().trim());
+  const col = names => h.findIndex(x=>names.includes(x));
+  const iN = col(["name"]), iX = col(["x_ft","x"]), iY = col(["y_ft","y"]), iLa = col(["lat","latitude"]), iLo = col(["lon","lng","longitude"]);
+  waypoints = [];
+  for (const row of rows){
+    if (iLa >= 0 && iLo >= 0 && row[iLa] !== "") waypoints.push({name:row[iN]||"", lat:Number(row[iLa]), lon:Number(row[iLo])});
+    else if (iX >= 0 && iY >= 0 && row[iX] !== "") waypoints.push({name:row[iN]||"", x:Number(row[iX])*FT, y:Number(row[iY])*FT});
+  }
+  note(`Loaded ${waypoints.length} route points from ${f.name}`);
+  drawField();
+});
+$("btnClearWp").addEventListener("click", ()=>{ waypoints = []; drawField(); });
+
+function drawBoards(boards){
+  const list = $("boardList"); list.innerHTML = "";
+  if (!boards.length) { list.innerHTML = '<div style="margin-top:8px;color:var(--soft)">No other boards plugged in right now.</div>'; return; }
+  for (const b of boards){
+    const d = document.createElement("div"); d.className = "boardItem";
+    const name = {"vehicle-sensors":"Vehicle sensor board","camera":"Camera"}[b.board] || b.board;
+    d.innerHTML = `<b>${esc(name)}</b> on ${esc(b.port)} · station <b>${b.station || "not set"}</b>
+      ${b.board === "camera" ? ` · WiFi: ${esc(b.wifi || "?")}${b.ip ? " ("+esc(b.ip)+")" : ""}` : ""}
+      <label>Station number</label><select class="bSt">${[1,2,3,4,5,6,7,8,9].map(n=>`<option ${n===(b.station||station)?"selected":""}>${n}</option>`).join("")}</select>
+      ${b.board === "camera" ? `<label>WiFi name</label><input class="bName" autocomplete="off"><label>WiFi password</label><input class="bPass" autocomplete="off">` : ""}
+      <div class="btns"><button class="primary bSave">Save to this board</button></div><div class="bMsg"></div>`;
+    d.querySelector(".bSave").addEventListener("click", async ()=>{
+      const lines = [`station ${d.querySelector(".bSt").value}`];
+      if (b.board === "camera"){
+        const n = d.querySelector(".bName").value.trim(), p = d.querySelector(".bPass").value;
+        if (n) lines.push(`wifiname ${n}`, `wifipass ${p}`, "wifisave"); else lines.push("restart");
+      }
+      const r = await post("/board",{port:b.port, lines});
+      d.querySelector(".bMsg").textContent = r.ok ? "Saved. The board is restarting…" : "Could not reach the board.";
+      const pass = d.querySelector(".bPass"); if (pass) pass.value = "";
+    });
+    list.appendChild(d);
+  }
+}
+function drawPick(){
+  const g = $("pickGrid"); g.innerHTML = "";
+  for (let n = 1; n <= limits.stations; n++){
+    const b = document.createElement("button");
+    b.textContent = n; b.style.background = stColor(n); b.style.color = textOn(n);
+    b.addEventListener("click", async ()=>{
+      if (!confirm(`This laptop is Station ${n}?`)) return;
+      await post("/station",{station:n});
+      $("pick").classList.add("hidden");
+    });
+    g.appendChild(b);
+  }
+}
+
+/* ==================== live updates ==================== */
+function connectEvents(){
+  const es = new EventSource("/events");
+  es.addEventListener("telemetry", ev=>{
+    const v = JSON.parse(ev.data); v._at = Date.now()/1000 - (v.age_s || 0);
+    vehicles[v.node] = v;
+    if (Number(v.station) === station) showTelemetry(v);
+    drawDynamic();
+  });
+  es.addEventListener("chat", ev=>{
+    const c = JSON.parse(ev.data);
+    chats.push(c); if (chats.length > 200) chats.shift();
+    drawChats();
+    if (!c.mine) beep();
+  });
+  es.addEventListener("chat_state", ev=>{
+    const s = JSON.parse(ev.data), c = chats.find(x=>x.ref === s.ref);
+    if (c) { c.state = s.state; drawChats(); }
+  });
+  es.addEventListener("marks", ev=>{ marks = JSON.parse(ev.data); drawDynamic(); });
+  es.addEventListener("status", ev=>{ const was = station; showStatus(JSON.parse(ev.data)); if (was !== station) { drawField(); drawToRow(); } });
+  es.addEventListener("camera", ev=>{ if (lastStatus) { lastStatus.camera = JSON.parse(ev.data); showStatus(lastStatus); } });
+  es.addEventListener("settings", ev=>{ cfg = JSON.parse(ev.data); $("showOthers").checked = !!cfg.show_other_vehicles; drawField(); });
+  es.addEventListener("note", ev=>note(JSON.parse(ev.data).text));
+  es.addEventListener("boards", ev=>drawBoards(JSON.parse(ev.data)));
+  es.addEventListener("board_reply", ev=>{ const r = JSON.parse(ev.data); note(`${r.port}: ${r.text || r.what || r.type}`); });
+  es.onerror = ()=>{ chip("chipRadio","bad","Dashboard stopped?"); };
+}
+async function start(){
+  S = await (await fetch("/state")).json();
+  cfg = S.settings; limits = S.limits;
+  chats = S.chats; marks = {mine:S.my_marks, others:S.other_marks};
+  for (const k in S.vehicles){ const v = S.vehicles[k]; v._at = Date.now()/1000 - v.age_s; vehicles[k] = v; }
+  (S.notes || []).forEach(note);
+  $("showOthers").checked = !!cfg.show_other_vehicles;
+  showStatus({station:S.station, radio:S.radio, camera:S.camera, vehicle_age:(S.vehicles[10+S.station]||{}).age_s ?? null});
+  drawField(); drawChats(); drawToRow(); drawBoards(S.boards); drawPick(); updateCount();
+  connectEvents();
+  setInterval(drawToRow, 10000);
+}
+start();
+</script>
+</body>
+</html>
