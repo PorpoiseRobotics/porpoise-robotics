@@ -250,6 +250,11 @@
 #define PN_ACK        6   // "I received your message", sent automatically
 #define PN_EVIDENCE   7   // camera -> everyone: "I photographed that"
 #define PN_TEXT       8   // free-form text, for debugging and messing about
+// Added for Find the Target v5 (several stations on one field):
+#define PN_CHAT           9   // a chat line typed by a person at a station
+#define PN_MARK          10   // add or remove a spot on the shared map
+#define PN_TELEMETRY_FULL 11  // every sensor reading the vehicle has (PnTelemetryFull)
+#define PN_MARK_LIST     12   // "these are ALL my marks right now" (clears lost removals)
 
 // ---- Roles ---------------------------------------------------------
 #define PN_ROLE_UNKNOWN  0
@@ -272,6 +277,8 @@
 #define PN_CMD_DISARM      7   // security: sensors stay quiet
 #define PN_CMD_SNAPSHOT    8   // security: camera, take a picture now
 #define PN_CMD_IDENTIFY    9   // flash your LEDs so I can see which board you are
+#define PN_CMD_SYNC       10   // "I just started: everyone, send me your marks again"
+#define PN_CMD_NOTIFY     11   // station radio -> its own vehicle: "new message, blink"
 
 // ---- Sensor kinds (payload of PN_ALERT) ----------------------------
 #define PN_SENSOR_MOTION     1
@@ -286,9 +293,24 @@
 #define PN_CHANNEL_FOLLOW_WIFI  0
 
 // ---- Tuning --------------------------------------------------------
-#define PN_MAX_PEERS       12   // roster size (ESP-NOW itself allows 20)
-#define PN_SEEN_HISTORY    24   // duplicate-filter memory, in messages
-#define PN_RX_QUEUE        8    // messages buffered between radio and loop()
+// Each one can be changed by a sketch: put e.g. "#define PN_MAX_PEERS 8"
+// ABOVE the #include line. The defaults fit 9 Find the Target stations
+// (18 boards) on one field with room to spare.
+#ifndef PN_MAX_PEERS
+#define PN_MAX_PEERS       20   // roster size (ESP-NOW itself allows 20 peers)
+#endif
+#ifndef PN_SEEN_HISTORY
+#define PN_SEEN_HISTORY    64   // duplicate-filter memory, in messages
+#endif
+#ifndef PN_RX_QUEUE
+#define PN_RX_QUEUE        16   // messages buffered between radio and loop()
+#endif
+#ifndef PN_RELAY_QUEUE
+#define PN_RELAY_QUEUE     8    // messages waiting for their turn to be repeated
+#endif
+#ifndef PN_ACK_QUEUE
+#define PN_ACK_QUEUE       4    // messages that need confirming, sent one at a time
+#endif
 #define PN_ACK_RETRIES     4    // resends before giving up on an ack
 #define PN_ACK_TIMEOUT_MS  400  // wait before resending
 #define PN_HELLO_EVERY_MS  3000 // heartbeat interval
@@ -384,7 +406,74 @@ typedef struct __attribute__((packed)) {
   uint32_t satellites;
 } PnTelemetry;
 
+// PN_CHAT - one line typed by a person. Only the letters actually typed
+// are sent (plus the closing NUL), so "hi" costs 3 bytes, not 121.
+// The header's dest says who it is for: 0 = every station, else the
+// station radio's node id. ANYONE NEARBY CAN READ THIS (see SECURITY).
+#define PN_CHAT_MAX_TEXT 120
+typedef struct __attribute__((packed)) {
+  char     text[PN_CHAT_MAX_TEXT + 1];   // UTF-8, always NUL-terminated
+} PnChat;                                // 121 bytes at most
+
+// PN_MARK - a spot on the shared map. A mark belongs to the node that
+// sent it (header origin) and is named by (origin, markId), so two
+// stations can both have a mark number 1 without clashing.
+#define PN_MARK_ADD     1   // add it, or move/rename it if it already exists
+#define PN_MARK_REMOVE  2
+#define PN_MARK_KIND_TARGET   1
+#define PN_MARK_KIND_HAZARD   2
+#define PN_MARK_KIND_WAYPOINT 3
+#define PN_MARK_KIND_MEET     4   // "meet here"
+typedef struct __attribute__((packed)) {
+  uint8_t  action;         // PN_MARK_ADD / PN_MARK_REMOVE
+  uint8_t  kind;           // PN_MARK_KIND_*
+  uint16_t markId;         // chosen by the owner, 1..65535
+  double   latitude;       // where the mark is (GPS degrees)
+  double   longitude;
+  char     label[25];      // short text shown next to it, NUL-terminated
+} PnMark;                  // 45 bytes
+
+// PN_MARK_LIST - every mark id the sender currently has. Sent with each
+// 30-second refresh, so a receiver that missed a "remove" can still drop
+// the mark: if it is not in the list, it is gone. Only the used part of
+// ids[] is sent.
+#define PN_MARK_LIST_MAX 40
+typedef struct __attribute__((packed)) {
+  uint8_t  count;          // how many entries of ids[] are used
+  uint8_t  reserved;       // always 0 for now
+  uint16_t ids[PN_MARK_LIST_MAX];
+} PnMarkList;              // 82 bytes at most
+
+// PN_TELEMETRY_FULL - everything the Find the Target sensor board
+// measures. PnTelemetry above is kept exactly as it was for older boards;
+// it has no room for pressure, altitude, course and compass separately.
+#define PN_TFULL_RANGE_OK  0x01
+#define PN_TFULL_GPS_FIX   0x02
+#define PN_TFULL_BATT_OK   0x04
+#define PN_TFULL_BMP_OK    0x08
+#define PN_TFULL_COMPASS_OK 0x10
+typedef struct __attribute__((packed)) {
+  uint8_t  health;          // PN_TFULL_* bits: which sensors worked this time
+  uint8_t  satellites;      // GPS satellites in use
+  uint8_t  battPercent;     // 0-100, 255 = not measured
+  uint8_t  reserved;        // always 0 for now
+  float    rangeInches;     // range finder, -1 = no echo
+  float    tempF;           // BMP280
+  float    pressureAtm;     // BMP280
+  float    bmpAltitudeFeet; // BMP280 (from pressure, so it drifts with weather)
+  double   latitude;        // GPS, 0 if no fix
+  double   longitude;
+  float    speedMph;        // GPS
+  float    gpsAltitudeFeet; // GPS
+  float    courseDeg;       // GPS: direction of TRAVEL (only while moving)
+  float    headingDeg;      // compass: direction the vehicle FACES, -1 = no compass
+} PnTelemetryFull;          // 52 bytes
+
 // Every payload has to fit in the space a message leaves for it.
+static_assert(sizeof(PnChat)          == 121, "PnChat layout changed");
+static_assert(sizeof(PnMark)          == 45,  "PnMark layout changed");
+static_assert(sizeof(PnMarkList)      == 82,  "PnMarkList layout changed");
+static_assert(sizeof(PnTelemetryFull) == 52,  "PnTelemetryFull layout changed");
 static_assert(sizeof(PnTargetReport) <= PN_MAX_PAYLOAD, "PnTargetReport too big");
 static_assert(sizeof(PnAlert)        <= PN_MAX_PAYLOAD, "PnAlert too big");
 static_assert(sizeof(PnCommand)      <= PN_MAX_PAYLOAD, "PnCommand too big");
@@ -403,6 +492,7 @@ typedef struct {
   uint8_t       mac[6];
   int8_t        rssi;         // signal strength of the last DIRECT packet
   bool          macKnown;     // false until we hear from it without a relay
+  bool          canUnicast;   // the radio accepted it as a peer (max 20)
   unsigned long lastHeardMs;
   uint32_t      received;     // messages counted from this node
   uint32_t      missed;       // sequence gaps: messages that never arrived
@@ -430,6 +520,10 @@ inline const char *pnTypeName(uint8_t type) {
     case PN_ACK:       return "ACK";
     case PN_EVIDENCE:  return "EVIDENCE";
     case PN_TEXT:      return "TEXT";
+    case PN_CHAT:      return "CHAT";
+    case PN_MARK:      return "MARK";
+    case PN_TELEMETRY_FULL: return "TELEMETRY_FULL";
+    case PN_MARK_LIST: return "MARK_LIST";
     default:           return "?";
   }
 }
@@ -482,6 +576,12 @@ class PorpoiseNetClass {
 
   void onMessage(MessageHandler handler) { _handler = handler; }
 
+  // Optional: told the outcome of every message sent with needAck.
+  //   confirmed = true  : the destination acknowledged it
+  //   confirmed = false : every retry went unanswered
+  typedef void (*SendResultHandler)(uint16_t dest, uint32_t seq, bool confirmed);
+  void onSendResult(SendResultHandler handler) { _resultHandler = handler; }
+
   // ---------------------------- sending -----------------------------
   // The general one. dest = PN_BROADCAST_ID reaches every node.
   // needAck asks for confirmation and retries until it arrives; use it
@@ -515,6 +615,25 @@ class PorpoiseNetClass {
     pnCopyStr(buf, sizeof(buf), text);
     return send(PN_TEXT, buf, (uint8_t)(strlen(buf) + 1), dest, false);
   }
+  // A chat line. Text longer than PN_CHAT_MAX_TEXT bytes is cut short.
+  // Ask for an ack only when dest is ONE node: with dest = everyone,
+  // every listening base would answer at once.
+  bool sendChat(const char *text, uint16_t dest = PN_BROADCAST_ID,
+                bool needAck = false) {
+    PnChat c;
+    pnCopyStr(c.text, sizeof(c.text), text);
+    return send(PN_CHAT, &c, (uint8_t)(strlen(c.text) + 1), dest, needAck);
+  }
+  bool sendMark(const PnMark &mark) {
+    return send(PN_MARK, &mark, sizeof(mark), PN_BROADCAST_ID, false);
+  }
+  bool sendMarkList(const PnMarkList &list) {
+    uint8_t n = list.count > PN_MARK_LIST_MAX ? PN_MARK_LIST_MAX : list.count;
+    return send(PN_MARK_LIST, &list, (uint8_t)(2 + 2 * n), PN_BROADCAST_ID, false);
+  }
+  bool sendTelemetryFull(const PnTelemetryFull &t, uint16_t dest = PN_BROADCAST_ID) {
+    return send(PN_TELEMETRY_FULL, &t, sizeof(t), dest, false);
+  }
 
   // ------------------------- payload unpacking ----------------------
   // Safe reads: they check the length first, so a corrupted or
@@ -534,6 +653,32 @@ class PorpoiseNetClass {
   bool asTelemetry(const PnMessage &m, PnTelemetry &out) const {
     return _unpack(m, PN_TELEMETRY, &out, sizeof(out));
   }
+  bool asTelemetryFull(const PnMessage &m, PnTelemetryFull &out) const {
+    return _unpack(m, PN_TELEMETRY_FULL, &out, sizeof(out));
+  }
+  bool asMark(const PnMessage &m, PnMark &out) const {
+    if (!_unpack(m, PN_MARK, &out, sizeof(out))) return false;
+    out.label[sizeof(out.label) - 1] = '\0';   // never trust a terminator off the air
+    return true;
+  }
+  // Chat and mark lists are sent short, so they are unpacked by hand.
+  bool asChat(const PnMessage &m, PnChat &out) const {
+    if (m.type != PN_CHAT || m.payloadLen == 0) return false;
+    size_t n = m.payloadLen < sizeof(out.text) ? m.payloadLen : sizeof(out.text);
+    memset(out.text, 0, sizeof(out.text));
+    memcpy(out.text, m.payload, n);
+    out.text[sizeof(out.text) - 1] = '\0';   // never trust a terminator off the air
+    return true;
+  }
+  bool asMarkList(const PnMessage &m, PnMarkList &out) const {
+    if (m.type != PN_MARK_LIST || m.payloadLen < 2) return false;
+    memset(&out, 0, sizeof(out));
+    size_t n = m.payloadLen < sizeof(out) ? m.payloadLen : sizeof(out);
+    memcpy(&out, m.payload, n);
+    uint8_t fits = (uint8_t)((n - 2) / 2);
+    if (out.count > fits) out.count = fits;
+    return true;
+  }
 
   // ------------------------- status / roster ------------------------
   uint16_t id() const      { return _nodeId; }
@@ -545,7 +690,13 @@ class PorpoiseNetClass {
   int  peerCount() const;                   // nodes heard from recently
   const PnPeer *peer(int index) const;      // walk the roster, 0..PN_MAX_PEERS-1
   const PnPeer *peerById(uint16_t id) const;
-  bool  isAwaitingAck() const { return _pending.active; }
+  bool  isAwaitingAck() const { return _ackCount > 0; }
+  int   pendingAckCount() const { return _ackCount; }   // 0..PN_ACK_QUEUE
+  // The seq number of the message this node sent most recently. Read it
+  // right after a send() to match a later onSendResult() to that message.
+  uint32_t lastSentSeq() const   { return _seq; }
+  uint32_t relayedCount() const  { return _relaySent; }
+  uint32_t relaySkippedCount() const { return _relaySkipped; }
   uint32_t sentCount() const     { return _txTotal; }
   uint32_t deliveredCount() const{ return _txDelivered; }
   uint32_t receivedCount() const { return _rxTotal; }
@@ -561,6 +712,13 @@ class PorpoiseNetClass {
   // Repeat messages meant for other nodes, extending range (STEP 7).
   // On by default. Turn it off on a node that must stay quiet.
   void setRelay(bool on)        { _relay = on; }
+  // Relay suppression, on by default. For messages that are repeated
+  // every few seconds anyway (heartbeats, telemetry, mark lists), a node
+  // that hears ANOTHER node relay the message first drops its own queued
+  // copy. With many boards in range of each other this cuts the radio
+  // traffic from "one copy per board" to roughly two or three copies.
+  // Chat, marks, finds and alerts are always relayed.
+  void setRelaySuppression(bool on) { _suppress = on; }
   // Whether this node answers PN_FLAG_NEEDS_ACK. Default: only the base.
   // If nothing answers, senders will retry and report NO-ACK, which is
   // honest but noisy; if everything answers, you get an ack storm.
@@ -583,8 +741,13 @@ class PorpoiseNetClass {
     memcpy(out, m.payload, size);
     return true;
   }
-  bool _rawSend(const PnMessage &m);
+  bool _rawSend(const PnMessage &m, bool forceBroadcast = false);
   bool _ensurePeer(const uint8_t *mac);
+  void _finishAck(bool confirmed);
+  static bool _isPeriodic(uint8_t type) {
+    return type == PN_HELLO || type == PN_TELEMETRY ||
+           type == PN_TELEMETRY_FULL || type == PN_MARK_LIST;
+  }
   void _learnPeer(uint16_t id, uint8_t role, const uint8_t *mac,
                   int8_t rssi, uint32_t seq, bool direct);
   bool _seenBefore(uint16_t origin, uint32_t seq);
@@ -601,7 +764,9 @@ class PorpoiseNetClass {
 
   // behaviour
   MessageHandler _handler = nullptr;
+  SendResultHandler _resultHandler = nullptr;
   bool     _relay        = true;
+  bool     _suppress     = true;
   bool     _ackResponder = false;
   bool     _verbose      = true;
   uint8_t  _ttl          = PN_DEFAULT_TTL;
@@ -614,6 +779,9 @@ class PorpoiseNetClass {
   uint32_t _rxTotal      = 0;
   uint32_t _rxForeign    = 0;
   uint32_t _rxDuplicate  = 0;
+  uint32_t _relaySent    = 0;
+  uint32_t _relaySkipped = 0;   // relays cancelled because another node did it
+  uint32_t _relayDropped = 0;   // relays lost because the queue was full
   unsigned long _lastHello = 0;
 
   // roster
@@ -624,18 +792,23 @@ class PorpoiseNetClass {
   SeenEntry _seen[PN_SEEN_HISTORY] = {};
   uint8_t   _seenNext = 0;
 
-  // one outstanding acknowledgement at a time - enough for events that
-  // happen seconds apart, and it keeps the memory cost near zero
+  // Messages waiting for an acknowledgement. They go out ONE AT A TIME,
+  // in the order they were sent ("stop and wait"): the first is sent and
+  // retried until it is confirmed or gives up, then the next one starts.
+  // That keeps chat lines in order and stops two retries colliding.
   struct Pending {
-    bool          active;
     PnMessage     msg;
     uint8_t       triesLeft;
+    bool          sent;        // false = still waiting for its turn
     unsigned long lastTryMs;
-  } _pending = {};
+  };
+  Pending  _ackQueue[PN_ACK_QUEUE] = {};
+  uint8_t  _ackHead  = 0;      // index of the message being chased
+  uint8_t  _ackCount = 0;      // how many are queued, including the head
 
   // relay queue: messages waiting to be repeated after a random stagger
   struct RelaySlot { bool used; PnMessage msg; unsigned long dueMs; };
-  RelaySlot _relayQueue[4] = {};
+  RelaySlot _relayQueue[PN_RELAY_QUEUE] = {};
 
   // Hand-off from the radio task to loop(). The callback writes at
   // _rxHead, loop() reads at _rxTail; the spinlock keeps the two from
@@ -829,10 +1002,15 @@ inline void PorpoiseNetClass::_learnPeer(uint16_t id, uint8_t role,
   // that node's MAC or signal strength - a relayed copy carries the
   // relay's radio characteristics, not the origin's.
   if (direct && mac) {
-    memcpy(p.mac, mac, 6);
-    p.macKnown = true;
-    p.rssi     = rssi;
-    _ensurePeer(mac);   // now we can send to it directly, not just broadcast
+    if (!p.macKnown || memcmp(p.mac, mac, 6) != 0) {
+      memcpy(p.mac, mac, 6);
+      p.macKnown = true;
+      // Now we can send to it directly, not just broadcast. The radio
+      // holds at most 20 peers; if it says no, keep broadcasting to this
+      // node (the dest field still makes sure only it acts on the message).
+      p.canUnicast = _ensurePeer(mac);
+    }
+    p.rssi = rssi;
   }
 
   // Sequence gaps: the honest measure of how lossy the link is. "Link
@@ -876,18 +1054,19 @@ inline bool PorpoiseNetClass::_seenBefore(uint16_t origin, uint32_t seq) {
 }
 
 // ------------------------------------------------------------ sending --
-inline bool PorpoiseNetClass::_rawSend(const PnMessage &m) {
+inline bool PorpoiseNetClass::_rawSend(const PnMessage &m, bool forceBroadcast) {
   // Send only the bytes actually used: header + payload. A short frame
   // is faster on air and leaves more room in the 250-byte budget.
   const uint8_t len = PN_HEADER_BYTES + m.payloadLen;
 
   const uint8_t *target = PN_BROADCAST_MAC;
-  if (m.dest != PN_BROADCAST_ID) {
+  if (m.dest != PN_BROADCAST_ID && !forceBroadcast) {
     const PnPeer *p = peerById(m.dest);
-    // If we have not learned that node's MAC yet we fall back to
-    // broadcasting: everyone hears it, but the dest field means only the
-    // intended node acts on it. Slightly wasteful, always works.
-    if (p && p->macKnown) target = p->mac;
+    // If we have not learned that node's MAC yet (or the radio's peer
+    // list was full) we fall back to broadcasting: everyone hears it, but
+    // the dest field means only the intended node acts on it. Slightly
+    // wasteful, always works.
+    if (p && p->macKnown && p->canUnicast) target = p->mac;
   }
 
   _txTotal++;
@@ -903,6 +1082,13 @@ inline bool PorpoiseNetClass::send(uint8_t type, const void *payload,
                                    bool needAck) {
   if (!_started) return false;
   if (payloadLen > PN_MAX_PAYLOAD) return false;
+  if (needAck && _ackCount >= PN_ACK_QUEUE) {
+    if (_verbose) {
+      Serial.println(F("# NOT SENT: too many messages are already waiting to be"));
+      Serial.println(F("#   confirmed. Wait a second and try again."));
+    }
+    return false;
+  }
 
   PnMessage m = {};
   m.magic      = PN_MAGIC;
@@ -924,18 +1110,31 @@ inline bool PorpoiseNetClass::send(uint8_t type, const void *payload,
   _seenBefore(_nodeId, m.seq);
 
   if (needAck) {
-    if (_pending.active && _verbose) {
-      Serial.println(F("# NOTE: a previous message was still waiting for an"));
-      Serial.println(F("#       ack and has been abandoned. Space out events"));
-      Serial.println(F("#       that need confirmation."));
-    }
-    _pending.active    = true;
-    _pending.msg       = m;
-    _pending.triesLeft = PN_ACK_RETRIES;
-    _pending.lastTryMs = millis();
+    // Join the back of the queue. If nothing else is waiting it goes out
+    // right now; otherwise loop() sends it when its turn comes.
+    Pending &p  = _ackQueue[(_ackHead + _ackCount) % PN_ACK_QUEUE];
+    p.msg       = m;
+    p.triesLeft = PN_ACK_RETRIES;
+    p.sent      = false;
+    p.lastTryMs = millis();
+    _ackCount++;
+    if (_ackCount > 1) return true;   // queued behind another message
+    p.sent = true;
   }
 
   return _rawSend(m);
+}
+
+// The message at the head of the ack queue is finished (confirmed or
+// given up). Tell the sketch, then let the next one have its turn.
+inline void PorpoiseNetClass::_finishAck(bool confirmed) {
+  if (_ackCount == 0) return;
+  const PnMessage &m = _ackQueue[_ackHead].msg;
+  uint16_t dest = m.dest;
+  uint32_t seq  = m.seq;
+  _ackHead  = (_ackHead + 1) % PN_ACK_QUEUE;
+  _ackCount--;
+  if (_resultHandler) _resultHandler(dest, seq, confirmed);
 }
 
 inline void PorpoiseNetClass::_sendAck(const PnMessage &m) {
@@ -1008,6 +1207,18 @@ inline void PorpoiseNetClass::_process(const PnMessage &m, int8_t rssi,
     // because our acknowledgement got lost, staying silent would make it
     // retry until it gave up. Answer again, then drop it.
     if (forMe && wantsAck && _ackResponder && m.origin != _nodeId) _sendAck(m);
+    // Relay suppression: another node has just repeated a message we were
+    // also about to repeat. For routine traffic one repeat is plenty, so
+    // drop ours and leave the airtime for everyone else.
+    if (_suppress && (m.flags & PN_FLAG_RELAYED) && _isPeriodic(m.type)) {
+      for (int i = 0; i < PN_RELAY_QUEUE; i++) {
+        RelaySlot &r = _relayQueue[i];
+        if (r.used && r.msg.origin == m.origin && r.msg.seq == m.seq) {
+          r.used = false;
+          _relaySkipped++;
+        }
+      }
+    }
     return;
   }
 
@@ -1015,15 +1226,17 @@ inline void PorpoiseNetClass::_process(const PnMessage &m, int8_t rssi,
     PnAck a;
     if (m.payloadLen >= sizeof(a)) {
       memcpy(&a, m.payload, sizeof(a));
-      if (a.ackOrigin == _nodeId && _pending.active && a.ackSeq == _pending.msg.seq) {
-        _pending.active = false;
+      const Pending &head = _ackQueue[_ackHead];
+      if (a.ackOrigin == _nodeId && _ackCount > 0 && head.sent &&
+          a.ackSeq == head.msg.seq) {
         if (_verbose) {
           Serial.print(F("# ACK from node ")); Serial.print(m.origin);
           Serial.print(F(" for message #")); Serial.print(a.ackSeq);
           Serial.print(F(" after "));
-          Serial.print(PN_ACK_RETRIES - _pending.triesLeft);
+          Serial.print(PN_ACK_RETRIES - head.triesLeft);
           Serial.println(F(" retr(y/ies) - confirmed received."));
         }
+        _finishAck(true);
       }
     }
   } else if (forMe) {
@@ -1037,7 +1250,8 @@ inline void PorpoiseNetClass::_process(const PnMessage &m, int8_t rssi,
   // discovery, just "say it once more and count down". The duplicate
   // filter above is what stops it echoing around the field forever.
   if (_relay && m.ttl > 1 && m.dest != _nodeId && m.origin != _nodeId) {
-    for (int i = 0; i < (int)(sizeof(_relayQueue) / sizeof(_relayQueue[0])); i++) {
+    bool queued = false;
+    for (int i = 0; i < PN_RELAY_QUEUE; i++) {
       if (_relayQueue[i].used) continue;
       _relayQueue[i].used  = true;
       _relayQueue[i].msg   = m;
@@ -1045,10 +1259,14 @@ inline void PorpoiseNetClass::_process(const PnMessage &m, int8_t rssi,
       _relayQueue[i].msg.flags |= PN_FLAG_RELAYED;
       // Random stagger: if three rovers all hear the same message and
       // all repeat it at the same instant, the copies collide in the air
-      // and nobody downstream gets any of them.
+      // and nobody downstream gets any of them. The stagger is also what
+      // makes relay suppression work: whoever's timer runs out first
+      // repeats it, and the others hear that and stand down.
       _relayQueue[i].dueMs = millis() + random(8, 45);
+      queued = true;
       break;
     }
+    if (!queued) _relayDropped++;
   }
 }
 
@@ -1073,34 +1291,46 @@ inline void PorpoiseNetClass::loop() {
   const unsigned long now = millis();
 
   // ---- 2. Send any relays whose stagger has elapsed ----
-  for (int i = 0; i < (int)(sizeof(_relayQueue) / sizeof(_relayQueue[0])); i++) {
+  for (int i = 0; i < PN_RELAY_QUEUE; i++) {
     if (_relayQueue[i].used && (long)(now - _relayQueue[i].dueMs) >= 0) {
-      _rawSend(_relayQueue[i].msg);
       _relayQueue[i].used = false;
+      _rawSend(_relayQueue[i].msg);
+      _relaySent++;
     }
   }
 
-  // ---- 3. Chase an unacknowledged message ----
-  if (_pending.active && (now - _pending.lastTryMs) >= PN_ACK_TIMEOUT_MS) {
-    if (_pending.triesLeft > 0) {
-      _pending.triesLeft--;
-      _pending.lastTryMs = now;
-      if (_verbose) {
-        Serial.print(F("# no ack yet for message #"));
-        Serial.print(_pending.msg.seq);
-        Serial.print(F(", resending ("));
-        Serial.print(_pending.triesLeft);
-        Serial.println(F(" tries left)"));
-      }
-      _rawSend(_pending.msg);
-    } else {
-      _pending.active = false;
-      if (_verbose) {
-        Serial.print(F("# NO ACK for message #"));
-        Serial.print(_pending.msg.seq);
-        Serial.println(F(" - it was broadcast, but nothing confirmed it."));
-        Serial.println(F("#   Base station powered? Same channel and net id?"));
-        Serial.println(F("#   In range? Check the roster."));
+  // ---- 3. Chase the unacknowledged message at the head of the queue ----
+  if (_ackCount > 0) {
+    Pending &p = _ackQueue[_ackHead];
+    if (!p.sent) {
+      // The one before it just finished: this one's turn.
+      p.sent      = true;
+      p.lastTryMs = now;
+      _rawSend(p.msg);
+    } else if ((now - p.lastTryMs) >= PN_ACK_TIMEOUT_MS) {
+      if (p.triesLeft > 0) {
+        p.triesLeft--;
+        p.lastTryMs = now;
+        if (_verbose) {
+          Serial.print(F("# no ack yet for message #"));
+          Serial.print(p.msg.seq);
+          Serial.print(F(", resending ("));
+          Serial.print(p.triesLeft);
+          Serial.println(F(" tries left)"));
+        }
+        // The last two tries go to the broadcast address even if we know
+        // the destination's MAC. If that board was swapped or reflashed,
+        // the MAC we learned is wrong, and broadcast still reaches it.
+        _rawSend(p.msg, p.triesLeft < 2);
+      } else {
+        if (_verbose) {
+          Serial.print(F("# NO ACK for message #"));
+          Serial.print(p.msg.seq);
+          Serial.println(F(" - it was sent, but nothing confirmed it."));
+          Serial.println(F("#   Other board powered? Same channel and net id?"));
+          Serial.println(F("#   In range? Check the roster."));
+        }
+        _finishAck(false);
       }
     }
   }
@@ -1148,6 +1378,12 @@ inline void PorpoiseNetClass::printRoster(Stream &out) const {
   out.print(F("  not ours "));           out.print(_rxForeign);
   if (_rxOverflow) {
     out.print(F("  DROPPED (loop too slow) ")); out.print(_rxOverflow);
+  }
+  out.println();
+  out.print(F("#   relays: sent "));     out.print(_relaySent);
+  out.print(F("  skipped (someone else did it) ")); out.print(_relaySkipped);
+  if (_relayDropped) {
+    out.print(F("  DROPPED (queue full) ")); out.print(_relayDropped);
   }
   out.println();
 }

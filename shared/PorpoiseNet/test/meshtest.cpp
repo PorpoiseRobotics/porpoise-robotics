@@ -90,7 +90,10 @@ int main() {
   g_sender = 1; A_target();
   for (int i = 0; i < 3; i++) step(0,0,0,0,0,0);
   check("still chasing an acknowledgement", A_waitingAck());
-  for (int i = 0; i < 40; i++) step(0,0,0,0,0,0);
+  // Test 2's find is also still waiting (the base's ack could not get
+  // back to rover 11 there). Messages that need an ack now queue up and
+  // are chased one at a time, so allow time for both to give up.
+  for (int i = 0; i < 80; i++) step(0,0,0,0,0,0);
   check("gave up after its retries instead of hanging", !A_waitingAck());
 
   printf("\nTEST 4  a repeated frame is only delivered to the sketch once\n");

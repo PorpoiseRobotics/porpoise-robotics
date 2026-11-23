@@ -1,33 +1,32 @@
 # Find the Target
 
-> A STEM mission activity: a camera-equipped vehicle hunts for targets while a base station
-> tracks it.
+> A STEM mission activity: camera-equipped vehicles hunt for targets on a field while each
+> team's laptop shows what its vehicle sees and where it is.
 
 ---
 
 ## What this project is
 
-A classroom mission rather than a vehicle platform. There are now two ways to run it, sharing the
-same camera and base station idea but different radios:
+A classroom mission rather than a vehicle platform. Up to **nine stations** share one field.
+A *station* is one laptop plus one vehicle, run by a team or by one person. Each vehicle
+carries three ESP32 boards:
 
-- **`FindTheTarget_v4`** (and the earlier `legacy` versions) — **one-way** telemetry. A vehicle
-  ESP32 pushes sensor and GPS data to a base-station ESP32 over ESP-NOW; the base station only
-  listens.
-- **`PorpoiseNet_Vehicle` + `PorpoiseNet_Base`** — **two-way** mesh, built on
-  [`shared/PorpoiseNet/`](../shared/PorpoiseNet/README.md). A rover that spots the target
-  announces it to every other rover on the field, not just the base, and the base can send
-  commands back (e.g. "recall") instead of only printing what it hears.
+| Board | Program | Job |
+|---|---|---|
+| Drive board | Op Program 13 (in [`ground-vehicle/`](../ground-vehicle/README.md)) | Driving, with a game controller |
+| Sensor board | `VehicleSensors_v5` | GPS, compass, range finder, temperature, LED ring |
+| Camera | `VehicleCamera_v5` | Live video over WiFi |
 
-Both variants use the same three pieces of hardware and a laptop:
+The laptop has a fourth board on its USB port, the **station radio** (`StationRadio_v5`), and
+runs the **dashboard**: live video, a map of the field with every vehicle, the sensor numbers,
+and a chat where stations can message each other and drop marks on each other's maps.
 
-- **CameraWebServer** — an ESP32-CAM streaming video over WiFi.
-- A pair (or fleet) of ESP32 boards passing data over ESP-NOW, a low-latency radio protocol that
-  does not need a WiFi network.
-- **BaseStation** — a Python program with an HTML dashboard, run on a laptop, that reads waypoints
-  from a spreadsheet and shows what the vehicle is doing.
+**Start here: [`src/FindTheTarget_v5/README.md`](src/FindTheTarget_v5/README.md).** It walks
+through setting everything up, step by step, for someone who has not done it before.
 
 The teaching material for the activity lives in [`docs/`](docs/): the slide deck and the setup
-guide students follow.
+guide students follow. They were written for v3/v4 (one vehicle) and have not been updated
+for v5 yet.
 
 ## Layout
 
@@ -35,37 +34,52 @@ guide students follow.
 find-the-target/
 ├── README.md
 ├── src/
-│   ├── FindTheTarget_v4/      current one-way version
-│   ├── PorpoiseNet_Vehicle/   two-way mesh: rover
-│   ├── PorpoiseNet_Base/      two-way mesh: base station
-│   └── legacy/                superseded versions, kept for reference
-├── docs/                      slides, setup guide, design notes
-└── hardware/                  circuit board (KiCad), order files, parts list
+│   ├── FindTheTarget_v5/      current version: several stations, chat and shared map marks
+│   │   ├── StationRadio_v5/     board on the laptop's USB port
+│   │   ├── VehicleSensors_v5/   sensor board on the vehicle
+│   │   ├── VehicleCamera_v5/    camera on the vehicle
+│   │   └── Dashboard/           double-click "Start Dashboard.bat"
+│   └── legacy/                superseded versions (v3, v4, the first mesh demo)
+├── docs/                      slides, setup guide
+└── hardware/                  sensor circuit board (KiCad), order files, parts list
 ```
 
-Version 3 is kept in `src/legacy/` only so old builds can be looked up; do not start anything new
-from it. See [`src/legacy/README.md`](src/legacy/README.md).
+Everything in `src/legacy/` is kept only so old builds can be looked up; do not start anything
+new from it. See [`src/legacy/README.md`](src/legacy/README.md).
 
-## Status
+## How it works, in one picture
 
-`FindTheTarget_v4` moved here from `dump/` during a repository tidy-up, arrived as-is, and has not
-been reviewed or documented beyond the README that came with it. `PorpoiseNet_Vehicle` and
-`PorpoiseNet_Base` are new: a two-way mesh built on the shared ESP-NOW layer that the security
-camera project also runs on — see [`shared/PorpoiseNet/README.md`](../shared/PorpoiseNet/README.md)
-for the protocol and the three settings that must match on every board. Open questions worth
-recording here as they are answered:
+```
+ STATION 1                         THE FIELD                       STATION 2
+ laptop + dashboard                                               laptop + dashboard
+      │ USB                                                             │ USB
+ station radio (node 1) ◄──── PorpoiseNet radio, channel 1 ────► station radio (node 2)
+                          ▲               ▲               ▲
+                 vehicle 1 sensors   vehicle 2 sensors   ...  (node 11, 12, ...)
 
-- Which vehicle the mission runs on — the [ground vehicle](../ground-vehicle/README.md), or
-  something else.
-- Whether the base station is expected to run on a school laptop, and what has to be installed
-  on it first.
-- What the WiFi and ESP-NOW setup assumes about the network it is used on.
-- Whether the team standardizes on v4 (one-way) or the PorpoiseNet mesh (two-way) going forward,
-  or keeps both.
+ vehicle 1 camera ──WiFi──► field router ◄──WiFi── laptops   (video only)
+```
+
+- The radio network is [PorpoiseNet](../shared/PorpoiseNet/README.md), shared with the security
+  camera project. No router is needed for it, and every board repeats messages for the others,
+  which stretches the range.
+- Video is too big for that radio, so the cameras use a WiFi router. A small router with no
+  internet is enough; set its 2.4 GHz channel to 6 or 11.
+- Every board stores its own station number. Every station uploads exactly the same programs.
+
+## WiFi names and passwords
+
+They are **not** on GitHub (this repository is public). They live in the team's shared
+OneDrive folder **Porpoise Robotics Private → WiFi networks.txt**. You type them into the
+camera's own setup page (or the dashboard's Setup page) once; the camera remembers them.
+Never type a real password into a file you commit.
 
 ## Safety and privacy
 
-This project streams video from a camera. Before running it anywhere students are present,
-settle who may view the stream, whether anything is recorded, and where recordings go. The
-[homeland security camera project](../homeland-security-camera/README.md) has stricter rules for
-the same reason — read those before pointing a camera at a campus.
+This project streams video from a camera and lets stations chat. Before running it anywhere
+students are present, settle who may view the streams, whether anything is recorded, and where
+recordings go. Chat messages travel over open radio: anyone nearby with an ESP32 can read them,
+so stations use numbers, never names. The dashboard says so next to the chat box and keeps a
+chat log on each laptop (`Dashboard/data/chat-log/`) so an adult can look back at what was said.
+The [homeland security camera project](../homeland-security-camera/README.md) has stricter
+rules for cameras — read those before pointing a camera at a campus.

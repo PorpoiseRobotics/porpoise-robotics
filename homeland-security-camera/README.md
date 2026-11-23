@@ -166,7 +166,7 @@ reasoning, not just the conclusion.
    PIR; it prints an alert.
 4. Flash `PorpoiseNet_CameraNode/` to an ESP32-CAM. Wave at the PIR again — the camera captures,
    and both boards print what happened.
-5. For an operator's view, flash `find-the-target/src/PorpoiseNet_Base/` onto a third
+5. For an operator's view, flash `find-the-target/src/legacy/PorpoiseNet_Base/` onto a third
    board. The same base station serves both projects.
 
 To check the network logic without any hardware at all:

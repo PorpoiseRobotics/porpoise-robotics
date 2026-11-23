@@ -1,0 +1,5 @@
+# This laptop's own files: settings, your station's map marks, chat logs.
+# They stay on the laptop and are never committed.
+data/
+__pycache__/
+data-practice/
