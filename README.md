@@ -53,10 +53,10 @@ and Pathfinder ROV; the team should confirm which of these this folder covers an
 the project README.
 
 ### [`find-the-target/`](find-the-target/README.md)
-A STEM mission activity built from an ESP32-CAM, a pair of ESP-NOW radios, and a laptop base
-station, with the slides and setup guide students follow. Now has two variants: the original
-one-way telemetry link, and a two-way mesh (`PorpoiseNet_Vehicle` + `PorpoiseNet_Base`) where a
-rover that spots the target tells every other rover on the field, not just the base.
+A STEM mission activity: up to nine stations, each a laptop plus a vehicle with a camera, GPS
+and sensors, share one field. Version 5 runs on the PorpoiseNet radio network, so stations can
+chat and drop marks on each other's maps. Includes the sensor circuit board (KiCad) and the
+slides and setup guide students follow.
 
 ### [`shared/`](shared/README.md)
 Not a project — code that more than one project uses, so a fix made once is a fix everywhere.
