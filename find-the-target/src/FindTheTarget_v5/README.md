@@ -40,7 +40,7 @@ meet here) that every other station sees.
 **Once, for the whole field**
 
 - A small WiFi router (it does **not** need internet). The cameras and the laptops join it.
-- The team's WiFi list: OneDrive folder **Porpoise Robotics Private → WiFi networks.txt**.
+- The team's WiFi list: OneDrive folder **Porpoise →  → WiFi networks.txt**.
 
 **How many stations?** Nine at most. See [what breaks above that](#limits).
 
