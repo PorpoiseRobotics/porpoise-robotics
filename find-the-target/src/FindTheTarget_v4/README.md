@@ -82,9 +82,13 @@ dashboard heading matches a phone compass.
    `ESPNow_Sender_v4.ino`, flash, and watch the SELF-TEST report. Each
    sensor prints PASS/FAIL with a wiring hint. Each transmission then
    prints `DELIVERED` or `MISSED`.
-3. **Camera** — add your WiFi network(s) to the `NETWORKS[]` list in
-   `CameraWebServer_v4.ino`, flash, and copy the **Video stream** URL it
-   prints (`http://<ip>:81/stream`).
+3. **Camera** — type your WiFi name and password into the `NETWORKS[]`
+   list in `CameraWebServer_v4.ino` (look for **TYPE YOUR WIFI NAME AND
+   PASSWORD HERE**), flash, and copy the **Video stream** URL it prints
+   (`http://<ip>:81/stream`). The team's real network details are not on
+   GitHub: they are in the shared OneDrive folder
+   **Porpoise Robotics Private → WiFi networks.txt**. Do not commit the
+   sketch after typing a real password in.
 4. **Base station** — close the receiver's Arduino serial monitor
    (only one program can use the port), then:
    ```
