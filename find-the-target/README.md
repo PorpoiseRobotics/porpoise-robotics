@@ -40,7 +40,7 @@ find-the-target/
 │   ├── PorpoiseNet_Base/      two-way mesh: base station
 │   └── legacy/                superseded versions, kept for reference
 ├── docs/                      slides, setup guide, design notes
-└── hardware/                  wiring, bill of materials
+└── hardware/                  circuit board (KiCad), order files, parts list
 ```
 
 Version 3 is kept in `src/legacy/` only so old builds can be looked up; do not start anything new
