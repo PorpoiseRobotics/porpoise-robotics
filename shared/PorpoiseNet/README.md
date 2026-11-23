@@ -113,9 +113,9 @@ software feature in here.
 
 ## Bring-up order
 
-1. **Base station first.** Flash `PorpoiseNet_Base`, open the serial monitor at
+1. **Base station first.** Flash `find-the-target/src/legacy/PorpoiseNet_Base`, open the serial monitor at
    115200. It prints its identity and then waits.
-2. **One rover.** Flash `PorpoiseNet_Vehicle` with `MY_NODE_ID 11`. Within a
+2. **One rover.** Flash `find-the-target/src/legacy/PorpoiseNet_Vehicle` with `MY_NODE_ID 11`. Within a
    few seconds it should appear in the base station's roster, and the base
    should appear in the rover's.
 3. **Prove it two ways.** Type `ping` at the base station — the rover answers.
@@ -304,6 +304,15 @@ Work down this list in order. It is sorted by how often each one is the answer.
 | `PN_EVIDENCE` | camera → everyone | what was saved, and which event it was for | no |
 | `PN_ACK` | base → sender | generated automatically | — |
 | `PN_TEXT` | any → any | a short string, for debugging | no |
+| `PN_CHAT` (9) | station → everyone, or → one station | a line a person typed, up to 120 bytes; only the typed bytes are sent | only when sent to **one** station, by that station |
+| `PN_MARK` (10) | station → everyone | add or remove a map mark: kind, id, lat/lon, 24-letter label (45 bytes) | no; re-sent every 30 s |
+| `PN_TELEMETRY_FULL` (11) | vehicle → everyone | every Find the Target sensor reading (52 bytes) | no |
+| `PN_MARK_LIST` (12) | station → everyone | the ids of all the sender's marks, so a lost "remove" still clears | no |
+
+Commands `PN_CMD_SYNC` (10, "send me your marks again") and `PN_CMD_NOTIFY`
+(11, "blink: a message arrived") were added for Find the Target v5. Every
+payload has a `static_assert` on its size, so a layout change cannot slip
+through silently.
 
 Events that matter are acknowledged and resent until confirmed; streams are
 not, because another reading is along in a second. That distinction is the
@@ -313,17 +322,53 @@ Message types are numbered and **must never be renumbered** — a board that
 spent the summer in a cupboard still speaks last term's numbers. Add new ones
 at the end.
 
+## Busy fields: what changed for Find the Target v5
+
+Nine stations means 18 boards in range of each other. Four changes keep that
+working, none of which changes a byte on the air, so older boards still talk
+to newer ones:
+
+- **Relay suppression.** Before, every board repeated every message, so 18
+  boards sent about 18 copies of each reading and the 4-slot repeat queue
+  overflowed without a word. Now, for routine traffic (heartbeats, telemetry,
+  mark lists), a board that hears *another* board repeat a message first drops
+  its own copy. In the tests that is 1 repeat instead of 5. Chat, marks, finds
+  and alerts are still repeated by everyone. `setRelaySuppression(false)`
+  brings the old behaviour back.
+- **A queue for acknowledged messages.** Before, a second message that needed
+  an ack silently cancelled the first. Now up to 4 wait their turn and go out
+  one at a time, in order; a fifth is refused (`send()` returns false) rather
+  than dropping an older one. `onSendResult()` tells the sketch whether each
+  one was confirmed.
+- **More room.** Roster 12 → 20 boards, duplicate memory 24 → 64 messages,
+  receive queue 8 → 16, repeat queue 4 → 8. Each can be overridden with a
+  `#define` above the `#include`.
+- **No stranding.** If the radio's own 20-peer list is full, a board falls back
+  to broadcast instead of failing, and the last two retries of an acknowledged
+  message always go to broadcast, in case the board it was aimed at was swapped
+  and has a new MAC address.
+
 ---
 
 ## Testing without hardware
 
-[`test/`](test/) builds three nodes inside one program on a laptop, wires them
-through a fake radio, and checks the awkward cases: the base out of range and
-reachable only by relay, the same frame arriving four times, nobody answering
-at all.
+[`test/`](test/) builds boards inside one program on a laptop, wires them
+through a fake radio, and checks the awkward cases:
+
+- `meshtest.cpp` (three boards): the base out of range and reachable only by
+  relay, the same frame arriving four times, nobody answering at all.
+- `stationtest.cpp` (three Find the Target stations, six boards, each with its
+  own MAC): chat to everyone and to one station, three confirmed chats in a
+  row, a full confirm queue, relay suppression on and off, a swapped board with
+  a stale MAC, marks and mark lists, and more boards than the radio's peer list.
+- `check_copies.sh`: sketches that carry their own copy of `PorpoiseNet.h`
+  (Find the Target v5 does, so nobody has to install a library) must match the
+  real one. After changing the header, copy it into those sketch folders.
 
 ```
 cd test && ./run_tests.sh
 ```
 
-Needs `g++` and nothing else. No ESP32, no field, no batteries.
+Needs `g++` and nothing else. On Windows, install it once with
+`winget install BrechtSanders.WinLibs.POSIX.UCRT`, then run the script from
+Git Bash. No ESP32, no field, no batteries.
