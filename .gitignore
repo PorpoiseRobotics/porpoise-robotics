@@ -229,3 +229,16 @@ temp/
 
 # Rendered course decks - build output, regenerate with generator/render_decks.py
 ground-vehicle/docs/courses/pdf/
+
+# -----------------------------------------------------------------------------
+# KiCad (circuit boards). Keep the .kicad_pro/.kicad_sch/.kicad_pcb and library
+# files; skip KiCad's own backups, window layout and lock files.
+# -----------------------------------------------------------------------------
+*-backups/
+*.kicad_prl
+fp-info-cache
+*.lck
+~*.lck
+_autosave-*
+\#auto_saved_files\#
+.history/
