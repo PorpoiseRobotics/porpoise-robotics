@@ -24,6 +24,15 @@ if errorlevel 1 (
   if errorlevel 1 goto nopip
 )
 
+rem ---- esptool puts programs on boards: Setup, Install a program.   ----
+rem ---- Optional: the dashboard works without it.                     ----
+%PY% -c "import esptool" >nul 2>nul
+if errorlevel 1 (
+  echo Installing esptool, for putting programs on boards. Needs the internet once...
+  %PY% -m pip install --user esptool
+  if errorlevel 1 echo Could not install esptool now. The dashboard still works; installing programs on boards will not.
+)
+
 %PY% start_dashboard.py --open %*
 echo.
 echo The dashboard has stopped.

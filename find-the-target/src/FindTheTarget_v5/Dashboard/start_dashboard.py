@@ -19,6 +19,9 @@ WHAT THIS PROGRAM DOES
      every 30 seconds, so a station that joins late still gets them.
   5. Saves every chat line to data/chat-log/<date>.txt on this laptop.
   6. Finds your vehicle's camera on the WiFi network by itself.
+  7. Puts a program (StationRadio_v5, VehicleSensors_v5, VehicleCamera_v5)
+     onto a board plugged into USB, from the files in firmware/, so
+     nobody needs the Arduino IDE (Setup -> Install a program on a board).
 
 HOW TO RUN
   Easiest: double-click "Start Dashboard.bat" in this folder.
@@ -28,8 +31,10 @@ HOW TO RUN
   Then open http://localhost:8000 (the .bat file does that for you).
 
 REQUIREMENTS
-  Python 3.8 or newer, and pyserial (the .bat file installs it once,
-  which needs internet that one time). --simulate works without pyserial.
+  Python 3.8 or newer, pyserial and esptool (the .bat file installs both
+  once, which needs internet that one time). --simulate works without
+  either. Without esptool the installer uses the copy that comes with the
+  Arduino IDE's esp32 package, if this laptop has one.
 
 Students may read this code: it is commented to be read.
 """
@@ -37,12 +42,18 @@ Students may read this code: it is commented to be read.
 import argparse
 import concurrent.futures
 import datetime as dt
+import hashlib
+import importlib.util
 import ipaddress
 import json
 import math
+import os
 import queue
 import random
+import re
 import socket
+import subprocess
+import sys
 import threading
 import time
 import urllib.request
@@ -63,6 +74,9 @@ DATA = HERE / "data"                  # this laptop's own files (not on GitHub)
 SETTINGS_FILE = DATA / "settings.json"
 MARKS_FILE = DATA / "marks.json"
 CHAT_LOG_DIR = DATA / "chat-log"
+FIRMWARE_DIR = HERE / "firmware"      # made by tools/build_firmware.py
+FLASH_BAUD = 460800                   # fast, and still fine on cheap USB chips
+FLASH_TIME_LIMIT_S = 240              # give up on an install that hangs
 
 MAX_STATIONS = 9
 CHAT_MAX_BYTES = 120                  # what one radio message can carry
@@ -465,6 +479,7 @@ class SerialLink:
         self.ser = serial.Serial(port, 115200, timeout=0.5)
         self.on_line, self.on_close = on_line, on_close
         self.wlock = threading.Lock()
+        self.closed = False
         threading.Thread(target=self._run, daemon=True).start()
 
     def send(self, line):
@@ -475,12 +490,21 @@ class SerialLink:
         except (serial.SerialException, OSError):
             return False
 
+    def close(self):
+        """Let go of the USB port (for the installer). The reading thread
+        notices, stops, and calls on_close."""
+        self.closed = True
+        try:
+            self.ser.close()
+        except Exception:
+            pass
+
     def _run(self):
         time.sleep(1.5)                   # opening the port resets the board
         self.send("info")
         buf = b""
         try:
-            while True:
+            while not self.closed:
                 chunk = self.ser.read(512)
                 if not chunk:
                     continue
@@ -502,27 +526,89 @@ class PortWatcher:
     """Opens every USB serial port, waits for each board to say which
     board it is, and connects the station radio to the station logic.
     Other boards (a camera or vehicle plugged in for setup) are listed
-    on the Setup page instead."""
+    on the Setup page instead.
 
-    def __init__(self, hub, station, fixed_port=None):
+    While the installer is putting a program on a board, that board's
+    port is "paused": the watcher lets go of it and does not open it
+    again until the installer is finished (two programs cannot use one
+    USB port at the same time)."""
+
+    def __init__(self, hub, station, fixed_port=None, list_ports=None, open_link=None):
         self.hub, self.station, self.fixed = hub, station, fixed_port
+        self.list_ports = list_ports or self._usb_ports      # -> [{"port", "desc"}]
+        self.open_link = open_link or SerialLink              # (port, on_line, on_close)
         self.links = {}                   # port -> SerialLink
         self.kind = {}                    # port -> board name from its hello
+        self.hello = {}                   # port -> the whole hello message
+        self.paused = set()               # ports the installer is using
+        self.open_lock = threading.Lock()
+
+    def _usb_ports(self):
+        if self.fixed:
+            return [{"port": self.fixed, "desc": ""}]
+        return [{"port": p.device, "desc": p.description or ""}
+                for p in serial.tools.list_ports.comports() if p.vid is not None]
+
+    def scan_once(self):
+        """Open every USB port that is not open yet (and not paused)."""
+        for port in [p["port"] for p in self.list_ports()]:
+            with self.open_lock:
+                if port in self.links or port in self.paused:
+                    continue
+                try:
+                    self.links[port] = self.open_link(port, self.on_line, self.on_close)
+                except (OSError, ValueError):   # pyserial's SerialException is an OSError
+                    pass                 # busy (Serial Monitor open?) - try again later
 
     def run(self):
         while True:
             try:
-                ports = [self.fixed] if self.fixed else [
-                    p.device for p in serial.tools.list_ports.comports() if p.vid is not None]
-                for port in ports:
-                    if port not in self.links:
-                        try:
-                            self.links[port] = SerialLink(port, self.on_line, self.on_close)
-                        except (serial.SerialException, OSError):
-                            pass          # busy (Serial Monitor open?) - try again later
+                self.scan_once()
             except Exception as e:        # never let the watcher die
                 self.hub.note(f"USB check failed: {e}")
             time.sleep(3)
+
+    def port_list(self):
+        """Every USB serial port, and what the board on it said it is."""
+        out = []
+        for p in self.list_ports():
+            h = self.hello.get(p["port"], {})
+            out.append({"port": p["port"], "desc": p.get("desc", ""),
+                        "board": h.get("board", ""), "station": h.get("station", 0),
+                        "fw": h.get("fw", ""), "busy": p["port"] in self.paused})
+        return out
+
+    # ---------------- hand-off to the installer ----------------
+    def release(self, port, timeout=5.0, settle=0.4):
+        """Close our connection to `port` and keep it closed until resume()."""
+        with self.open_lock:
+            self.paused.add(port)
+            link = self.links.get(port)
+            self.hello.pop(port, None)
+        if link:
+            link.close()
+            end = time.time() + timeout
+            while self.links.get(port) is link and time.time() < end:
+                time.sleep(0.05)          # wait for the reading thread to stop
+            if self.links.get(port) is link:
+                self.on_close(link)
+            time.sleep(settle)            # Windows needs a moment to free the port
+
+    def resume(self, port):
+        with self.open_lock:
+            self.paused.discard(port)
+        try:
+            self.scan_once()              # open it again straight away
+        except Exception:
+            pass                          # the watcher's loop tries again soon
+
+    def wait_for_hello(self, port, timeout=15.0):
+        end = time.time() + timeout
+        while time.time() < end:
+            if port in self.hello:
+                return dict(self.hello[port])
+            time.sleep(0.25)
+        return None
 
     def on_line(self, link, line):
         msg = parse_board_line(line)
@@ -530,6 +616,7 @@ class PortWatcher:
             return
         if msg["type"] == "hello":
             self.kind[link.port] = msg.get("board", "")
+            self.hello[link.port] = msg
             with self.hub.lock:
                 if msg.get("board") == "station-radio":
                     self.hub.boards.pop(link.port, None)
@@ -548,8 +635,12 @@ class PortWatcher:
             self.hub.publish("board_reply", {"port": link.port, **msg})
 
     def on_close(self, link):
-        self.links.pop(link.port, None)
-        self.kind.pop(link.port, None)
+        with self.open_lock:
+            if self.links.get(link.port) is not link:
+                return                    # an older link; a new one may be open already
+            self.links.pop(link.port, None)
+            self.kind.pop(link.port, None)
+            self.hello.pop(link.port, None)
         with self.hub.lock:
             self.hub.boards.pop(link.port, None)
         if self.station.link is link:
@@ -568,6 +659,263 @@ class PortWatcher:
             link.send(ln)
             time.sleep(0.15)
         return True
+
+
+# =====================================================================
+# Installing a program on a board (no Arduino IDE needed)
+# =====================================================================
+# tools/build_firmware.py builds the three sketches and leaves, for each
+# one, the four pieces the Arduino IDE writes to a board, plus
+# firmware/manifest.json saying where on the board each piece goes.
+# esptool (Espressif's own uploader, the one the IDE uses too) copies
+# them onto the board. The pieces skip the part of the board's memory
+# where it keeps its station number and WiFi list, so those survive.
+
+def load_firmware(folder=None):
+    """(manifest, problem). problem is a plain sentence, or "" if every
+    file is there and unchanged."""
+    folder = Path(folder or FIRMWARE_DIR)
+    try:
+        manifest = json.loads((folder / "manifest.json").read_text(encoding="utf-8"))
+    except (OSError, ValueError):
+        return None, ("The program files are missing from the firmware folder. "
+                      "Get a fresh copy of the FindTheTarget_v5 folder.")
+    for prog in manifest.get("programs", []):
+        for f in prog.get("files", []):
+            p = folder / f["path"]
+            try:
+                data = p.read_bytes()
+            except OSError:
+                return manifest, f"A program file is missing ({f['path']}). Get a fresh copy of the folder."
+            if len(data) != f["size"] or hashlib.sha256(data).hexdigest() != f["sha256"]:
+                return manifest, f"A program file is damaged ({f['path']}). Get a fresh copy of the folder."
+    return manifest, ""
+
+
+def arduino15_folder():
+    if sys.platform.startswith("win"):
+        return Path(os.environ.get("LOCALAPPDATA", Path.home() / "AppData" / "Local")) / "Arduino15"
+    if sys.platform == "darwin":
+        return Path.home() / "Library" / "Arduino15"
+    return Path.home() / ".arduino15"
+
+
+def find_esptool(arduino15=None, have_module=None):
+    """The command that runs esptool, as a list, or None.
+    1st choice: the esptool Python package (Start Dashboard.bat installs it).
+    2nd choice: the esptool program inside the Arduino IDE's esp32 package."""
+    if have_module is None:
+        have_module = importlib.util.find_spec("esptool") is not None
+    if have_module:
+        return [sys.executable, "-m", "esptool"]
+    tools = Path(arduino15 or arduino15_folder()) / "packages" / "esp32" / "tools" / "esptool_py"
+    found = []
+    for d in tools.glob("*"):
+        for name in ("esptool.exe", "esptool"):
+            if (d / name).is_file():
+                version = tuple(int(x) for x in re.findall(r"\d+", d.name))
+                found.append((version, str(d / name)))
+                break
+    return [max(found)[1]] if found else None
+
+
+def esptool_command(esptool, port, program, folder=None, baud=FLASH_BAUD):
+    """The whole esptool command line for putting `program` (one entry of
+    the manifest) on the board at `port`. These spellings work with
+    esptool 4 and 5."""
+    folder = Path(folder or FIRMWARE_DIR)
+    cmd = list(esptool) + [
+        "--chip", program.get("chip", "esp32"), "--port", port, "--baud", str(baud),
+        "--before", "default_reset", "--after", "hard_reset",
+        "write_flash", "-z", "--flash_mode", "keep", "--flash_freq", "keep", "--flash_size", "keep"]
+    for f in sorted(program["files"], key=lambda f: int(f["offset"], 16)):
+        cmd += [f["offset"], str(folder / f["path"])]
+    return cmd
+
+
+class FlashProgress:
+    """Turns esptool's output into a stage and a percent for the page.
+    The percent is worked out from the "Writing at 0x..." address, which
+    esptool 4 and 5 both print, over all four pieces together."""
+
+    def __init__(self, files):
+        self.files = sorted(((int(f["offset"], 16), int(f["size"])) for f in files))
+        self.total = sum(size for _, size in self.files) or 1
+        self.verified = 0                 # pieces esptool has finished and checked
+        self.percent = 0
+
+    def _done_before(self, n):
+        return sum(size for _, size in self.files[:n])
+
+    def feed(self, line):
+        """One line of esptool output -> {"stage", "percent"} or None."""
+        low = line.lower()
+        if "connecting" in low:
+            return {"stage": "connecting", "percent": self.percent}
+        m = re.search(r"writing at 0x([0-9a-f]+)", low)
+        if m:
+            addr = int(m.group(1), 16)
+            for i, (off, size) in enumerate(self.files):
+                if off <= addr <= off + size:
+                    done = self._done_before(i) + (addr - off)
+                    self.percent = max(self.percent, min(99, int(100 * done / self.total)))
+                    break
+            return {"stage": "writing", "percent": self.percent}
+        if "hash of data verified" in low:
+            self.verified += 1
+            self.percent = max(self.percent, min(99, int(100 * self._done_before(self.verified) / self.total)))
+            return {"stage": "writing", "percent": self.percent}
+        if "hard resetting" in low:
+            self.percent = 100
+            return {"stage": "restarting", "percent": 100}
+        return None
+
+
+STAGE_WORDS = {
+    "releasing": "Getting ready…",
+    "connecting": "Talking to the board…",
+    "writing": "Copying the program onto the board…",
+    "restarting": "Restarting the board…",
+    "waiting": "Installed! Waiting for the board to start up…",
+}
+
+
+def explain_flash_error(log):
+    """esptool's messages -> one sentence a grown-up without tech
+    experience can act on."""
+    low = log.lower()
+    if "install took too long" in low:
+        return "The install took too long and was stopped. Unplug the board, plug it back in, and try again."
+    if re.search(r"this chip is [^\n]* not esp32\b", low) or "wrong --chip" in low or "wrong chip" in low:
+        return ("This board is a different kind of ESP32. These programs need a plain ESP32 "
+                "(like the sensor board's ESP32 or the Freenove WROVER camera).")
+    # esptool 5 says "the port is busy or doesn't exist" either way, so go
+    # by the error Windows (or Linux) gave underneath.
+    if "permissionerror" in low or "access is denied" in low or "resource busy" in low:
+        return ("Another program is using this USB port. Close the Arduino IDE (or its Serial "
+                "Monitor) and any other dashboard window, then try again.")
+    if "could not open" in low or "port doesn't exist" in low or "filenotfounderror" in low:
+        return "The board was unplugged, or its USB port went away. Plug it back in and try again."
+    if any(s in low for s in ("failed to connect", "no serial data received", "wrong boot mode",
+                              "timed out waiting for packet", "download mode")):
+        return ("The board did not answer. Hold down the BOOT button on the board, press Install "
+                "again, and let go when the bar starts moving. If that does not help, try another "
+                "USB cable (some cables only charge).")
+    if "exceeds" in low or "does not fit" in low or "doesn't fit" in low or "too big" in low:
+        return "This board has less memory than the program needs."
+    if any(s in low for s in ("serialexception", "stopped responding", "lost connection",
+                              "returned no data", "writefile failed", "clearcommerror")):
+        return ("The USB connection dropped while copying. Try another USB cable or another USB "
+                "port on the laptop, then try again.")
+    return ("Something went wrong while installing. Unplug the board, plug it back in, and try "
+            "again. Nothing is broken: a board can always be installed again.")
+
+
+class Flasher:
+    """Runs one install at a time and tells the page how it is going
+    (event "flash"). Steps: let go of the port, run esptool, open the
+    port again, wait for the board's hello."""
+
+    def __init__(self, hub, watcher, folder=None, esptool=None, popen=subprocess.Popen):
+        self.hub, self.watcher = hub, watcher
+        self.folder = Path(folder or FIRMWARE_DIR)
+        self._esptool = esptool           # None = look for it when needed
+        self.popen = popen
+        self.lock = threading.Lock()
+        self.state = {"busy": False, "port": "", "program": "", "title": "", "stage": "",
+                      "percent": 0, "text": "", "ok": None, "error": "", "log": "", "hello": None}
+
+    def esptool(self):
+        return self._esptool or find_esptool()
+
+    def info(self):
+        manifest, problem = load_firmware(self.folder)
+        if not problem and not self.esptool():
+            problem = ("The installer tool (esptool) is missing. Connect this laptop to the "
+                       "internet once and start the dashboard with Start Dashboard.bat.")
+        with self.lock:
+            state = dict(self.state)
+        return {"problem": problem, "state": state,
+                "built": (manifest or {}).get("built", ""),
+                "programs": [{"id": p["id"], "title": p["title"], "fw": p.get("fw", "")}
+                             for p in (manifest or {}).get("programs", [])]}
+
+    def _update(self, **kw):
+        with self.lock:
+            self.state.update(kw)
+            if "stage" in kw and "text" not in kw:
+                self.state["text"] = STAGE_WORDS.get(kw["stage"], "")
+            state = dict(self.state)
+        self.hub.publish("flash", state)
+
+    def start(self, port, program_id):
+        manifest, problem = load_firmware(self.folder)
+        if problem:
+            return {"ok": False, "error": problem}
+        prog = next((p for p in manifest.get("programs", []) if p["id"] == program_id), None)
+        if prog is None:
+            return {"ok": False, "error": "That program is not in the firmware folder."}
+        tool = self.esptool()
+        if not tool:
+            return {"ok": False, "error": self.info()["problem"]}
+        if port not in [p["port"] for p in self.watcher.port_list()]:
+            return {"ok": False, "error": "That board is not plugged in any more. Plug it in and look again."}
+        with self.lock:
+            if self.state["busy"]:
+                return {"ok": False, "error": "Another board is being installed. Wait until it is finished."}
+            self.state.update(busy=True, port=port, program=prog["id"], title=prog["title"],
+                              stage="releasing", text=STAGE_WORDS["releasing"], percent=0,
+                              ok=None, error="", log="", hello=None)
+        cmd = esptool_command(tool, port, prog, self.folder)
+        threading.Thread(target=self._run, args=(port, prog, cmd), daemon=True).start()
+        return {"ok": True}
+
+    def _run(self, port, prog, cmd):
+        self.hub.note(f"Installing {prog['title']} on {port}…")
+        self._update(stage="releasing")
+        log, rc = [], -1
+        self.watcher.release(port)
+        try:
+            env = dict(os.environ, PYTHONIOENCODING="utf-8", PYTHONUTF8="1",
+                       NO_COLOR="1", TERM="dumb", COLUMNS="200")
+            proc = self.popen(cmd, stdout=subprocess.PIPE, stderr=subprocess.STDOUT, env=env,
+                              creationflags=getattr(subprocess, "CREATE_NO_WINDOW", 0))
+            timer = threading.Timer(FLASH_TIME_LIMIT_S,
+                                    lambda: (log.append("(the install took too long)"), proc.kill()))
+            timer.start()
+            progress = FlashProgress(prog["files"])
+            last = None
+            try:
+                for raw in iter(proc.stdout.readline, b""):
+                    for piece in re.split(r"[\r\n]+", raw.decode("utf-8", errors="replace")):
+                        if not piece.strip() or piece.startswith("WARNING: Deprecated"):
+                            continue      # esptool 5 nagging about esptool 4 spellings
+                        log.append(piece.rstrip())
+                        ev = progress.feed(piece)
+                        if ev and ev != last:
+                            last = ev
+                            self._update(**ev)
+                rc = proc.wait()
+            finally:
+                timer.cancel()
+        except OSError as e:
+            log.append(f"Could not start esptool: {e}")
+        finally:
+            self.watcher.resume(port)
+        text_log = "\n".join(log[-60:])
+        if rc != 0:
+            error = explain_flash_error(text_log)
+            self.hub.note(f"Install on {port} did not work: {error}")
+            self._update(busy=False, ok=False, stage="failed", text="It did not work.",
+                         error=error, log=text_log)
+            return
+        self._update(stage="waiting", percent=100, log=text_log)
+        hello = self.watcher.wait_for_hello(port)
+        self.hub.note(f"Installed {prog['title']} on {port}.")
+        self._update(busy=False, ok=True, stage="done", hello=hello,
+                     text=f"✔ {prog['title']} is installed." if hello else
+                          f"✔ {prog['title']} is installed, but the board has not started talking yet. "
+                          "Unplug it and plug it back in.")
 
 
 # =====================================================================
@@ -763,7 +1111,7 @@ def camera_worker(hub):
 # =====================================================================
 # Web server
 # =====================================================================
-def make_handler(hub, station, watcher):
+def make_handler(hub, station, watcher, flasher=None):
     class Handler(BaseHTTPRequestHandler):
         def log_message(self, *args):     # keep the console quiet
             pass
@@ -796,6 +1144,15 @@ def make_handler(hub, station, watcher):
                 self._send(200, hub.snapshot())
             elif path == "/events":
                 self.stream_events()
+            elif path == "/ports":
+                # For "Install a program on a board": every USB port, and the
+                # programs in the firmware folder.
+                if watcher is None or flasher is None:
+                    self._send(200, {"available": False, "ports": [],
+                                     "problem": "Installing programs needs real boards, so it is "
+                                                "switched off in practice mode."})
+                else:
+                    self._send(200, {"available": True, "ports": watcher.port_list(), **flasher.info()})
             else:
                 self._send(404, {"error": "unknown page"})
 
@@ -838,6 +1195,12 @@ def make_handler(hub, station, watcher):
                 lines = [clean_text(x, 180) for x in b.get("lines", [])][:6]
                 ok = watcher.board_send(b.get("port", ""), lines) if watcher else False
                 self._send(200, {"ok": ok})
+            elif path == "/install":
+                b = self._json()
+                if flasher is None:
+                    self._send(200, {"ok": False, "error": "Installing is switched off in practice mode."})
+                else:
+                    self._send(200, flasher.start(str(b.get("port", "")), str(b.get("program", ""))))
             elif path == "/table":
                 name = self.headers.get("X-Filename", "file.csv")
                 try:
@@ -902,7 +1265,7 @@ def main():
         SETTINGS_FILE, MARKS_FILE, CHAT_LOG_DIR = DATA / "settings.json", DATA / "marks.json", DATA / "chat-log"
     hub = Hub(simulate=args.simulate > 0)
     station = Station(hub)
-    watcher = None
+    watcher = flasher = None
     if args.simulate:
         sim = SimRadio(hub, station, args.simulate, args.as_station)
         threading.Thread(target=sim.run, daemon=True).start()
@@ -911,13 +1274,14 @@ def main():
             raise SystemExit("pyserial is not installed. Run:  python -m pip install pyserial\n"
                              "(or double-click Start Dashboard.bat, which does it for you)")
         watcher = PortWatcher(hub, station, args.port)
+        flasher = Flasher(hub, watcher)
         threading.Thread(target=watcher.run, daemon=True).start()
         threading.Thread(target=camera_worker, args=(hub,), daemon=True).start()
     threading.Thread(target=housekeeping, args=(station,), daemon=True).start()
 
     # 127.0.0.1 = only this laptop can open the page. That also means
     # Windows does not pop up a firewall question.
-    server = ThreadingHTTPServer(("127.0.0.1", args.http), make_handler(hub, station, watcher))
+    server = ThreadingHTTPServer(("127.0.0.1", args.http), make_handler(hub, station, watcher, flasher))
     server.daemon_threads = True
     print("==============================================")
     print(" Find the Target v5 - station dashboard")

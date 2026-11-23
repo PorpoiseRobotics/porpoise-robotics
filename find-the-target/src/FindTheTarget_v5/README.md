@@ -50,16 +50,54 @@ meet here) that every other station sees.
 
 Do this once. After that, game day is just switching things on.
 
-### 2a. The laptop where you upload programs
+### 2a. Each station's laptop
+
+1. Install **Python 3** from python.org. On the first installer screen tick
+   **"Add python.exe to PATH"**.
+2. Copy this whole `FindTheTarget_v5` folder onto the laptop (or clone the repository).
+3. With **internet** available, double-click **`Dashboard/Start Dashboard.bat`** once. It
+   installs `pyserial` (so Python can talk to the boards) and `esptool` (so it can put
+   programs on them), then opens the dashboard. After that, it works with no internet at all.
+
+### 2b. Put the programs on the boards
+
+Every board needs one of three programs. The dashboard has all three ready to go, so you do
+**not** need the Arduino IDE.
+
+1. Start the dashboard (double-click **`Dashboard/Start Dashboard.bat`**).
+2. Plug the board into the laptop's USB.
+3. Open **⚙ Setup → Boards plugged into this laptop → Install a program on a board**.
+   Each USB port is listed with what it is running now (a brand-new board shows
+   "a program the dashboard does not know"). Nothing listed? Press
+   **🔄 Look for boards again**, or try another cable: some cables only charge.
+4. Press the program this board should run:
+
+   | Board | Press |
+   |---|---|
+   | The ESP32 that stays plugged into the laptop | **Install Station Radio** |
+   | The ESP32 on the vehicle's sensor PCB | **Install Vehicle Sensors** |
+   | The Freenove ESP32-WROVER camera | **Install Camera** |
+
+5. Say **OK** to the question, and leave the board plugged in. A bar shows how far it is
+   (about a minute). When it says **✔ installed**, press the board's **station number**.
+   For a camera, then give it the WiFi (step 2d).
+
+Installing again later (for a newer program) keeps the board's saved station number and
+WiFi. If an install goes wrong, nothing is broken: the dashboard says what to try in one
+sentence, usually one of these:
+
+- *"Another program is using this USB port"* → close the Arduino IDE / Serial Monitor.
+- *"The board did not answer"* → hold the board's **BOOT** button, press Install again, and
+  let go when the bar starts moving.
+
+<details>
+<summary>Using the Arduino IDE instead (only needed if you change the programs)</summary>
 
 1. Install the **Arduino IDE** (arduino.cc).
 2. **Tools → Board → Boards Manager**: install **esp32 by Espressif Systems**, version **3.3.12**.
 3. **Tools → Manage Libraries**: install **Adafruit BMP280**, **Adafruit NeoPixel**,
    **TinyGPSPlus**. (PorpoiseNet does not need installing: a copy sits in each sketch folder.)
-
-### 2b. Upload the three programs
-
-Every station uploads **exactly the same files**. Nothing needs editing.
+4. Upload. Every station uploads **exactly the same files**; nothing needs editing.
 
 | Board | Open this sketch | Tools → Board | Also set |
 |---|---|---|---|
@@ -67,11 +105,19 @@ Every station uploads **exactly the same files**. Nothing needs editing.
 | Vehicle sensor board | `VehicleSensors_v5/VehicleSensors_v5.ino` | ESP32 Dev Module | — |
 | Vehicle camera | `VehicleCamera_v5/VehicleCamera_v5.ino` | ESP32 Wrover Module | Partition Scheme: **Huge APP (3MB No OTA/1MB SPIFFS)** |
 
+**After changing a program, rebuild the dashboard's copies** so the Install buttons put the
+new version on boards: in the `Dashboard` folder run `python tools/build_firmware.py` (about
+3 minutes per program; it uses the Arduino IDE's own arduino-cli and libraries), then commit
+the `Dashboard/firmware/` folder. `test_dashboard.py` fails if a sketch changed and the
+firmware was not rebuilt.
+
+</details>
+
 ### 2c. Give every board its station number
 
 Each board saves its number in its own memory, so you do this once per board.
 
-- **Station radio:** start the dashboard (step 2e) with the radio plugged in. It asks
+- **Station radio:** start the dashboard (step 2a) with the radio plugged in. It asks
   "Which station is this?" — press the number.
 - **Vehicle sensor board:** plug it into the laptop, start the dashboard, open **⚙ Setup →
   Boards plugged into this laptop**, choose the number, press **Save to this board**.
@@ -98,16 +144,7 @@ Pick the easiest way. The password is in **WiFi networks.txt** in the private On
 A camera remembers up to three networks and joins whichever it can see. If it cannot join any
 of them for 30 seconds, it opens `FTT-Camera-3-Setup` again for three minutes so you can fix it.
 
-### 2e. Each station's laptop
-
-1. Install **Python 3** from python.org. On the first installer screen tick
-   **"Add python.exe to PATH"**.
-2. Copy this whole `FindTheTarget_v5` folder onto the laptop (or clone the repository).
-3. With **internet** available, double-click **`Dashboard/Start Dashboard.bat`** once. It
-   installs `pyserial` (the only extra piece) and opens the dashboard.
-   After that, it works with no internet at all.
-
-### 2f. The field router
+### 2e. The field router
 
 - Give it a name and password and write them in **WiFi networks.txt** (OneDrive).
 - In its settings, set the **2.4 GHz channel to 6 or 11** (not "Auto"). The radio network uses
@@ -115,7 +152,7 @@ of them for 30 seconds, it opens `FTT-Camera-3-Setup` again for three minutes so
 - If it is dual-band, put the laptops on its 5 GHz network: the cameras can only use 2.4 GHz,
   and that leaves 2.4 GHz to them.
 
-### 2g. The field map (each laptop)
+### 2f. The field map (each laptop)
 
 Open **⚙ Setup → Field**. Park a vehicle at the corner that should be the map's (0,0), facing
 along the long side with the field on its left. Press **Use my vehicle's spot**, then
@@ -178,15 +215,18 @@ each one means.
 | You see | Try this |
 |---|---|
 | **Radio ✖** "The station radio is not connected" | Plug the radio board into the laptop. Close the Arduino Serial Monitor (only one program can use the USB port). Try another USB cable: some only charge. |
-| "Which station is this?" keeps coming back | The radio is not saving its number. Upload `StationRadio_v5` again. |
+| "Which station is this?" keeps coming back | The radio is not saving its number. Install Station Radio on it again (step 2b). |
 | **Vehicle ✖** | Vehicle switched on? Its LED ring should light up. Blinking orange = no station number (step 2c). LED 0 blinking = it cannot hear the station radio: move closer. Wrong color = it has another station's number. |
 | **GPS …** for more than 2 minutes | GPS only works outside with open sky. The FK-A1's blue light starts flashing when it has a fix. |
-| Vehicle not on the map, but GPS ✔ | The field map is not set up on this laptop (step 2g). |
+| Vehicle not on the map, but GPS ✔ | The field map is not set up on this laptop (step 2f). |
 | **Camera ✖** | Is the camera powered and set up with this station's number (step 2d)? Is the laptop on the **same WiFi** as the camera? Open ⚙ Setup → Camera → **Search again**. If the router blocks it, type the camera's address (shown in its Serial Monitor) into Setup. |
 | Chat says **✖ not delivered** | The other station's radio did not answer. Is that station's dashboard running and its radio plugged in? |
 | Marks from another station never appear | Both stations' dashboards must be running. Marks are re-sent every 30 seconds. |
-| `Start Dashboard.bat` says Python is not installed | Step 2e. Tick "Add python.exe to PATH" in the installer. |
+| `Start Dashboard.bat` says Python is not installed | Step 2a. Tick "Add python.exe to PATH" in the installer. |
 | A board is in a strange state | Unplug it and plug it back in. Every board is safe to restart at any time. |
+| Install says **"The installer tool (esptool) is missing"** | Connect the laptop to the internet and start the dashboard with `Start Dashboard.bat`, which installs it. |
+| Install says **"The board did not answer"** | Hold the board's **BOOT** button, press Install again, let go when the bar moves. Still no? Another USB cable. |
+| A board is not in the Install list | Some USB cables only charge: try another. A CH340 camera board on an old Windows laptop may need its driver (search "CH340 driver"). |
 
 The sensor board also prints a self-test when it starts (Serial Monitor, 115200 baud): one PASS
 or FAIL line per sensor with a wiring hint, the same as v4.
@@ -286,6 +326,8 @@ sync    identify    roster    info    station 3    help
 | `Dashboard/dashboard.html` | The page. Nothing in it comes from the internet. |
 | `Dashboard/test_dashboard.py` | `python -m unittest test_dashboard -v` |
 | `Dashboard/data/` | This laptop's settings, marks and chat logs. Not on GitHub. |
+| `Dashboard/firmware/` | The three programs, ready-built, for **Install a program on a board**. `manifest.json` lists each piece, its address on the board and its checksum. |
+| `Dashboard/tools/build_firmware.py` | Rebuilds `firmware/` from the three sketches (needs the Arduino IDE). Run it after changing a sketch. |
 
 ---
 
@@ -308,3 +350,8 @@ not been run on real boards yet**. Before the first class, go through this with 
 - [ ] Walk a vehicle to the far end of the field: does it stay connected (LED 0 steady)?
 - [ ] With all stations running, the video stays smooth on every laptop.
 - [ ] The heading on the dashboard matches a phone compass (else set `HEADING_OFFSET_DEG`).
+- [ ] **Install a program on a board** works for each of the three boards: the bar moves, it
+      says ✔ installed, the board restarts with the new program and the station-number step
+      appears. Installing again keeps the station number (and the camera's WiFi).
+- [ ] Installing on the station radio while the dashboard uses it: the radio comes back by
+      itself afterwards (Radio ✔).

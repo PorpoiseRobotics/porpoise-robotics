@@ -1,0 +1,120 @@
+{
+  "format": 1,
+  "built": "2026-11-23 06:42",
+  "core": "esp32:esp32 3.3.12",
+  "git_commit": "746a900",
+  "note": "Made by tools/build_firmware.py. Do not edit by hand.",
+  "programs": [
+    {
+      "id": "station-radio",
+      "title": "Station Radio",
+      "sketch": "StationRadio_v5",
+      "fw": "5.0",
+      "chip": "esp32",
+      "fqbn": "esp32:esp32:esp32",
+      "board_name": "ESP32 Dev Module",
+      "flash_args": "--flash-mode dio --flash-freq 80m --flash-size 4MB",
+      "source_sha256": "35e5ea1cdd7537d8ee66d4e72eff05c91b8558685ce67b67c9c3c9ff66e05448",
+      "files": [
+        {
+          "offset": "0x1000",
+          "path": "station-radio/bootloader.bin",
+          "size": 24992,
+          "sha256": "47bbbfca119fe87190f63a67af9d85adff6433bcf3812ec92a9b9c9416a53ad1"
+        },
+        {
+          "offset": "0x8000",
+          "path": "station-radio/partitions.bin",
+          "size": 3072,
+          "sha256": "148b959cbff1c38aa8e1d5c0ba9d612c54997b945e56a63f41223eef650653a1"
+        },
+        {
+          "offset": "0xe000",
+          "path": "station-radio/boot_app0.bin",
+          "size": 8192,
+          "sha256": "f94c5d786a7a8fab06ac5d10e33bf37711a6697636dc037559ea19cc410a17f0"
+        },
+        {
+          "offset": "0x10000",
+          "path": "station-radio/app.bin",
+          "size": 915792,
+          "sha256": "47cc7c1e6c4c1b7e5427fc531cdb38fc58d5f4e3803c268e9d75fece6cadbc8e"
+        }
+      ]
+    },
+    {
+      "id": "vehicle-sensors",
+      "title": "Vehicle Sensors",
+      "sketch": "VehicleSensors_v5",
+      "fw": "5.0",
+      "chip": "esp32",
+      "fqbn": "esp32:esp32:esp32",
+      "board_name": "ESP32 Dev Module",
+      "flash_args": "--flash-mode dio --flash-freq 80m --flash-size 4MB",
+      "source_sha256": "5d5eb13ce991827ad46241b2ca22dc889041094ec6cd6cde1be7082a53c7cf6d",
+      "files": [
+        {
+          "offset": "0x1000",
+          "path": "vehicle-sensors/bootloader.bin",
+          "size": 24992,
+          "sha256": "47bbbfca119fe87190f63a67af9d85adff6433bcf3812ec92a9b9c9416a53ad1"
+        },
+        {
+          "offset": "0x8000",
+          "path": "vehicle-sensors/partitions.bin",
+          "size": 3072,
+          "sha256": "148b959cbff1c38aa8e1d5c0ba9d612c54997b945e56a63f41223eef650653a1"
+        },
+        {
+          "offset": "0xe000",
+          "path": "vehicle-sensors/boot_app0.bin",
+          "size": 8192,
+          "sha256": "f94c5d786a7a8fab06ac5d10e33bf37711a6697636dc037559ea19cc410a17f0"
+        },
+        {
+          "offset": "0x10000",
+          "path": "vehicle-sensors/app.bin",
+          "size": 965504,
+          "sha256": "bcbc9ba57a8dfa1b9ded6d09bae0dc2890d9cbfdfe8b083dc30c25c063963cd4"
+        }
+      ]
+    },
+    {
+      "id": "camera",
+      "title": "Camera",
+      "sketch": "VehicleCamera_v5",
+      "fw": "5.0",
+      "chip": "esp32",
+      "fqbn": "esp32:esp32:esp32wrover:PartitionScheme=huge_app",
+      "board_name": "ESP32 Wrover Module, Huge APP (3MB No OTA/1MB SPIFFS)",
+      "flash_args": "--flash-mode dio --flash-freq 80m --flash-size 4MB",
+      "source_sha256": "cbdb9a3fd4d2a8a97cbae5fffccef57ebfe38c621458f7e380c946c1e3c8ce19",
+      "files": [
+        {
+          "offset": "0x1000",
+          "path": "camera/bootloader.bin",
+          "size": 24992,
+          "sha256": "47bbbfca119fe87190f63a67af9d85adff6433bcf3812ec92a9b9c9416a53ad1"
+        },
+        {
+          "offset": "0x8000",
+          "path": "camera/partitions.bin",
+          "size": 3072,
+          "sha256": "aaae2888c5a6a348004b5b436f47abb25ae32e72d9003902955a998eda723edd"
+        },
+        {
+          "offset": "0xe000",
+          "path": "camera/boot_app0.bin",
+          "size": 8192,
+          "sha256": "f94c5d786a7a8fab06ac5d10e33bf37711a6697636dc037559ea19cc410a17f0"
+        },
+        {
+          "offset": "0x10000",
+          "path": "camera/app.bin",
+          "size": 1255120,
+          "sha256": "8edaa56c65ddc31ba6c40199b3488aa269f96dca98f1a6179691d201483fdcf0"
+        }
+      ]
+    }
+  ]
+}

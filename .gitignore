@@ -122,6 +122,9 @@ compile_commands.json
 *.hex
 *.elf
 *.bin
+# ...except the ready-built programs the v5 dashboard installs on boards
+# (made by find-the-target/src/FindTheTarget_v5/Dashboard/tools/build_firmware.py).
+!find-the-target/src/FindTheTarget_v5/Dashboard/firmware/*/*.bin
 *.eep
 *.map
 
