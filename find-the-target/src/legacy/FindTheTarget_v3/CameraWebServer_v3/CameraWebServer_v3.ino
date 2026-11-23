@@ -15,7 +15,7 @@
  *   Sketch folder must also contain: app_httpd.cpp, camera_index.h,
  *   camera_pins.h (these are the stock Espressif files, unchanged).
  *
- * WIFI: EDIT THE NETWORKS[] LIST BELOW
+ * WIFI: TYPE YOUR NETWORK INTO THE NETWORKS[] LIST BELOW
  *   Add every network the camera might use (home, school, hotspot...).
  *   On boot the camera scans and joins the strongest one it knows.
  *   If it can't join any, it prints a scan of what it CAN see so you
@@ -55,17 +55,21 @@
 #include "camera_pins.h"
 
 // ======================================================================
-// WIFI NETWORK LIST - add or remove rows as needed.
-// The camera joins the strongest network in this list that it can see.
+// >>> TYPE YOUR WIFI NAME AND PASSWORD HERE <<<
+// Replace the two words in quotes on the first line with your network's
+// name and password (keep the quote marks). Add more lines for more
+// networks; the camera joins the strongest one it can see.
+//
+// Your team's real network names and passwords are NOT on GitHub. Look
+// in the shared OneDrive folder "Porpoise Robotics Private" -> "WiFi
+// networks.txt". Never commit this file after typing a real password:
+// this repository is public, and anything committed stays in its history.
 // ======================================================================
 struct WifiCred { const char *ssid; const char *password; };
 
 const WifiCred NETWORKS[] = {
-  { "Kiln Guest",     "kilnguests"     },
-  { "SpectrumSetup-D8",     "violetocean004"     },
-  { "Porpoise",     "*9293kpb"     },
-  // { "YourHomeWiFi",   "yourpassword"   },
-  // { "PhoneHotspot",   "hotspotpass"    },
+  { "TYPE-WIFI-NAME-HERE",  "TYPE-WIFI-PASSWORD-HERE" },
+  // { "SecondNetwork",     "itspassword"             },
 };
 const int NUM_NETWORKS = sizeof(NETWORKS) / sizeof(NETWORKS[0]);
 

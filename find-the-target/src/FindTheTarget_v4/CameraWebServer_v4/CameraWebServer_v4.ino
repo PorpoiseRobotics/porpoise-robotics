@@ -16,7 +16,7 @@
  *   camera_pins.h (these are the stock Espressif files from the core
  *   3.0.7 CameraWebServer example, unchanged; they build as-is on 3.3.12).
  *
- * WIFI: EDIT THE NETWORKS[] LIST BELOW
+ * WIFI: TYPE YOUR NETWORK INTO THE NETWORKS[] LIST BELOW
  *   Add every network the camera might use (home, school, hotspot...).
  *   On boot the camera scans and joins the strongest one it knows.
  *   If it can't join any, it prints a scan of what it CAN see so you
@@ -56,17 +56,21 @@
 #include "camera_pins.h"
 
 // ======================================================================
-// WIFI NETWORK LIST - add or remove rows as needed.
-// The camera joins the strongest network in this list that it can see.
+// >>> TYPE YOUR WIFI NAME AND PASSWORD HERE <<<
+// Replace the two words in quotes on the first line with your network's
+// name and password (keep the quote marks). Add more lines for more
+// networks; the camera joins the strongest one it can see.
+//
+// Your team's real network names and passwords are NOT on GitHub. Look
+// in the shared OneDrive folder "Porpoise Robotics Private" -> "WiFi
+// networks.txt". Never commit this file after typing a real password:
+// this repository is public, and anything committed stays in its history.
 // ======================================================================
 struct WifiCred { const char *ssid; const char *password; };
 
 const WifiCred NETWORKS[] = {
-  { "Kiln Guest",     "kilnguests"     },
-  { "SpectrumSetup-D8",     "violetocean004"     },
-  { "Porpoise",     "*9293kpb"     },
-  // { "YourHomeWiFi",   "yourpassword"   },
-  // { "PhoneHotspot",   "hotspotpass"    },
+  { "TYPE-WIFI-NAME-HERE",  "TYPE-WIFI-PASSWORD-HERE" },
+  // { "SecondNetwork",     "itspassword"             },
 };
 const int NUM_NETWORKS = sizeof(NETWORKS) / sizeof(NETWORKS[0]);
 
@@ -105,6 +109,12 @@ void printWifiScan() {
 // each round so the serial monitor always explains what is happening.
 // ======================================================================
 void connectWifi() {
+  if (strncmp(NETWORKS[0].ssid, "TYPE-", 5) == 0) {
+    Serial.println("*** You have not typed your WiFi name and password yet! ***");
+    Serial.println("*** Open this sketch, find NETWORKS[], type them in and   ***");
+    Serial.println("*** upload again. The real ones are in the OneDrive folder ***");
+    Serial.println("*** \"Porpoise Robotics Private\".                          ***");
+  }
   Serial.printf("Trying %d known network(s):\n", NUM_NETWORKS);
   for (int i = 0; i < NUM_NETWORKS; i++) {
     Serial.printf("  - %s\n", NETWORKS[i].ssid);

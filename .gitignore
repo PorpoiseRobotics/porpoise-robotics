@@ -28,6 +28,10 @@ config.local.*
 *_secret*
 *_secrets*
 *.credentials
+# The team's private WiFi list lives in OneDrive, never in here. These lines
+# stop a copy that was dragged into the repo by mistake from being committed.
+Porpoise Robotics Private/
+WiFi networks.txt
 
 # -----------------------------------------------------------------------------
 # Python
