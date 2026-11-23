@@ -339,7 +339,7 @@ void onNetworkMessage(const PnMessage &msg, int8_t rssi) {
 
 // =========================== Serial commands =========================
 void printHello() {
-  // One JSON line so the dashboard's "Set up a board" page knows what
+  // One JSON line so the dashboard's "Set up a board" button knows what
   // is plugged in. People can ignore it.
   Serial.print(F("{\"type\":\"hello\",\"board\":\"vehicle-sensors\",\"fw\":\""));
   Serial.print(F(FIRMWARE_VERSION));

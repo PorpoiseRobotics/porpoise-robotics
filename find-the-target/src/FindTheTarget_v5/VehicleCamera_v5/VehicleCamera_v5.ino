@@ -23,7 +23,7 @@
  *       3. Choose the station number, pick your WiFi, type its password,
  *          press Save. The camera restarts and joins your WiFi.
  *   (b) With the dashboard: plug the camera into the laptop's USB and use
- *       the "Set up a board" page.
+ *       its "Set up a board" button.
  *   (c) With Serial Monitor (115200 baud), type, pressing Enter after each:
  *          station 3
  *          wifiname Your Network Name
@@ -140,6 +140,16 @@ void printHello() {
   else Serial.print(F("connecting"));
   Serial.print(F("\",\"ip\":\""));
   Serial.print(WiFi.status() == WL_CONNECTED ? WiFi.localIP().toString() : String(""));
+  Serial.print(F("\",\"ssid\":\""));
+  // The WiFi it joined, so the dashboard can say "the laptop must be on
+  // this one too". Quotes and backslashes are dropped to keep the JSON valid.
+  if (WiFi.status() == WL_CONNECTED) {
+    String ssid = WiFi.SSID();
+    for (unsigned i = 0; i < ssid.length(); i++) {
+      char c = ssid[i];
+      if (c != '"' && c != '\\' && (uint8_t)c >= 0x20) Serial.print(c);
+    }
+  }
   Serial.print(F("\",\"networks\":")); Serial.print(netCount);
   Serial.println(F("}"));
 }
